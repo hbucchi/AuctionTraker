@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- preview:strip-above -->
+<title>AuctionTraker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky filter rail on the left, scannable lot rows on the right; one column on phones. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #15202c;
+  --muted: #5a6676;
+  --line: #dce2ea;
+  --accent: #1f4fd1;
+  --accent-soft: #e7edff;
+  --good: #0c7a4e;
+  --good-soft: #e1f3ea;
+  --warn: #9a5400;
+  --warn-soft: #fff0d9;
+  --bad: #b42318;
+  --bad-soft: #fde7e4;
+  --font-display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141b; --surface: #151e28; --ink: #e5ecf4; --muted: #93a2b3; --line: #253140;
+    --accent: #86a6ff; --accent-soft: #1b2950; --good: #52c58e; --good-soft: #10301f;
+    --warn: #f1aa4a; --warn-soft: #36280f; --bad: #ff7d71; --bad-soft: #3b1815;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141b; --surface: #151e28; --ink: #e5ecf4; --muted: #93a2b3; --line: #253140;
+  --accent: #86a6ff; --accent-soft: #1b2950; --good: #52c58e; --good-soft: #10301f;
+  --warn: #f1aa4a; --warn-soft: #36280f; --bad: #ff7d71; --bad-soft: #3b1815;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.45 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+a { color: inherit; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--surface);
+}
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.topbar-inner, .page {
+  max-width: 1280px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.topbar-inner { display: flex; align-items: center; gap: 16px; padding-block: 12px; flex-wrap: wrap; }
+.wordmark { font: 700 20px/1 var(--font-display); letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+.wordmark svg { color: var(--accent); }
+.freshness { color: var(--muted); font-size: 13px; }
+.spacer { flex: 1; }
+.badge-preview {
+  font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--warn); background: var(--warn-soft); padding: 4px 8px; border-radius: 999px;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px;
+  padding: 8px 12px; font-weight: 500;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.user { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+
+.page { padding-block: 20px 48px; display: grid; gap: 20px; grid-template-columns: 280px minmax(0, 1fr); align-items: start; }
+@media (max-width: 900px) { .page { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- filters ---- */
+.filters {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 72px);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  max-height: calc(100vh - 96px); overflow: auto;
+}
+@media (max-width: 900px) { .filters { position: static; max-height: none; } }
+.filters summary {
+  list-style: none; cursor: pointer; padding: 14px 16px; font: 600 15px/1 var(--font-display);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.filters summary::-webkit-details-marker { display: none; }
+.filters summary .count { font: 500 13px var(--font-body); color: var(--muted); }
+.filter-body { display: grid; gap: 16px; padding: 0 16px 16px; }
+.field { display: grid; gap: 6px; }
+.field > label, .field > .label {
+  font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+}
+.input, select.input {
+  width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-toggle { position: relative; }
+.chip-toggle input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.chip-toggle span {
+  display: inline-flex; gap: 6px; align-items: baseline; padding: 5px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg); font-size: 13px;
+}
+.chip-toggle span small { color: var(--muted); font-size: 12px; }
+.chip-toggle input:checked + span { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.chip-toggle input:checked + span small { color: var(--accent); }
+.chip-toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.link-btn { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font-size: 13px; justify-self: start; }
+
+/* ---- summary ---- */
+.main { display: grid; gap: 16px; min-width: 0; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.stat .k { font-size: 12px; color: var(--muted); }
+.stat .v { font: 700 24px/1.15 var(--font-display); margin-top: 4px; }
+.stat .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.toolbar .result-count { font-weight: 600; }
+.toolbar select { width: auto; }
+
+/* ---- lot rows ---- */
+.list { display: grid; gap: 10px; }
+.lot {
+  display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 14px; align-items: start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px;
+}
+@media (max-width: 640px) { .lot { grid-template-columns: 64px minmax(0, 1fr); } .lot .price-col { grid-column: 1 / -1; text-align: left; justify-items: start; } }
+.thumb {
+  width: 100%; aspect-ratio: 4 / 3; border-radius: 8px; background: var(--accent-soft); color: var(--accent);
+  display: grid; place-items: center; overflow: hidden; font: 700 13px var(--font-display); max-width: 100%;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lot-main { min-width: 0; display: grid; gap: 6px; }
+.lot-title { font-weight: 600; font-size: 15px; line-height: 1.3; text-decoration: none; overflow-wrap: anywhere; }
+.lot-title:hover { color: var(--accent); text-decoration: underline; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--muted); font-size: 13px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+.tag.src { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 500; }
+.rounds { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+.round b { font-weight: 600; }
+.round.past { color: var(--muted); text-decoration: line-through; }
+.price-col { display: grid; gap: 4px; justify-items: end; text-align: right; }
+.price { font: 700 20px/1.1 var(--font-display); white-space: nowrap; }
+.appraisal { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.good { color: var(--good); background: var(--good-soft); }
+.pill.warn { color: var(--warn); background: var(--warn-soft); }
+.pill.bad { color: var(--bad); background: var(--bad-soft); }
+.pill.mute { color: var(--muted); background: var(--bg); }
+
+.more { justify-self: center; }
+.empty, .gate {
+  background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: 32px 20px; text-align: center; color: var(--muted); display: grid; gap: 12px; justify-items: center;
+}
+.gate h1 { font: 700 26px/1.2 var(--font-display); color: var(--ink); margin: 0; text-wrap: balance; }
+.gate p { margin: 0; max-width: 52ch; }
+.notice { font-size: 13px; color: var(--muted); }
+.error { color: var(--bad); }
+@media (prefers-reduced-motion: no-preference) { .lot { transition: border-color .15s; } .lot:hover { border-color: var(--accent); } }
+</style>
+<!-- preview:strip-below -->
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="wordmark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 3.5l6 6-2.2 2.2-6-6 2.2-2.2zM9.8 8.2l6 6-2.3 2.3-6-6 2.3-2.3zM12 9.6l-8.6 8.6a1.6 1.6 0 002.3 2.3l8.6-8.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M13 21h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      AuctionTraker
+    </div>
+    <span class="freshness" id="freshness"></span>
+    <span class="spacer"></span>
+    <span class="badge-preview" id="previewBadge" hidden>Prévia</span>
+    <div class="user" id="userBox" hidden></div>
+  </div>
+</header>
+
+<div class="page" id="app">
+  <details class="filters" id="filters" open>
+    <summary>Filtros <span class="count" id="activeCount"></span></summary>
+    <div class="filter-body">
+      <div class="field">
+        <label for="q">Buscar</label>
+        <input class="input" id="q" type="search" placeholder="bairro, cidade, rua, comitente…" autocomplete="off">
+      </div>
+      <div class="field">
+        <span class="label">Site</span>
+        <div class="chips" id="srcChips"></div>
+      </div>
+      <div class="field">
+        <span class="label">Categoria</span>
+        <div class="chips" id="catChips"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="uf">Estado</label>
+          <select class="input" id="uf"><option value="">Todos</option></select>
+        </div>
+        <div class="field">
+          <label for="ptype">Tipo</label>
+          <select class="input" id="ptype"><option value="">Todos</option></select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="pmin">Preço mín. (R$)</label>
+          <input class="input" id="pmin" type="number" inputmode="numeric" min="0" step="10000" placeholder="0">
+        </div>
+        <div class="field">
+          <label for="pmax">Preço máx. (R$)</label>
+          <input class="input" id="pmax" type="number" inputmode="numeric" min="0" step="10000" placeholder="sem limite">
+        </div>
+      </div>
+      <div class="field">
+        <label for="dmin">Desconto mínimo</label>
+        <select class="input" id="dmin">
+          <option value="">Qualquer</option>
+          <option value="20">20% ou mais</option>
+          <option value="30">30% ou mais</option>
+          <option value="40">40% ou mais</option>
+          <option value="50">50% ou mais</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="hideEnded" checked> Ocultar encerrados</label>
+      <button class="link-btn" id="reset" type="button">Limpar filtros</button>
+    </div>
+  </details>
+
+  <main class="main" id="main">
+    <section class="stats" id="stats" aria-label="Resumo"></section>
+    <div class="toolbar">
+      <span class="result-count" id="resultCount"></span>
+      <span class="spacer"></span>
+      <label for="sort" class="notice">Ordenar</label>
+      <select class="input" id="sort">
+        <option value="ending">Encerra primeiro</option>
+        <option value="discount">Maior desconto</option>
+        <option value="priceAsc">Menor preço</option>
+        <option value="priceDesc">Maior preço</option>
+      </select>
+    </div>
+    <div class="list" id="list"></div>
+    <button class="btn more" id="more" type="button" hidden>Mostrar mais</button>
+    <p class="notice" id="footnote"></p>
+  </main>
+</div>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+const FIREBASE_SDK = "13.4.0";
+const PAGE = 40;
+const SITES = {
+  zuk: "Portal Zuk", biasi: "Biasi", frazao: "Frazão", superbid: "Superbid",
+  picelli: "Picelli", alfa: "Alfa", pgfn: "PGFN Comprei",
+};
+const CATS = { imovel: "Imóveis", veiculo: "Veículos", outros: "Outros" };
+const TZ = "America/Sao_Paulo";
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const brlShort = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 1 });
+const dShort = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: TZ });
+const dLong = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: TZ });
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeUrl = (u) => (typeof u === "string" && /^https:\/\//.test(u) ? u : "#");
+
+let ALL = [];
+let shown = PAGE;
+let showImages = false;
+const NOW = Date.now();
+const DAY = 86400000;
+
+/* ---------- derived fields ---------- */
+function enrich(x) {
+  const rounds = (x.rounds || []).map((r) => ({ ...r, t: r.d ? Date.parse(r.d) : NaN }));
+  const upcoming = rounds.find((r) => r.t >= NOW);
+  const endT = x.end ? Date.parse(x.end) : NaN;
+  const nextT = upcoming ? upcoming.t : endT;
+  const proposals = /proposta/i.test(x.status || "");
+  const ended = !Number.isNaN(endT) && endT < NOW && !proposals;
+  // discount vs appraisal when known; otherwise vs the 1st round (common in 2-round auctions)
+  let disc = x.disc ?? (x.appraisal && x.price ? 100 * (1 - x.price / x.appraisal) : null);
+  let discBasis = "da avaliação";
+  if (disc == null && rounds.length > 1 && rounds[0].v && x.price && rounds[0].v > x.price) {
+    disc = 100 * (1 - x.price / rounds[0].v);
+    discBasis = "vs 1ª praça";
+  }
+  const hay = [x.title, x.city, x.uf, x.hood, x.seller, x.type, SITES[x.src]].join(" ");
+  return { ...x, rounds, nextT, endT, ended, proposals, disc: disc == null ? null : Math.round(disc), discBasis,
+           hay: hay.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase() };
+}
+
+/* ---------- filters ---------- */
+const state = { q: "", src: new Set(), cat: new Set(["imovel"]), uf: "", ptype: "", pmin: null, pmax: null, dmin: null, hideEnded: true, sort: "ending" };
+
+function readControls() {
+  state.q = $("q").value.trim().normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  state.uf = $("uf").value;
+  state.ptype = $("ptype").value;
+  state.pmin = $("pmin").value ? Number($("pmin").value) : null;
+  state.pmax = $("pmax").value ? Number($("pmax").value) : null;
+  state.dmin = $("dmin").value ? Number($("dmin").value) : null;
+  state.hideEnded = $("hideEnded").checked;
+  state.sort = $("sort").value;
+  state.src = new Set([...document.querySelectorAll("#srcChips input:checked")].map((i) => i.value));
+  state.cat = new Set([...document.querySelectorAll("#catChips input:checked")].map((i) => i.value));
+}
+
+function matches(x) {
+  if (state.src.size && !state.src.has(x.src)) return false;
+  if (state.cat.size && !state.cat.has(x.cat || "outros")) return false;
+  if (state.uf && x.uf !== state.uf) return false;
+  if (state.ptype && x.type !== state.ptype) return false;
+  if (state.pmin != null && !(x.price >= state.pmin)) return false;
+  if (state.pmax != null && !(x.price <= state.pmax)) return false;
+  if (state.dmin != null && !(x.disc >= state.dmin)) return false;
+  if (state.hideEnded && x.ended) return false;
+  if (state.q && !state.q.split(/\s+/).every((w) => x.hay.includes(w))) return false;
+  return true;
+}
+
+const SORTS = {
+  ending: (a, b) => (isNaN(a.nextT) ? 1 : 0) - (isNaN(b.nextT) ? 1 : 0) || (a.nextT < NOW) - (b.nextT < NOW) || a.nextT - b.nextT,
+  discount: (a, b) => (b.disc ?? -1) - (a.disc ?? -1),
+  priceAsc: (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
+  priceDesc: (a, b) => (b.price ?? -1) - (a.price ?? -1),
+};
+
+/* ---------- rendering ---------- */
+function deadline(x) {
+  const t = x.nextT;
+  if (isNaN(t)) return x.status ? `<span class="pill mute">${esc(x.status)}</span>` : "";
+  const dt = t - NOW;
+  if (dt < 0) return x.proposals ? `<span class="pill warn">Aceita propostas</span>` : `<span class="pill mute">Encerrado ${dShort.format(t)}</span>`;
+  const days = Math.floor(dt / DAY);
+  const label = dt < DAY ? `Hoje, ${dLong.format(t).slice(-5)}` : days === 1 ? "Amanhã" : `Em ${days} dias`;
+  const cls = dt < DAY ? "bad" : days < 7 ? "warn" : "mute";
+  return `<span class="pill ${cls}" title="${esc(dLong.format(t))}">${label}</span>`;
+}
+
+function initials(x) {
+  const t = x.type || CATS[x.cat] || "Lote";
+  return esc(t.replace(/\p{M}/gu, "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "L");
+}
+
+function lotHTML(x) {
+  const where = [x.hood, x.city && x.uf ? `${x.city}/${x.uf}` : x.city || x.uf].filter(Boolean).join(", ");
+  const rounds = x.rounds.length > 1 || (x.rounds.length === 1 && x.rounds[0].v && x.rounds[0].v !== x.price)
+    ? `<div class="rounds">${x.rounds.map((r) => `<span class="round${r.t < NOW ? " past" : ""}"><b>${r.n}ª praça</b> ${isNaN(r.t) ? "" : dShort.format(r.t)} ${r.v ? brlShort.format(r.v) : ""}</span>`).join("")}</div>`
+    : "";
+  const img = showImages && x.img ? `<img src="${esc(safeUrl(x.img))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
+  const disc = x.disc != null && x.disc > 0 ? `<span class="pill good">−${x.disc}% ${x.discBasis}</span>` : "";
+  return `<article class="lot">
+    <div class="thumb" aria-hidden="true">${img || initials(x)}</div>
+    <div class="lot-main">
+      <a class="lot-title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
+      <div class="meta">${where ? `<span>${esc(where)}</span>` : ""}${x.area ? `<span>${x.area.toLocaleString("pt-BR")} m²</span>` : ""}${x.seller ? `<span>${esc(x.seller)}</span>` : ""}</div>
+      <div class="tags"><span class="tag src">${esc(SITES[x.src] || x.src)}</span>${x.type ? `<span class="tag">${esc(x.type)}</span>` : ""}${x.mod ? `<span class="tag">${esc(x.mod)}</span>` : ""}</div>
+      ${rounds}
+    </div>
+    <div class="price-col">
+      <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
+      ${x.appraisal ? `<div class="appraisal">Avaliação ${brl.format(x.appraisal)}</div>` : ""}
+      ${disc}
+      ${deadline(x)}
+    </div>
+  </article>`;
+}
+
+function median(nums) {
+  if (!nums.length) return null;
+  const s = [...nums].sort((a, b) => a - b), m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function render() {
+  readControls();
+  const rows = ALL.filter(matches).sort(SORTS[state.sort]);
+  const week = rows.filter((x) => x.nextT >= NOW && x.nextT - NOW < 7 * DAY).length;
+  const discs = rows.map((x) => x.disc).filter((d) => d != null && d > 0);
+  const prices = rows.map((x) => x.price).filter((p) => p > 0);
+  const md = median(discs);
+  $("stats").innerHTML = [
+    ["Oportunidades", rows.length.toLocaleString("pt-BR"), `de ${ALL.length.toLocaleString("pt-BR")} coletadas`],
+    ["Encerram em 7 dias", week.toLocaleString("pt-BR"), "próxima praça ou prazo"],
+    ["Desconto mediano", md == null ? "—" : `${Math.round(md)}%`, `${discs.length.toLocaleString("pt-BR")} com desconto informado`],
+    ["Preço mediano", prices.length ? brlShort.format(median(prices)) : "—", "lance mínimo / preço atual"],
+  ].map(([k, v, s]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+
+  $("resultCount").textContent = `${rows.length.toLocaleString("pt-BR")} resultado${rows.length === 1 ? "" : "s"}`;
+  const page = rows.slice(0, shown);
+  $("list").innerHTML = page.length
+    ? page.map(lotHTML).join("")
+    : `<div class="empty"><strong>Nenhum lote com esses filtros.</strong><span>Tente ampliar o preço, remover o estado ou desmarcar “Ocultar encerrados”.</span></div>`;
+  $("more").hidden = rows.length <= shown;
+  $("more").textContent = `Mostrar mais (${(rows.length - shown).toLocaleString("pt-BR")} restantes)`;
+
+  const n = state.src.size + (state.cat.size && !(state.cat.size === 1 && state.cat.has("imovel")) ? 1 : 0) +
+    [state.q, state.uf, state.ptype, state.pmin, state.pmax, state.dmin].filter((v) => v !== "" && v != null).length;
+  $("activeCount").textContent = n ? `${n} ativo${n > 1 ? "s" : ""}` : "";
+}
+
+function buildControls() {
+  const count = (key) => ALL.reduce((m, x) => (m[x[key]] = (m[x[key]] || 0) + 1, m), {});
+  const srcN = count("src"), catN = count("cat");
+  $("srcChips").innerHTML = Object.keys(SITES).filter((k) => srcN[k]).map((k) =>
+    `<label class="chip-toggle"><input type="checkbox" id="src-${k}" value="${k}"><span>${SITES[k]} <small>${srcN[k]}</small></span></label>`).join("");
+  $("catChips").innerHTML = Object.keys(CATS).filter((k) => catN[k]).map((k) =>
+    `<label class="chip-toggle"><input type="checkbox" id="cat-${k}" value="${k}" ${state.cat.has(k) ? "checked" : ""}><span>${CATS[k]} <small>${catN[k]}</small></span></label>`).join("");
+  const ufs = [...new Set(ALL.map((x) => x.uf).filter(Boolean))].sort();
+  $("uf").innerHTML = `<option value="">Todos</option>` + ufs.map((u) => `<option>${u}</option>`).join("");
+  const types = Object.entries(count("type")).filter(([t, n]) => t !== "undefined" && n >= 3).sort((a, b) => b[1] - a[1]);
+  $("ptype").innerHTML = `<option value="">Todos</option>` + types.map(([t]) => `<option>${esc(t)}</option>`).join("");
+
+  const rerender = () => { shown = PAGE; render(); };
+  let timer;
+  $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(rerender, 150); });
+  for (const id of ["uf", "ptype", "dmin", "hideEnded", "sort", "pmin", "pmax"]) $(id).addEventListener("change", rerender);
+  $("srcChips").addEventListener("change", rerender);
+  $("catChips").addEventListener("change", rerender);
+  $("more").addEventListener("click", () => { shown += PAGE; render(); });
+  $("reset").addEventListener("click", () => {
+    for (const id of ["q", "uf", "ptype", "pmin", "pmax", "dmin"]) $(id).value = "";
+    $("hideEnded").checked = true;
+    document.querySelectorAll("#srcChips input").forEach((i) => (i.checked = false));
+    document.querySelectorAll("#catChips input").forEach((i) => (i.checked = i.value === "imovel"));
+    rerender();
+  });
+  if (window.matchMedia("(max-width: 900px)").matches) $("filters").open = false;
+}
+
+function start(items, updatedAt, note) {
+  ALL = items.map(enrich);
+  $("freshness").textContent = updatedAt ? `Atualizado ${dLong.format(new Date(updatedAt))}` : "";
+  $("footnote").textContent = note || "";
+  buildControls();
+  render();
+}
+
+function showGate(html) {
+  $("main").innerHTML = `<div class="gate">${html}</div>`;
+  $("filters").hidden = true;
+}
+
+/* ---------- data sources ---------- */
+async function startPreview() {
+  $("previewBadge").hidden = false;
+  try {
+    const r = await fetch("listings.json");
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(d.run_id || "");
+    const when = m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : null;
+    start(d.items, when, "Prévia com os dados de uma coleta real. No app publicado, os dados vêm do Firestore depois do login com Google, e as fotos dos lotes aparecem.");
+  } catch (e) {
+    showGate(`<h1>Não foi possível carregar os dados</h1><p class="error">${esc(e.message)}</p><p>Gere o arquivo com <code>python -m auction_tracker export-web data/&lt;run-id&gt;</code>.</p>`);
+  }
+}
+
+async function startLive(config) {
+  showImages = true;
+  const base = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK}`;
+  const [{ initializeApp }, auth, fs] = await Promise.all([
+    import(`${base}/firebase-app.js`), import(`${base}/firebase-auth.js`), import(`${base}/firebase-firestore.js`),
+  ]);
+  const app = initializeApp(config);
+  const a = auth.getAuth(app);
+  const db = fs.getFirestore(app);
+  const mainHTML = $("main").innerHTML;
+  let loaded = false;
+
+  auth.onAuthStateChanged(a, async (user) => {
+    const box = $("userBox");
+    if (!user) {
+      box.hidden = true;
+      showGate(`<h1>Leilões de 7 sites em uma só lista</h1>
+        <p>Entre com sua conta Google para ver as oportunidades coletadas do Portal Zuk, Biasi, Frazão, Superbid, Picelli, Alfa e PGFN Comprei.</p>
+        <button class="btn btn-primary" id="signin" type="button">Entrar com Google</button>`);
+      $("signin").addEventListener("click", () => auth.signInWithPopup(a, new auth.GoogleAuthProvider()).catch((e) => alert(e.message)));
+      loaded = false;
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML = `<span>${esc(user.displayName || user.email)}</span><button class="btn" id="signout" type="button">Sair</button>`;
+    $("signout").addEventListener("click", () => auth.signOut(a));
+    if (loaded) return;
+    $("main").innerHTML = mainHTML;
+    $("filters").hidden = false;
+    try {
+      const snap = await fs.getDocs(fs.collection(db, "summaries"));
+      let items = [], updated = null;
+      snap.forEach((doc) => {
+        const d = doc.data();
+        items = items.concat(d.items || []);
+        if (!updated || d.updated_at > updated) updated = d.updated_at;
+      });
+      if (!items.length) {
+        showGate(`<h1>Ainda não há dados</h1><p>O Firestore está vazio. Rode <code>python -m auction_tracker scrape --firestore</code> para fazer a primeira carga.</p>`);
+        return;
+      }
+      loaded = true;
+      start(items, updated, `${snap.size} documentos lidos do Firestore.`);
+    } catch (e) {
+      showGate(`<h1>Sem acesso aos dados</h1><p class="error">${esc(e.message)}</p><p>Confira as regras do Firestore (firestore.rules).</p>`);
+    }
+  });
+}
+
+if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey) startLive(window.FIREBASE_CONFIG);
+else startPreview();
+</script>
+</body>
+</html>

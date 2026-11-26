@@ -1,0 +1,1243 @@
+[
+ {
+  "id": "0b929f2c-8cba-40b5-add5-224fa78cbc34",
+  "title": "Terreno com 160m² | Jardim das Flores",
+  "image_url": "https://api.picellileiloes.com.br/storage/v1/object/public/auction-files/0b929f2c-8cba-40b5-add5-224fa78cbc34/featured/imagem2-ytzlk.png",
+  "seller_id": "b1dc3052-bea9-4156-81d2-dd16083f0501",
+  "category_id": null,
+  "auction_type": "Extrajudicial",
+  "closing_format": "Online",
+  "lots_count": 1,
+  "views_count": 94,
+  "interested_count": 0,
+  "bids_count": 0,
+  "proposals_count": 0,
+  "allowed_bid_types": [
+   "lance-vista"
+  ],
+  "is_featured": false,
+  "created_at": "2026-11-17T17:07:39.110176+00:00",
+  "updated_at": "2026-11-26T16:13:27.066976+00:00",
+  "first_call_seconds": 60,
+  "second_call_seconds": 30,
+  "extra_time_seconds": 180,
+  "allows_installment_after_cash": true,
+  "currency": "BRL",
+  "locale": "pt-BR",
+  "lot_interval_minutes": 1,
+  "status": "aberto",
+  "auctioneer_id": "65288197-1c81-48bc-b5ba-e67af00141fd",
+  "code": "051612",
+  "slug": "terreno-com-160m-jardim-das-flores",
+  "redirect_link": null,
+  "stream_url": null,
+  "selected_lot_id": null,
+  "auctioneer_license_id": "6fdcd9d6-1583-40e0-a08a-4917cab63b9e",
+  "active_phase_order": 1,
+  "original_l_id": null,
+  "subtitle": "Hortolândia, SP",
+  "hidden": false,
+  "agentic": false,
+  "auction_location": null,
+  "no_timer": false,
+  "home_tab": "home",
+  "sellers": {
+   "id": "b1dc3052-bea9-4156-81d2-dd16083f0501",
+   "name": "Veccon Empreendimentos",
+   "logo_url": "https://api.picellileiloes.com.br/storage/v1/object/public/site-assets/sellers/1775587500909-bo1epl6n1x.JPG"
+  },
+  "auction_phases": [
+   {
+    "name": "1º Leilão",
+    "end_date": "2026-11-30T20:10:00+00:00",
+    "completed": false,
+    "phase_order": 1
+   },
+   {
+    "name": "2º Leilão",
+    "end_date": "2026-12-07T20:10:00+00:00",
+    "completed": false,
+    "phase_order": 2
+   }
+  ],
+  "lots": [
+   {
+    "id": "37365aed-6ffc-4373-9d0f-5ea477a03f91",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 255058.94
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 138662.18
+     }
+    ],
+    "allows_installment": false
+   }
+  ]
+ },
+ {
+  "id": "2220437e-79f6-4e41-ac71-11e670cf386d",
+  "title": "Chácara de 1.225 m² | Chácaras Fernão Dias",
+  "image_url": "https://api.picellileiloes.com.br/storage/v1/object/public/auction-files/2220437e-79f6-4e41-ac71-11e670cf386d/featured/localiza-o-16-9-rkdui.jpg",
+  "seller_id": "48e566b5-7dfc-46a0-9ba3-16ec1503733e",
+  "category_id": null,
+  "auction_type": "Extrajudicial",
+  "closing_format": "Online",
+  "lots_count": 1,
+  "views_count": 103,
+  "interested_count": 0,
+  "bids_count": 0,
+  "proposals_count": 0,
+  "allowed_bid_types": [
+   "lance-vista"
+  ],
+  "is_featured": false,
+  "created_at": "2026-11-16T20:28:57.021387+00:00",
+  "updated_at": "2026-11-26T17:28:32.310468+00:00",
+  "first_call_seconds": 60,
+  "second_call_seconds": 30,
+  "extra_time_seconds": 180,
+  "allows_installment_after_cash": true,
+  "currency": "BRL",
+  "locale": "pt-BR",
+  "lot_interval_minutes": 1,
+  "status": "aberto",
+  "auctioneer_id": "65288197-1c81-48bc-b5ba-e67af00141fd",
+  "code": "051611",
+  "slug": "af-matr-81242",
+  "redirect_link": null,
+  "stream_url": null,
+  "selected_lot_id": null,
+  "auctioneer_license_id": "6fdcd9d6-1583-40e0-a08a-4917cab63b9e",
+  "active_phase_order": 1,
+  "original_l_id": null,
+  "subtitle": "Bragança Paulista, SP",
+  "hidden": false,
+  "agentic": false,
+  "auction_location": null,
+  "no_timer": false,
+  "home_tab": "home",
+  "sellers": {
+   "id": "48e566b5-7dfc-46a0-9ba3-16ec1503733e",
+   "name": "BID+",
+   "logo_url": "https://api.picellileiloes.com.br/storage/v1/object/public/site-assets/sellers/1768823094590-uzujxmuxh8c.png"
+  },
+  "auction_phases": [
+   {
+    "name": "1º Leilão",
+    "end_date": "2026-11-30T19:00:00+00:00",
+    "completed": false,
+    "phase_order": 1
+   },
+   {
+    "name": "2º Leilão",
+    "end_date": "2026-12-07T19:00:00+00:00",
+    "completed": false,
+    "phase_order": 2
+   }
+  ],
+  "lots": [
+   {
+    "id": "d84c52fb-789c-461c-91ff-d52a2884d4d9",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 1028629.58
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 1358413.51
+     }
+    ],
+    "allows_installment": false
+   }
+  ]
+ },
+ {
+  "id": "133ad7a9-74b8-4995-896a-a87d533c328e",
+  "title": "Leilão de Veículos Antigos & Especiais | Garagem 55 - Dezembro | Transmissão ao vivo ",
+  "image_url": "https://api.picellileiloes.com.br/storage/v1/object/public/auction-files/133ad7a9-74b8-4995-896a-a87d533c328e/featured/leil-o-de-sp-mooca-picelli-w6cbg.jpg",
+  "seller_id": "0be2e681-5e32-4268-9d1d-6fe3c28ca0ad",
+  "category_id": null,
+  "auction_type": "Corporativo",
+  "closing_format": "Presencial e Online",
+  "lots_count": 57,
+  "views_count": 1728,
+  "interested_count": 36,
+  "bids_count": 80,
+  "proposals_count": 0,
+  "allowed_bid_types": [
+   "lance-vista"
+  ],
+  "is_featured": true,
+  "created_at": "2026-11-12T13:04:21.206524+00:00",
+  "updated_at": "2026-11-26T19:19:45.052578+00:00",
+  "first_call_seconds": 30,
+  "second_call_seconds": 15,
+  "extra_time_seconds": 20,
+  "allows_installment_after_cash": true,
+  "currency": "BRL",
+  "locale": "pt-BR",
+  "lot_interval_minutes": 1,
+  "status": "aberto",
+  "auctioneer_id": "65288197-1c81-48bc-b5ba-e67af00141fd",
+  "code": "051603",
+  "slug": "leilao-de-veiculos-antigos-especiais-garagem-55-dezembro-transmissao-ao-vivo",
+  "redirect_link": null,
+  "stream_url": null,
+  "selected_lot_id": null,
+  "auctioneer_license_id": "6fdcd9d6-1583-40e0-a08a-4917cab63b9e",
+  "active_phase_order": 1,
+  "original_l_id": null,
+  "subtitle": "Mooca - São Paulo, SP ",
+  "hidden": false,
+  "agentic": false,
+  "auction_location": "Garagem 55 - R. Borges de Figueiredo, 1098 - Mooca, São Paulo - SP, 03110-001",
+  "no_timer": false,
+  "home_tab": "home",
+  "sellers": {
+   "id": "0be2e681-5e32-4268-9d1d-6fe3c28ca0ad",
+   "name": "Circuito de Leilões ",
+   "logo_url": "https://api.picellileiloes.com.br/storage/v1/object/public/site-assets/sellers/1773683480617-iwmg2h8ochd.JPG"
+  },
+  "auction_phases": [
+   {
+    "name": "Leilão",
+    "end_date": "2026-12-04T17:30:00+00:00",
+    "completed": false,
+    "phase_order": 1
+   }
+  ],
+  "lots": [
+   {
+    "id": "f269daf8-d623-4172-8c98-44f05e1ce2ca",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 22000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "27f9ca67-254b-4e82-ab21-51096c936fde",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 10000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "82258ae8-be7e-489e-a851-0930eb58458f",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 20000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "85aae15f-275a-463f-bea1-8daf76ba372f",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 18000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "0215412a-aed9-457a-aefc-444d5697cbc4",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 70000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "28f1db9f-341a-4e31-8dff-36bfe1614442",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 95000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "57808a2d-128b-4599-beff-a8d1be9f20a6",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 14000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "fabaf278-3f2c-4452-9b8c-b9cb58e66716",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 95000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "82d5f9a3-d3e5-49bf-887f-226b73ed681e",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 20000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "e7aab5df-0c03-4c64-b641-8f7646a4e50b",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 85000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "d7d2654f-8a22-4d60-8731-474ca4e584dd",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 28000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "90fd8de8-83aa-40a6-8519-5f9d988fd777",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 34000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "139045b0-e731-46a2-91b5-34da539b2eb0",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 170000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "cf01e145-b192-4e03-ae16-9ddc326d7c7c",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 35000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "528a77b0-49bb-431b-9212-a5b4b84b8e5c",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 95000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "911a9fea-dfd0-4cbf-91ff-1b126bf5dec4",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 8000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "c4a7bcd6-95a7-4784-95dc-f0321be5999b",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 95000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "fa7526ec-d402-4416-940f-f39e33548ed5",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 80000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "f6b83739-82d0-4f9a-b6b5-4a1eb8ae7b5b",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 15000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "50b9e894-8a0b-42b6-aae0-afd6cc1e5523",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 14000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "b45c4854-5b56-481e-b92e-2441268556bc",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 22000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "c633f5b0-4c92-4537-b8a0-72061232b8ad",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 45000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "c43009da-988f-47e8-8ab0-0fa08cfdd865",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 90000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "b1713232-2b8a-4100-8a68-64337dca7048",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 22000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "a35e4452-dbb5-4797-96c9-3020cb626003",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 8000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "97af37d0-f574-4790-8de9-6ac8774bae07",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 75000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "3d3b8166-ee2b-4e1a-8c4d-b639c1c18fab",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 75000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "24909193-196d-4a01-9302-0552520a2acd",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 30000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "acb647bd-45fe-4da7-8d33-532de41f7775",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 155000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "643c3a9a-03aa-4ff8-a553-1217900b616f",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 350000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "10abd091-f51c-4151-b5ad-bf92f65f4aeb",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 28000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "93b5f830-87fe-4178-9f69-59e0ab4f94d6",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 18000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "6e4c698b-ef8a-46cc-aeaa-a4151ff885b6",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 22000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "21f7134f-5ed9-4277-82b6-7af02bdb0690",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 18000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "56b11b1e-ba49-4bab-95d4-f3a88633b812",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 7000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "1d3e41de-6432-44dc-ba9f-4d4349aadae2",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 40000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "1a6d9c2b-32c9-4e2b-8691-c802f25d88b5",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 10000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "791e92eb-fc70-4b81-a60a-278531a8d93a",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 15000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "a68ea988-f15e-4f95-9ab9-72ed2ee957c6",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 14000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "b51296bb-676b-4ed1-8b90-301363421a80",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 30000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "2c3062f4-ba45-4006-a8e6-27cb02833888",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 95000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "50f358fa-7c3c-4026-ae58-50b2d29cc7aa",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 115000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "9e71d95c-7103-4fe2-be42-e9ca3de64ae7",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 28000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "807a93ac-beb6-435e-b73d-368b27576859",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 80000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "7326fe5e-0e70-4c12-b72b-97c4e5b64505",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 22000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "02203ef3-9270-4035-8d68-c60474c763ae",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 85000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "0992c4fd-c88d-4b36-af00-fb2c4a5cbaea",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 20000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "1052c8ea-b09e-4b09-95ce-17cfbf977109",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 80000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "e316280c-c941-4e9f-b6dc-c1cccd559623",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 18000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "0728e74c-230b-4e39-8a99-8ce8e786c2ee",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 90000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "9899a5ca-1794-4e49-8204-426bc134514a",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 55000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "e14fe5df-a8c5-4bdd-acad-a166052a48ba",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 18000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "f2c75fe9-d080-410f-b111-29827a6cbd86",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 22000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "ab6d971e-19c6-4448-bbe7-4bcd4984e7b5",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 18000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "5e7201c1-a4f9-462e-93a6-790e2ab537ec",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 16000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "13825818-e045-4263-87b5-d7614555d471",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 18000.0
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "ef2fb9a1-48bc-4dae-821d-215fb78a87e1",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 8000.0
+     }
+    ],
+    "allows_installment": false
+   }
+  ]
+ },
+ {
+  "id": "0180bba9-6880-4a2b-aad5-bcac38fa9f57",
+  "title": "Apartamento de 50,470m² | Residencial Viva Vista",
+  "image_url": "https://api.picellileiloes.com.br/storage/v1/object/public/auction-files/0180bba9-6880-4a2b-aad5-bcac38fa9f57/featured/viva-vista-recanto-capa-2ka45.jpg",
+  "seller_id": "32f7cade-61d3-41ff-b0a0-ca58f7b66f31",
+  "category_id": null,
+  "auction_type": "Judicial",
+  "closing_format": "Online",
+  "lots_count": 1,
+  "views_count": 240,
+  "interested_count": 0,
+  "bids_count": 0,
+  "proposals_count": 0,
+  "allowed_bid_types": [
+   "lance-vista"
+  ],
+  "is_featured": false,
+  "created_at": "2026-11-05T15:16:48.956323+00:00",
+  "updated_at": "2026-11-26T17:58:05.046728+00:00",
+  "first_call_seconds": 60,
+  "second_call_seconds": 30,
+  "extra_time_seconds": 180,
+  "allows_installment_after_cash": true,
+  "currency": "BRL",
+  "locale": "pt-BR",
+  "lot_interval_minutes": 1,
+  "status": "aberto",
+  "auctioneer_id": "65288197-1c81-48bc-b5ba-e67af00141fd",
+  "code": "051602",
+  "slug": "apartamento-de-50470m-residencial-viva-vista",
+  "redirect_link": null,
+  "stream_url": null,
+  "selected_lot_id": null,
+  "auctioneer_license_id": "6fdcd9d6-1583-40e0-a08a-4917cab63b9e",
+  "active_phase_order": 2,
+  "original_l_id": null,
+  "subtitle": "Sumaré, SP",
+  "hidden": false,
+  "agentic": false,
+  "auction_location": null,
+  "no_timer": false,
+  "home_tab": "home",
+  "sellers": {
+   "id": "32f7cade-61d3-41ff-b0a0-ca58f7b66f31",
+   "name": "3Z Realty",
+   "logo_url": "https://api.picellileiloes.com.br/storage/v1/object/public/site-assets/sellers/1768823050698-utwvh2ae8f.png"
+  },
+  "auction_phases": [
+   {
+    "name": "1º Leilão",
+    "end_date": "2026-11-17T20:00:00+00:00",
+    "completed": true,
+    "phase_order": 1
+   },
+   {
+    "name": "2º Leilão",
+    "end_date": "2026-11-27T20:00:00+00:00",
+    "completed": false,
+    "phase_order": 2
+   }
+  ],
+  "lots": [
+   {
+    "id": "d4bdfcc5-e515-46f5-96eb-7c8330160060",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 2,
+      "announced_value": 518489.47
+     },
+     {
+      "phase_order": 1,
+      "announced_value": 293808.41
+     }
+    ],
+    "allows_installment": false
+   }
+  ]
+ },
+ {
+  "id": "e64f91d2-c828-4d2a-852b-73e6fe50eae6",
+  "title": "Imóveis Residenciais e Rurais | Alienação fiduciária | BB Adm de Consórcios | BB11",
+  "image_url": "https://api.picellileiloes.com.br/storage/v1/object/public/auction-files/e64f91d2-c828-4d2a-852b-73e6fe50eae6/featured/capa-w0r7f.jpg",
+  "seller_id": "3d5f9625-59e9-452d-8db8-7905d147ae93",
+  "category_id": null,
+  "auction_type": "Extrajudicial",
+  "closing_format": "Presencial e Online",
+  "lots_count": 17,
+  "views_count": 1192,
+  "interested_count": 63,
+  "bids_count": 101,
+  "proposals_count": 0,
+  "allowed_bid_types": [
+   "lance-vista"
+  ],
+  "is_featured": true,
+  "created_at": "2026-10-29T15:25:43.209525+00:00",
+  "updated_at": "2026-11-26T19:19:52.462054+00:00",
+  "first_call_seconds": 20,
+  "second_call_seconds": 20,
+  "extra_time_seconds": 20,
+  "allows_installment_after_cash": true,
+  "currency": "BRL",
+  "locale": "pt-BR",
+  "lot_interval_minutes": 1,
+  "status": "encerrado",
+  "auctioneer_id": "65288197-1c81-48bc-b5ba-e67af00141fd",
+  "code": "051599",
+  "slug": "imoveis-residenciais-e-rurais-alienacao-fiduciaria-bb-adm-de-consorcios-bb11",
+  "redirect_link": null,
+  "stream_url": "https://www.youtube.com/embed/XPlZWuf9PEc?si=mwl5evaksGPLf8gg",
+  "selected_lot_id": "8c193bb6-27c9-418d-85ac-aea6321b4645",
+  "auctioneer_license_id": "6fdcd9d6-1583-40e0-a08a-4917cab63b9e",
+  "active_phase_order": 2,
+  "original_l_id": null,
+  "subtitle": "SP, ES, MG, GO, MS, MT, CE, MA e PR ",
+  "hidden": false,
+  "agentic": false,
+  "auction_location": null,
+  "no_timer": false,
+  "home_tab": "home",
+  "sellers": {
+   "id": "3d5f9625-59e9-452d-8db8-7905d147ae93",
+   "name": "BB ADMINISTRADORA DE CONSORCIOS S.A.",
+   "logo_url": "https://api.picellileiloes.com.br/storage/v1/object/public/site-assets/sellers/1768823080409-afj5kd3yf6.png"
+  },
+  "auction_phases": [
+   {
+    "name": "1º Leilão",
+    "end_date": "2026-11-17T17:00:00+00:00",
+    "completed": true,
+    "phase_order": 1
+   },
+   {
+    "name": "2º Leilão",
+    "end_date": "2026-11-26T17:00:00+00:00",
+    "completed": true,
+    "phase_order": 2
+   }
+  ],
+  "lots": [
+   {
+    "id": "8c193bb6-27c9-418d-85ac-aea6321b4645",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 2,
+      "announced_value": 83288.83
+     },
+     {
+      "phase_order": 1,
+      "announced_value": 175607.38
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "4d4a6363-19dd-4f30-b2a1-45f225727d92",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 3871034.27
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 874923.64
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "7be8ebff-788f-4f5b-8751-f233c849df37",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 470336.5
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 207726.76
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "2f3adfe9-eeac-42da-a9b6-8416bed6017e",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 82729.44
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 89692.49
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "5d4f5d5c-6ebc-4fcb-968c-ef90f0139f1a",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 2,
+      "announced_value": 186566.87
+     },
+     {
+      "phase_order": 1,
+      "announced_value": 190548.99
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "7c5cd5ea-3dff-42a7-bd69-264f535497df",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 650312.27
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 1513497.76
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "85a5d297-0f6f-4efa-9aef-d8f71d846739",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 709982.5
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 90780.38
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "66014d0c-c138-4a4c-82de-fc525e89b6f2",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 435930.09
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 184377.37
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "a0704843-f59b-4352-be3c-90287f963472",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 2,
+      "announced_value": 71880.3
+     },
+     {
+      "phase_order": 1,
+      "announced_value": 87232.78
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "8f29c491-7ee7-4a98-bf96-81ed43cb536d",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 300535.98
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 230324.7
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "d3c94b41-f6eb-4a79-b160-9dda06692346",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 1133451.91
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 536988.45
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "692d61fe-a0af-4439-86b5-30d8e7ae368e",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 521199.63
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 296667.5
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "7b8f36cf-2ca6-4309-acde-78d125d414bd",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 247125.57
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 279872.46
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "7f45e00a-ee09-4fcf-8380-2d32e0097b78",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 2,
+      "announced_value": 793930.54
+     },
+     {
+      "phase_order": 1,
+      "announced_value": 882182.07
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "342c3510-97cb-478d-aac1-42b38e0826f4",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 113673.9
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 100741.78
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "e6af39fd-4a5d-48ca-87ad-fd758f0668b0",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 193358.1
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 157413.4
+     }
+    ],
+    "allows_installment": false
+   },
+   {
+    "id": "730927bf-dd50-4ccc-b5c4-41e325d21228",
+    "hidden": false,
+    "lot_phases": [
+     {
+      "phase_order": 1,
+      "announced_value": 672229.26
+     },
+     {
+      "phase_order": 2,
+      "announced_value": 349764.93
+     }
+    ],
+    "allows_installment": false
+   }
+  ]
+ }
+]

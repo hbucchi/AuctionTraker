@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# scrape output (goes to the database, not to git)
+data/
+# credentials — never commit
+*.json.key
+service-account*.json
+*firebase-adminsdk*.json
+*-adminsdk-*.json
+.env
+# exported preview data (scraped listings)
+web/listings.json
