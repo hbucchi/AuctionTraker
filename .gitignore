@@ -7,4 +7,8 @@ data/
 # credentials — never commit
 *.json.key
 service-account*.json
+*firebase-adminsdk*.json
+*-adminsdk-*.json
 .env
+# exported preview data (scraped listings)
+web/listings.json

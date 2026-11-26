@@ -33,6 +33,34 @@ Output: `data/<run-id>/<site>.jsonl` (one listing per line) and
 `data/<run-id>/report.json` (health of each scraper). The exit code is 1 if
 any site failed.
 
+## Web app and Firebase
+
+`web/index.html` is the dashboard. On Firebase Hosting it asks for Google
+sign-in, then reads the `summaries` collection from Firestore. Without a
+Firebase config, it runs as a preview from `web/listings.json`.
+
+```
+firebase.json / .firebaserc   hosting (folder web/) + Firestore rules, project "auctiontraker"
+firestore.rules               signed-in users read; browsers can never write
+web/firebase-config.js        public web config (safe to commit)
+.github/workflows/scrape.yml  daily scrape + upload to Firestore
+```
+
+Who holds which key:
+
+| Key | Where it lives | Safe to share? |
+|---|---|---|
+| Web config (`apiKey`, `projectId`...) | `web/firebase-config.js`, in the repo | Yes, it only identifies the project |
+| Service-account JSON key | GitHub secret `FIREBASE_SERVICE_ACCOUNT` only | **No**, it's full admin access. Never in the repo, the website or a chat |
+
+Deploy the site and the security rules from your computer:
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase deploy --only hosting,firestore:rules
+```
+
 ## The data model
 
 Every site maps into `auction_tracker.models.Listing`. Its main fields:

@@ -96,7 +96,8 @@ def offer_to_listing(o: dict[str, Any], links: dict[str, str], category: str) ->
         source="superbid",
         source_id=oid,
         url=links.get(oid, f"https://exchange.superbid.net/oferta/{oid}"),
-        title=clean(product.get("shortDesc")) or oid,
+        # Superbid's own data has "¿" where a dash was lost to an encoding bug on their side
+        title=clean((product.get("shortDesc") or "").replace(" ¿ ", " – ")) or oid,
         category=category,
         property_type=clean(sub.get("description")),
         modality=clean(auction.get("modalityDesc")),

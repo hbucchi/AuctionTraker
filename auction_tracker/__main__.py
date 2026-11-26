@@ -4,6 +4,8 @@
     python -m auction_tracker scrape                 # every site
     python -m auction_tracker scrape zuk alfa        # some sites
     python -m auction_tracker scrape --max-pages 1   # quick smoke test
+    python -m auction_tracker scrape --firestore     # also upload to Firestore
+    python -m auction_tracker export-web data/<run-id> web/listings.json
 
 Output goes to data/<run-id>/<site>.jsonl plus data/<run-id>/report.json;
 data/latest_report.json always holds the most recent report.
@@ -49,6 +51,11 @@ def cmd_scrape(args: argparse.Namespace) -> int:
     data_dir = Path(args.out)
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     sink = JsonlSink(data_dir / run_id)
+    fs = None
+    if args.firestore:
+        from .storage.firestore import FirestoreSink
+
+        fs = FirestoreSink(project_id=args.project)
     prev = _previous_counts(data_dir)
     reports = []
 
@@ -73,6 +80,9 @@ def cmd_scrape(args: argparse.Namespace) -> int:
             limited=args.max_pages is not None,
             reported_total=scraper.reported_total,
         )
+        if fs is not None and listings and rep.status != "FAIL":
+            # a WARN run still uploads (data is usable); a FAIL keeps yesterday's data
+            fs.write(name, listings)
         reports.append(rep)
         print(f"{rep.status:4} {name:9} {rep.count:6} listings  {rep.seconds:6.1f}s  {'; '.join(rep.reasons)}")
 
@@ -84,8 +94,31 @@ def cmd_scrape(args: argparse.Namespace) -> int:
     text = json.dumps(summary, ensure_ascii=False, indent=2)
     (data_dir / run_id / "report.json").write_text(text)
     (data_dir / "latest_report.json").write_text(text)
+    if fs is not None:
+        fs.write_report(run_id, summary)
     print(f"\nwrote {data_dir / run_id}")
     return 1 if any(r.status == "FAIL" for r in reports) else 0
+
+
+def cmd_export_web(args: argparse.Namespace) -> int:
+    """Concatenate a run's JSONL files into the compact JSON the web app reads."""
+    from .summary import from_dict
+
+    run_dir = Path(args.run_dir)
+    items = []
+    for f in sorted(run_dir.glob("*.jsonl")):
+        with f.open(encoding="utf-8") as fh:
+            items += [from_dict(json.loads(line)) for line in fh if line.strip()]
+    run_id = run_dir.name
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8") as fh:
+        # one record per line keeps the file diff- and grep-friendly
+        fh.write('{"run_id": %s, "items": [\n' % json.dumps(run_id))
+        fh.write(",\n".join(json.dumps(i, ensure_ascii=False, separators=(",", ":")) for i in items))
+        fh.write("\n]}\n")
+    print(f"wrote {len(items)} listings to {out} ({out.stat().st_size // 1024} KB)")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,6 +130,11 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("sites", nargs="*", help=f"subset of: {', '.join(REGISTRY)}")
     sp.add_argument("--max-pages", type=int, default=None, help="cap pages per site (smoke test)")
     sp.add_argument("--out", default="data", help="output directory (default: data)")
+    sp.add_argument("--firestore", action="store_true", help="also upload to Firestore")
+    sp.add_argument("--project", default="auctiontraker", help="Firebase project id")
+    ep = sub.add_parser("export-web", help="build the web app's data file from a run")
+    ep.add_argument("run_dir")
+    ep.add_argument("out", nargs="?", default="web/listings.json")
     args = ap.parse_args(argv)
 
     logging.basicConfig(
@@ -107,6 +145,8 @@ def main(argv: list[str] | None = None) -> int:
         for name, cls in REGISTRY.items():
             print(f"{name:9} {cls.base_url}")
         return 0
+    if args.cmd == "export-web":
+        return cmd_export_web(args)
     return cmd_scrape(args)
 
 

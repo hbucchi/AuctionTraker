@@ -1,0 +1,57 @@
+"""Compact listing format for the web app.
+
+Firestore bills per document read. If the dashboard loaded every listing as
+its own document, one page view would cost ~4 000 reads (free tier: 50 000
+reads/day). Instead each scraper run also writes summary documents holding a
+compact copy of all of a site's listings, so a page view costs ~8 reads.
+Firestore documents are limited to 1 MiB, so the summary keeps only what the
+list view needs (~550 bytes per listing) and large sites are split across
+several documents (Superbid: ~850 KB -> 2 parts).
+
+Firestore can't store arrays directly inside arrays, which is why ``rounds``
+is a list of small maps rather than a list of lists.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from .models import Listing
+
+TITLE_MAX = 160
+MAX_DOC_BYTES = 800_000  # per summary document; Firestore's hard limit is 1 MiB
+
+
+def to_summary(x: Listing) -> dict[str, Any]:
+    d: dict[str, Any] = {
+        "id": x.id,
+        "src": x.source,
+        "url": x.url,
+        "title": (x.title or "")[:TITLE_MAX],
+        "cat": x.category,
+        "type": x.property_type,
+        "mod": x.modality,
+        "status": x.status,
+        "seller": x.seller,
+        "city": x.city,
+        "uf": x.state,
+        "hood": x.neighborhood,
+        "area": x.area_m2,
+        "appraisal": x.appraisal_value,
+        "price": x.current_price,
+        "disc": x.discount_pct,
+        "end": x.end_date,
+        "img": x.image_url,
+        "bids": x.bids_count,
+        "rounds": [{"n": r.number, "d": r.date, "v": r.min_bid} for r in x.rounds],
+    }
+    return {k: v for k, v in d.items() if v not in (None, [], "")}
+
+
+def from_dict(d: dict[str, Any]) -> dict[str, Any]:
+    """Same as to_summary, from a Listing.to_dict() row (e.g. a JSONL line)."""
+    from .models import AuctionRound
+
+    rounds = [AuctionRound(**r) for r in d.get("rounds") or []]
+    fields = {k: v for k, v in d.items() if k in Listing.__dataclass_fields__ and k != "rounds"}
+    return to_summary(Listing(**fields, rounds=rounds))
