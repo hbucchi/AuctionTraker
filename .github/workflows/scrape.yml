@@ -38,10 +38,12 @@ jobs:
       - name: Offline tests
         run: python -m pytest -q
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Write service-account credentials
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          python3 scripts/write_credentials.py "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
 
       - name: Scrape and upload to Firestore
         run: python -m auction_tracker scrape --firestore --project auctiontraker
@@ -53,3 +55,7 @@ jobs:
           name: scrape-report
           path: data/latest_report.json
           retention-days: 30
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
