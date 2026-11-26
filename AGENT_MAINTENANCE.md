@@ -62,6 +62,18 @@ Commit with a message like `fix(frazao): new card markup for price` and
 summarize for the user: which sites were OK, what broke, what you changed, and
 anything you couldn't fix.
 
+## Reference data and strategies
+
+- Once a month: `python scripts/build_reference_data.py --fipezap` (new
+  FipeZAP month) and commit `auction_tracker/data/fipezap.json`. Once a year,
+  run it without `--fipezap` to pick up new IBGE GDP data.
+- If you change how a strategy rule works, change BOTH
+  `auction_tracker/strategy.py` and `web/strategy.js`, and add a case to
+  `tests/strategy_cases.json`. `pytest` runs the cases against both.
+- If an enrichment field's coverage drops (market value, bedrooms, debts),
+  check `auction_tracker/enrich.py` and the site's scraper; users' alerts
+  depend on these fields.
+
 ## Baselines (2026-11-26)
 
 | site | listings | notes |

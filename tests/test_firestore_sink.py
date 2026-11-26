@@ -44,7 +44,14 @@ class FakeCollection:
     def document(self, doc_id):
         return FakeDoc(self.store, self.name, doc_id)
 
-    def where(self, field, op, value):
+    def stream(self):
+        for k in list(self.store.get(self.name, {})):
+            yield FakeDoc(self.store, self.name, k)
+
+    def where(self, filter):
+        field = getattr(filter, "field_path", None) or filter[0]
+        op = getattr(filter, "op_string", None) or filter[1]
+        value = getattr(filter, "value", None) if hasattr(filter, "value") else filter[2]
         assert op == "=="
         return FakeQuery(self.store, self.name, field, value)
 

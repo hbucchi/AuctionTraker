@@ -19,7 +19,7 @@ from __future__ import annotations
 from typing import Any, Iterator
 
 from ..models import Listing
-from ..parsing import clean, guess_category, guess_property_type, split_city_uf
+from ..parsing import clean, debts_on_buyer, guess_category, guess_property_type, parse_bedrooms, split_city_uf
 from .base import BaseScraper
 
 BASE = "https://comprei.pgfn.gov.br"
@@ -37,6 +37,12 @@ def item_to_listing(x: dict[str, Any]) -> Listing:
         neighborhood = clean(head.rsplit(",", 1)[-1])
     title = clean((x.get("titulo") or "").strip("-_ ")) or f"Anúncio {x['id']}"
     imgs = x.get("imagensAnuncio") or []
+    # descricao is free text written by the broker; we read it for the debts
+    # clause and bedrooms but never store it (it carries contact details)
+    from bs4 import BeautifulSoup
+
+    desc = BeautifulSoup(x.get("descricao") or "", "lxml").get_text(" ")
+    debts = debts_on_buyer(desc)
     return Listing(
         source="pgfn",
         source_id=str(x["id"]),
@@ -57,6 +63,9 @@ def item_to_listing(x: dict[str, Any]) -> Listing:
         end_date=_br_to_iso(x.get("prazoParaEncerramento")),
         image_url=f"{API}/imagem/anuncio/{imgs[0]}" if imgs else None,
         bids_count=x.get("qtdPropostas"),
+        bedrooms=parse_bedrooms(f"{title} {desc}"),
+        buyer_pays_debts=debts,
+        debts_source="descrição do anúncio" if debts is not None else None,
         extra={
             "asset_id": x.get("idBem"),
             "registry_number": x.get("matriculaBem"),

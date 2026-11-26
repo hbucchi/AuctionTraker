@@ -60,6 +60,23 @@ class Listing:
     # --- timing -------------------------------------------------------
     end_date: str | None = None    # ISO 8601: when bidding (or the last round) closes
 
+    # --- property & deal details (filled by scrapers when the site shows them)
+    bedrooms: int | None = None
+    buyer_pays_debts: bool | None = None   # condo/IPTU debts on the buyer (arrematante)?
+    debts_source: str | None = None        # where buyer_pays_debts came from
+
+    # --- enrichment (auction_tracker/enrich.py; derived, not scraped) ----
+    kind: str | None = None                # casa | casa_condominio | apartamento | comercial | terreno | rural | galpao | outros
+    modality_norm: str | None = None       # judicial | extrajudicial | venda_direta
+    market_value: float | None = None      # estimated market value, BRL
+    market_value_source: str | None = None # "avaliação" | "FipeZAP <city> <yyyy-mm>"
+    price_to_market_pct: float | None = None   # current_price / market_value * 100
+    city_population: int | None = None
+    city_gdp_per_capita: float | None = None
+    city_idhm: float | None = None
+    city_agro_share: float | None = None
+    city_capital: bool | None = None
+
     # --- extras -------------------------------------------------------
     image_url: str | None = None
     bids_count: int | None = None

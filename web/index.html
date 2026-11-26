@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Layout: sticky filter rail on the left, scannable lot rows on the right; one column on phones. */
+/* Layout: sticky filter rail + scannable lot rows; a second tab holds the user's saved strategies. */
 :root {
   --bg: #f3f5f8;
   --surface: #ffffff;
@@ -45,13 +45,14 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font: 14px/1.45 var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 a { color: inherit; }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 body::before {
@@ -62,16 +63,23 @@ body::before {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
   background: var(--surface); border-bottom: 1px solid var(--line);
 }
-.topbar-inner, .page {
+.topbar-inner, .page, .single {
   max-width: 1280px; margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.topbar-inner { display: flex; align-items: center; gap: 16px; padding-block: 12px; flex-wrap: wrap; }
+.topbar-inner { display: flex; align-items: center; gap: 8px 16px; padding-block: 10px; flex-wrap: wrap; }
 .wordmark { font: 700 20px/1 var(--font-display); letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
 .wordmark svg { color: var(--accent); }
 .freshness { color: var(--muted); font-size: 13px; }
 .spacer { flex: 1; }
+.tabs { display: flex; gap: 4px; }
+.tab {
+  border: 0; background: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--muted);
+  display: inline-flex; gap: 6px; align-items: center;
+}
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.tab .count-badge { background: var(--accent); color: var(--surface); border-radius: 999px; font-size: 11px; padding: 1px 6px; }
 .badge-preview {
   font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
   color: var(--warn); background: var(--warn-soft); padding: 4px 8px; border-radius: 999px;
@@ -83,9 +91,12 @@ body::before {
 }
 .btn:hover { border-color: var(--accent); }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn-danger { color: var(--bad); }
+.btn-sm { padding: 5px 10px; font-size: 13px; }
 .user { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
 
 .page { padding-block: 20px 48px; display: grid; gap: 20px; grid-template-columns: 280px minmax(0, 1fr); align-items: start; }
+.single { padding-block: 20px 48px; display: grid; gap: 16px; }
 @media (max-width: 900px) { .page { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---- filters ---- */
@@ -102,12 +113,12 @@ body::before {
 .filters summary::-webkit-details-marker { display: none; }
 .filters summary .count { font: 500 13px var(--font-body); color: var(--muted); }
 .filter-body { display: grid; gap: 16px; padding: 0 16px 16px; }
-.field { display: grid; gap: 6px; }
-.field > label, .field > .label {
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > label, .field > .label, .label {
   font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
 }
-.input, select.input {
-  width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px;
+.input, select.input, textarea.input {
+  width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; min-width: 0;
 }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -136,14 +147,16 @@ body::before {
 .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .toolbar .result-count { font-weight: 600; }
 .toolbar select { width: auto; }
+.banner {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-radius: var(--radius);
+  background: var(--accent-soft); color: var(--accent); font-weight: 500;
+}
 
 /* ---- lot rows ---- */
 .list { display: grid; gap: 10px; }
-.lot {
-  display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 14px; align-items: start;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px;
-}
-@media (max-width: 640px) { .lot { grid-template-columns: 64px minmax(0, 1fr); } .lot .price-col { grid-column: 1 / -1; text-align: left; justify-items: start; } }
+.lot { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.lot-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 12px; }
+@media (max-width: 640px) { .lot-row { grid-template-columns: 64px minmax(0, 1fr); } .lot-row .price-col { grid-column: 1 / -1; text-align: left; justify-items: start; } }
 .thumb {
   width: 100%; aspect-ratio: 4 / 3; border-radius: 8px; background: var(--accent-soft); color: var(--accent);
   display: grid; place-items: center; overflow: hidden; font: 700 13px var(--font-display); max-width: 100%;
@@ -153,9 +166,12 @@ body::before {
 .lot-title { font-weight: 600; font-size: 15px; line-height: 1.3; text-decoration: none; overflow-wrap: anywhere; }
 .lot-title:hover { color: var(--accent); text-decoration: underline; }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--muted); font-size: 13px; }
-.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
 .tag.src { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 500; }
+.tag.good { color: var(--good); background: var(--good-soft); border-color: transparent; }
+.tag.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.tag.new { color: var(--surface); background: var(--accent); border-color: transparent; font-weight: 600; }
 .rounds { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
 .round b { font-weight: 600; }
 .round.past { color: var(--muted); text-decoration: line-through; }
@@ -167,6 +183,14 @@ body::before {
 .pill.warn { color: var(--warn); background: var(--warn-soft); }
 .pill.bad { color: var(--bad); background: var(--bad-soft); }
 .pill.mute { color: var(--muted); background: var(--bg); }
+.dd-toggle { font-size: 12px; }
+
+/* ---- due diligence ---- */
+.dd { border-top: 1px solid var(--line); padding: 12px 12px 14px; display: grid; gap: 10px; }
+.dd-item { display: grid; gap: 4px; }
+.dd-item .check { font-size: 14px; }
+.dd-help { color: var(--muted); font-size: 12px; margin-left: 26px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.dd-help a { color: var(--accent); }
 
 .more { justify-self: center; }
 .empty, .gate {
@@ -177,6 +201,33 @@ body::before {
 .gate p { margin: 0; max-width: 52ch; }
 .notice { font-size: 13px; color: var(--muted); }
 .error { color: var(--bad); }
+
+/* ---- strategies ---- */
+.st-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.st-head h1 { font: 700 24px/1.2 var(--font-display); margin: 0; }
+.st-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.st-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; align-content: start; }
+.st-card h2 { font: 600 17px/1.25 var(--font-display); margin: 0; overflow-wrap: anywhere; }
+.st-nums { display: flex; gap: 16px; flex-wrap: wrap; }
+.st-nums b { font: 700 22px/1 var(--font-display); display: block; }
+.st-nums span { color: var(--muted); font-size: 12px; }
+.st-crit { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.st-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.editor { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); display: grid; }
+.editor-top { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 16px; border-bottom: 1px solid var(--line); position: sticky; top: calc(env(safe-area-inset-top, 0px) + 58px); background: var(--surface); z-index: 2; border-radius: var(--radius) var(--radius) 0 0; }
+.editor-top .input { max-width: 420px; font-weight: 600; }
+.live-count { font-weight: 600; color: var(--accent); }
+.ed-group { padding: 16px; border-bottom: 1px solid var(--line); display: grid; gap: 14px; }
+.ed-group h3 { font: 600 15px var(--font-display); margin: 0; }
+.ed-grid { display: grid; gap: 14px 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.range { display: grid; gap: 6px; }
+.range .minmax { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.range .unit { font-size: 12px; color: var(--muted); }
+.help { font-size: 12px; color: var(--muted); }
+.ed-foot { display: flex; gap: 8px; flex-wrap: wrap; padding: 16px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg label { padding: 6px 10px; cursor: pointer; font-size: 13px; display: flex; gap: 6px; align-items: center; }
+.seg input:checked + span { color: var(--accent); font-weight: 600; }
 @media (prefers-reduced-motion: no-preference) { .lot { transition: border-color .15s; } .lot:hover { border-color: var(--accent); } }
 </style>
 <!-- preview:strip-below -->
@@ -188,6 +239,10 @@ body::before {
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 3.5l6 6-2.2 2.2-6-6 2.2-2.2zM9.8 8.2l6 6-2.3 2.3-6-6 2.3-2.3zM12 9.6l-8.6 8.6a1.6 1.6 0 002.3 2.3l8.6-8.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M13 21h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       AuctionTraker
     </div>
+    <nav class="tabs" role="tablist" id="tabs" hidden>
+      <button class="tab" role="tab" id="tab-lots" aria-selected="true" type="button">Oportunidades</button>
+      <button class="tab" role="tab" id="tab-strategies" aria-selected="false" type="button">Estratégias <span class="count-badge" id="newBadge" hidden></span></button>
+    </nav>
     <span class="freshness" id="freshness"></span>
     <span class="spacer"></span>
     <span class="badge-preview" id="previewBadge" hidden>Prévia</span>
@@ -195,7 +250,9 @@ body::before {
   </div>
 </header>
 
-<div class="page" id="app">
+<div class="single" id="gateView" hidden></div>
+
+<div class="page" id="lotsView" hidden>
   <details class="filters" id="filters" open>
     <summary>Filtros <span class="count" id="activeCount"></span></summary>
     <div class="filter-body">
@@ -242,11 +299,13 @@ body::before {
         </select>
       </div>
       <label class="check"><input type="checkbox" id="hideEnded" checked> Ocultar encerrados</label>
+      <label class="check"><input type="checkbox" id="onlyReview"> Só imóveis em análise</label>
       <button class="link-btn" id="reset" type="button">Limpar filtros</button>
     </div>
   </details>
 
   <main class="main" id="main">
+    <div class="banner" id="stBanner" hidden></div>
     <section class="stats" id="stats" aria-label="Resumo"></section>
     <div class="toolbar">
       <span class="result-count" id="resultCount"></span>
@@ -254,6 +313,7 @@ body::before {
       <label for="sort" class="notice">Ordenar</label>
       <select class="input" id="sort">
         <option value="ending">Encerra primeiro</option>
+        <option value="ptm">Menor % do mercado</option>
         <option value="discount">Maior desconto</option>
         <option value="priceAsc">Menor preço</option>
         <option value="priceDesc">Maior preço</option>
@@ -265,8 +325,12 @@ body::before {
   </main>
 </div>
 
+<div class="single" id="strategiesView" hidden></div>
+
 <script src="firebase-config.js"></script>
 <script type="module">
+import { matchesStrategy, nextDeadline } from "./strategy.js";
+
 const FIREBASE_SDK = "13.4.0";
 const PAGE = 40;
 const SITES = {
@@ -277,27 +341,34 @@ const CATS = { imovel: "Imóveis", veiculo: "Veículos", outros: "Outros" };
 const TZ = "America/Sao_Paulo";
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const brlShort = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact", maximumFractionDigits: 1 });
+const numShort = new Intl.NumberFormat("pt-BR", { notation: "compact", maximumFractionDigits: 1 });
 const dShort = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: TZ });
 const dLong = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: TZ });
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const safeUrl = (u) => (typeof u === "string" && /^https:\/\//.test(u) ? u : "#");
+const fold = (s) => String(s ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
+let SPEC = null;
 let ALL = [];
 let shown = PAGE;
 let showImages = false;
+let store = null;               // persistence: Firestore (live) or this browser (preview)
+let USER = { strategies: [], checklists: {}, alertState: {}, email: null };
+let activeStrategy = null;      // strategy applied to the list
+let editing = null;             // strategy being edited (a copy)
+const openDD = new Set();       // lots with the due-diligence panel open
 const NOW = Date.now();
+const NOW_S = NOW / 1000;
 const DAY = 86400000;
 
 /* ---------- derived fields ---------- */
 function enrich(x) {
   const rounds = (x.rounds || []).map((r) => ({ ...r, t: r.d ? Date.parse(r.d) : NaN }));
-  const upcoming = rounds.find((r) => r.t >= NOW);
+  const nd = nextDeadline(x, NOW_S);
   const endT = x.end ? Date.parse(x.end) : NaN;
-  const nextT = upcoming ? upcoming.t : endT;
   const proposals = /proposta/i.test(x.status || "");
   const ended = !Number.isNaN(endT) && endT < NOW && !proposals;
-  // discount vs appraisal when known; otherwise vs the 1st round (common in 2-round auctions)
   let disc = x.disc ?? (x.appraisal && x.price ? 100 * (1 - x.price / x.appraisal) : null);
   let discBasis = "da avaliação";
   if (disc == null && rounds.length > 1 && rounds[0].v && x.price && rounds[0].v > x.price) {
@@ -305,27 +376,28 @@ function enrich(x) {
     discBasis = "vs 1ª praça";
   }
   const hay = [x.title, x.city, x.uf, x.hood, x.seller, x.type, SITES[x.src]].join(" ");
-  return { ...x, rounds, nextT, endT, ended, proposals, disc: disc == null ? null : Math.round(disc), discBasis,
-           hay: hay.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase() };
+  return { ...x, rounds, nextT: nd == null ? NaN : nd * 1000, endT, ended, proposals,
+           disc: disc == null ? null : Math.round(disc), discBasis, hay: fold(hay) };
 }
 
-/* ---------- filters ---------- */
-const state = { q: "", src: new Set(), cat: new Set(["imovel"]), uf: "", ptype: "", pmin: null, pmax: null, dmin: null, hideEnded: true, sort: "ending" };
+/* ---------- quick filters (sidebar) ---------- */
+const state = { q: "", src: new Set(), cat: new Set(["imovel"]), uf: "", ptype: "", pmin: null, pmax: null, dmin: null, hideEnded: true, onlyReview: false, sort: "ending" };
 
 function readControls() {
-  state.q = $("q").value.trim().normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  state.q = fold($("q").value.trim());
   state.uf = $("uf").value;
   state.ptype = $("ptype").value;
   state.pmin = $("pmin").value ? Number($("pmin").value) : null;
   state.pmax = $("pmax").value ? Number($("pmax").value) : null;
   state.dmin = $("dmin").value ? Number($("dmin").value) : null;
   state.hideEnded = $("hideEnded").checked;
+  state.onlyReview = $("onlyReview").checked;
   state.sort = $("sort").value;
   state.src = new Set([...document.querySelectorAll("#srcChips input:checked")].map((i) => i.value));
   state.cat = new Set([...document.querySelectorAll("#catChips input:checked")].map((i) => i.value));
 }
 
-function matches(x) {
+function quickMatch(x) {
   if (state.src.size && !state.src.has(x.src)) return false;
   if (state.cat.size && !state.cat.has(x.cat || "outros")) return false;
   if (state.uf && x.uf !== state.uf) return false;
@@ -334,18 +406,27 @@ function matches(x) {
   if (state.pmax != null && !(x.price <= state.pmax)) return false;
   if (state.dmin != null && !(x.disc >= state.dmin)) return false;
   if (state.hideEnded && x.ended) return false;
+  if (state.onlyReview && !USER.checklists[ckKey(x.id)]) return false;
   if (state.q && !state.q.split(/\s+/).every((w) => x.hay.includes(w))) return false;
   return true;
 }
 
 const SORTS = {
   ending: (a, b) => (isNaN(a.nextT) ? 1 : 0) - (isNaN(b.nextT) ? 1 : 0) || (a.nextT < NOW) - (b.nextT < NOW) || a.nextT - b.nextT,
+  ptm: (a, b) => (a.ptm ?? Infinity) - (b.ptm ?? Infinity),
   discount: (a, b) => (b.disc ?? -1) - (a.disc ?? -1),
   priceAsc: (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
   priceDesc: (a, b) => (b.price ?? -1) - (a.price ?? -1),
 };
 
-/* ---------- rendering ---------- */
+/* ---------- "new" listings from the alert job ---------- */
+function newIds() {
+  const ids = new Set();
+  for (const s of Object.values(USER.alertState.strategies || {})) for (const id of s.new || []) ids.add(id);
+  return ids;
+}
+
+/* ---------- lot rendering ---------- */
 function deadline(x) {
   const t = x.nextT;
   if (isNaN(t)) return x.status ? `<span class="pill mute">${esc(x.status)}</span>` : "";
@@ -359,33 +440,109 @@ function deadline(x) {
 
 function initials(x) {
   const t = x.type || CATS[x.cat] || "Lote";
-  return esc(t.replace(/\p{M}/gu, "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "L");
+  return esc(t.replace(/[^A-Za-zÀ-ú ]/g, "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "L");
 }
 
-function lotHTML(x) {
+function ptmPill(x) {
+  if (x.ptm == null) return "";
+  const cls = x.ptm <= 50 ? "good" : x.ptm <= 70 ? "warn" : "mute";
+  const est = x.mvo ? "" : " (estimativa)";
+  return `<span class="pill ${cls}" title="Valor de mercado ${brl.format(x.mv)} — fonte: ${esc(x.mvs)}">Lance = ${Math.round(x.ptm)}% do mercado${est}</span>`;
+}
+
+function cityLine(x) {
+  const bits = [];
+  if (x.pop) bits.push(`${numShort.format(x.pop)} hab.`);
+  if (x.idhm) bits.push(`IDH-M ${x.idhm.toFixed(3).replace(".", ",")}`);
+  if (x.gdppc) bits.push(`PIB pc ${brlShort.format(x.gdppc)}`);
+  if (x.agro != null && x.agro >= 10) bits.push(`agro ${Math.round(x.agro)}%`);
+  if (x.cap) bits.push("capital");
+  return bits.length ? `<span title="IBGE / PNUD">${bits.join(" · ")}</span>` : "";
+}
+
+function lotHTML(x, isNew) {
   const where = [x.hood, x.city && x.uf ? `${x.city}/${x.uf}` : x.city || x.uf].filter(Boolean).join(", ");
   const rounds = x.rounds.length > 1 || (x.rounds.length === 1 && x.rounds[0].v && x.rounds[0].v !== x.price)
     ? `<div class="rounds">${x.rounds.map((r) => `<span class="round${r.t < NOW ? " past" : ""}"><b>${r.n}ª praça</b> ${isNaN(r.t) ? "" : dShort.format(r.t)} ${r.v ? brlShort.format(r.v) : ""}</span>`).join("")}</div>`
     : "";
   const img = showImages && x.img ? `<img src="${esc(safeUrl(x.img))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
-  const disc = x.disc != null && x.disc > 0 ? `<span class="pill good">−${x.disc}% ${x.discBasis}</span>` : "";
-  return `<article class="lot">
-    <div class="thumb" aria-hidden="true">${img || initials(x)}</div>
-    <div class="lot-main">
-      <a class="lot-title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
-      <div class="meta">${where ? `<span>${esc(where)}</span>` : ""}${x.area ? `<span>${x.area.toLocaleString("pt-BR")} m²</span>` : ""}${x.seller ? `<span>${esc(x.seller)}</span>` : ""}</div>
-      <div class="tags"><span class="tag src">${esc(SITES[x.src] || x.src)}</span>${x.type ? `<span class="tag">${esc(x.type)}</span>` : ""}${x.mod ? `<span class="tag">${esc(x.mod)}</span>` : ""}</div>
-      ${rounds}
+  const disc = x.disc != null && x.disc > 0 && x.ptm == null ? `<span class="pill good">−${x.disc}% ${x.discBasis}</span>` : "";
+  const debts = x.debts === true ? `<span class="tag warn" title="${esc(x.debtsrc || "")}">Dívidas: arrematante</span>`
+    : x.debts === false ? `<span class="tag good" title="${esc(x.debtsrc || "")}">Dívidas: vendedor</span>` : "";
+  const ck = USER.checklists[ckKey(x.id)];
+  const open = openDD.has(x.id);
+  return `<article class="lot" data-id="${esc(x.id)}">
+    <div class="lot-row">
+      <div class="thumb" aria-hidden="true">${img || initials(x)}</div>
+      <div class="lot-main">
+        <a class="lot-title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
+        <div class="meta">${where ? `<span>${esc(where)}</span>` : ""}${x.area ? `<span>${x.area.toLocaleString("pt-BR")} m²</span>` : ""}${x.beds ? `<span>${x.beds} quarto${x.beds > 1 ? "s" : ""}</span>` : ""}${x.seller ? `<span>${esc(x.seller)}</span>` : ""}</div>
+        <div class="meta">${cityLine(x)}</div>
+        <div class="tags">${isNew ? `<span class="tag new">Novo</span>` : ""}<span class="tag src">${esc(SITES[x.src] || x.src)}</span>${x.type ? `<span class="tag">${esc(x.type)}</span>` : ""}${x.modn ? `<span class="tag">${esc(x.modn.replace("_", " "))}</span>` : ""}${debts}${ck ? `<span class="tag">Em análise · ${ckDone(ck)}/6</span>` : ""}</div>
+        ${rounds}
+      </div>
+      <div class="price-col">
+        <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
+        ${x.appraisal ? `<div class="appraisal">Avaliação ${brl.format(x.appraisal)}</div>` : ""}
+        ${ptmPill(x)}${disc}
+        ${deadline(x)}
+        <button class="btn btn-sm dd-toggle" type="button" data-dd="${esc(x.id)}" aria-expanded="${open}">${open ? "Fechar checklist" : "Checklist"}</button>
+      </div>
     </div>
-    <div class="price-col">
-      <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
-      ${x.appraisal ? `<div class="appraisal">Avaliação ${brl.format(x.appraisal)}</div>` : ""}
-      ${disc}
-      ${deadline(x)}
-    </div>
+    ${open ? ddHTML(x) : ""}
   </article>`;
 }
 
+/* ---------- due-diligence checklist ---------- */
+const ckKey = (id) => id.replace(/[^A-Za-z0-9_-]/g, "_");
+const DD_ITEMS = [
+  ["edital", "Li o edital (pagamento, comissão do leiloeiro, condições de venda)"],
+  ["debts", "Confirmei no edital quem paga condomínio, IPTU e outras dívidas"],
+  ["lawsuits", "Pesquisei ações do ex-mutuário contra o banco (ex.: ação anulatória)"],
+  ["matricula", "Conferi a matrícula atualizada no cartório de registro de imóveis"],
+  ["occupancy", "Verifiquei se o imóvel está ocupado e o custo de desocupação"],
+  ["visit", "Visitei ou vi o imóvel por fora"],
+];
+const ckDone = (ck) => DD_ITEMS.filter(([k]) => ck[k]).length;
+
+function ddHelp(key, x) {
+  if (key === "debts") {
+    const auto = x.debts === true ? "Leitura automática: dívidas ficam com o arrematante" : x.debts === false ? "Leitura automática: vendedor entrega livre de dívidas" : "Leitura automática: o anúncio não informa";
+    return `<span>${auto}${x.debtsrc ? ` (${esc(x.debtsrc)})` : ""}. Confirme no edital.</span>`;
+  }
+  if (key === "lawsuits") {
+    const tj = x.uf === "SP" ? `<a href="https://esaj.tjsp.jus.br/cpopg/open.do" target="_blank" rel="noopener noreferrer">TJSP (e-SAJ)</a>` : "";
+    return `<span>Use o nome ou CPF do ex-mutuário que consta no edital. O AuctionTraker não guarda CPFs.</span>
+      <a href="https://www.jusbrasil.com.br/consulta-processual/" target="_blank" rel="noopener noreferrer">Jusbrasil</a>
+      <a href="https://www.escavador.com/" target="_blank" rel="noopener noreferrer">Escavador</a>${tj}
+      <select class="input" data-ck-field="lawsuits_result" data-ck-id="${esc(x.id)}" style="max-width:260px">
+        ${[["", "Resultado da pesquisa…"], ["none", "Nada encontrado"], ["found", "Encontrei ação — risco"], ["unclear", "Inconclusivo"]].map(([v, l]) => `<option value="${v}" ${(USER.checklists[ckKey(x.id)] || {}).lawsuits_result === v ? "selected" : ""}>${l}</option>`).join("")}
+      </select>`;
+  }
+  if (key === "matricula") return `<a href="https://registradores.onr.org.br/" target="_blank" rel="noopener noreferrer">Pedir matrícula online (ONR)</a>`;
+  return "";
+}
+
+function ddHTML(x) {
+  const ck = USER.checklists[ckKey(x.id)] || {};
+  return `<div class="dd">
+    ${DD_ITEMS.map(([k, label]) => `<div class="dd-item">
+      <label class="check"><input type="checkbox" data-ck-field="${k}" data-ck-id="${esc(x.id)}" ${ck[k] ? "checked" : ""}> ${label}</label>
+      ${ddHelp(k, x) ? `<div class="dd-help">${ddHelp(k, x)}</div>` : ""}
+    </div>`).join("")}
+    <div class="field"><label for="notes-${ckKey(x.id)}">Anotações</label>
+      <textarea class="input" rows="2" id="notes-${ckKey(x.id)}" data-ck-field="notes" data-ck-id="${esc(x.id)}">${esc(ck.notes || "")}</textarea></div>
+  </div>`;
+}
+
+async function saveCheck(id, field, value) {
+  const k = ckKey(id);
+  const ck = { ...(USER.checklists[k] || {}), [field]: value, updated: new Date().toISOString() };
+  USER.checklists[k] = ck;
+  await store.saveChecklist(k, ck);
+}
+
+/* ---------- list view ---------- */
 function median(nums) {
   if (!nums.length) return null;
   const s = [...nums].sort((a, b) => a - b), m = s.length >> 1;
@@ -394,28 +551,39 @@ function median(nums) {
 
 function render() {
   readControls();
-  const rows = ALL.filter(matches).sort(SORTS[state.sort]);
+  let rows = ALL;
+  if (activeStrategy) rows = rows.filter((x) => matchesStrategy(SPEC, activeStrategy, x, NOW_S));
+  rows = rows.filter(quickMatch).sort(SORTS[state.sort]);
+  const fresh = newIds();
   const week = rows.filter((x) => x.nextT >= NOW && x.nextT - NOW < 7 * DAY).length;
-  const discs = rows.map((x) => x.disc).filter((d) => d != null && d > 0);
+  const ptms = rows.map((x) => x.ptm).filter((d) => d != null);
+  const under50 = ptms.filter((p) => p <= 50).length;
   const prices = rows.map((x) => x.price).filter((p) => p > 0);
-  const md = median(discs);
   $("stats").innerHTML = [
     ["Oportunidades", rows.length.toLocaleString("pt-BR"), `de ${ALL.length.toLocaleString("pt-BR")} coletadas`],
     ["Encerram em 7 dias", week.toLocaleString("pt-BR"), "próxima praça ou prazo"],
-    ["Desconto mediano", md == null ? "—" : `${Math.round(md)}%`, `${discs.length.toLocaleString("pt-BR")} com desconto informado`],
+    ["Lance ≤ 50% do mercado", under50.toLocaleString("pt-BR"), `${ptms.length.toLocaleString("pt-BR")} com valor de mercado`],
     ["Preço mediano", prices.length ? brlShort.format(median(prices)) : "—", "lance mínimo / preço atual"],
   ].map(([k, v, s]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+
+  $("stBanner").hidden = !activeStrategy;
+  if (activeStrategy) {
+    $("stBanner").innerHTML = `<span>Estratégia aplicada: <b>${esc(activeStrategy.name)}</b></span><span class="spacer"></span>
+      <button class="btn btn-sm" type="button" id="editActive">Editar</button><button class="btn btn-sm" type="button" id="clearActive">Remover</button>`;
+    $("clearActive").onclick = () => { activeStrategy = null; shown = PAGE; render(); };
+    $("editActive").onclick = () => openEditor(USER.strategies.find((s) => s.id === activeStrategy.id) || activeStrategy);
+  }
 
   $("resultCount").textContent = `${rows.length.toLocaleString("pt-BR")} resultado${rows.length === 1 ? "" : "s"}`;
   const page = rows.slice(0, shown);
   $("list").innerHTML = page.length
-    ? page.map(lotHTML).join("")
+    ? page.map((x) => lotHTML(x, fresh.has(x.id))).join("")
     : `<div class="empty"><strong>Nenhum lote com esses filtros.</strong><span>Tente ampliar o preço, remover o estado ou desmarcar “Ocultar encerrados”.</span></div>`;
   $("more").hidden = rows.length <= shown;
   $("more").textContent = `Mostrar mais (${(rows.length - shown).toLocaleString("pt-BR")} restantes)`;
 
   const n = state.src.size + (state.cat.size && !(state.cat.size === 1 && state.cat.has("imovel")) ? 1 : 0) +
-    [state.q, state.uf, state.ptype, state.pmin, state.pmax, state.dmin].filter((v) => v !== "" && v != null).length;
+    [state.q, state.uf, state.ptype, state.pmin, state.pmax, state.dmin].filter((v) => v !== "" && v != null).length + (state.onlyReview ? 1 : 0);
   $("activeCount").textContent = n ? `${n} ativo${n > 1 ? "s" : ""}` : "";
 }
 
@@ -434,43 +602,315 @@ function buildControls() {
   const rerender = () => { shown = PAGE; render(); };
   let timer;
   $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(rerender, 150); });
-  for (const id of ["uf", "ptype", "dmin", "hideEnded", "sort", "pmin", "pmax"]) $(id).addEventListener("change", rerender);
+  for (const id of ["uf", "ptype", "dmin", "hideEnded", "onlyReview", "sort", "pmin", "pmax"]) $(id).addEventListener("change", rerender);
   $("srcChips").addEventListener("change", rerender);
   $("catChips").addEventListener("change", rerender);
   $("more").addEventListener("click", () => { shown += PAGE; render(); });
   $("reset").addEventListener("click", () => {
     for (const id of ["q", "uf", "ptype", "pmin", "pmax", "dmin"]) $(id).value = "";
-    $("hideEnded").checked = true;
+    $("hideEnded").checked = true; $("onlyReview").checked = false;
     document.querySelectorAll("#srcChips input").forEach((i) => (i.checked = false));
     document.querySelectorAll("#catChips input").forEach((i) => (i.checked = i.value === "imovel"));
     rerender();
   });
+  $("list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-dd]");
+    if (!b) return;
+    const id = b.dataset.dd;
+    openDD.has(id) ? openDD.delete(id) : openDD.add(id);
+    render();
+  });
+  $("list").addEventListener("change", async (e) => {
+    const el = e.target.closest("[data-ck-field]");
+    if (!el) return;
+    await saveCheck(el.dataset.ckId, el.dataset.ckField, el.type === "checkbox" ? el.checked : el.value);
+    if (el.type === "checkbox") render();
+  });
   if (window.matchMedia("(max-width: 900px)").matches) $("filters").open = false;
+}
+
+/* ---------- strategies ---------- */
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+function presetStrategy() {
+  const p = JSON.parse(JSON.stringify(SPEC.presets.abaixo50).replace('"NATIONAL_GDP_PC"', String(SPEC.reference.national_gdp_per_capita)));
+  return { id: uid(), ...p };
+}
+function blankStrategy() {
+  return { id: uid(), name: "Nova estratégia", enabled: true, email: true, hide_ended: true, city_mode: "all", debts: "any",
+           sets: {}, ranges: {}, toggles: {}, cities: [], neighborhoods: [] };
+}
+
+function strategySummary(st) {
+  const bits = [];
+  const fmt = (r, v) => r.unit === "R$" ? brlShort.format(v) : r.key === "pop" ? numShort.format(v) : `${String(v).replace(".", ",")}${r.unit && r.unit !== "hab." ? " " + r.unit : ""}`;
+  for (const s of SPEC.sets) { const c = (st.sets || {})[s.key]; if (c?.values?.length) bits.push(c.values.map((v) => (s.options.find((o) => o[0] === v) || [v, v])[1]).join(", ")); }
+  for (const r of SPEC.ranges) {
+    const c = (st.ranges || {})[r.key]; if (!c || (c.min == null && c.max == null)) continue;
+    bits.push(`${r.label} ${c.min != null ? "≥ " + fmt(r, c.min) : ""}${c.min != null && c.max != null ? " e " : ""}${c.max != null ? "≤ " + fmt(r, c.max) : ""}`);
+  }
+  for (const t of SPEC.toggles) if ((st.toggles || {})[t.key]) bits.push(t.label);
+  if (st.cities?.length) bits.push(st.cities.join(", "));
+  if (st.neighborhoods?.length) bits.push("bairros: " + st.neighborhoods.join(", "));
+  return bits;
+}
+
+function renderStrategies() {
+  const v = $("strategiesView");
+  if (editing) { v.innerHTML = editorHTML(editing); wireEditor(); return; }
+  const st = USER.alertState.strategies || {};
+  const cards = USER.strategies.map((s) => {
+    const count = ALL.filter((x) => matchesStrategy(SPEC, s, x, NOW_S)).length;
+    const fresh = (st[s.id]?.new || []).length;
+    return `<article class="st-card">
+      <h2>${esc(s.name)}</h2>
+      <div class="st-nums"><div><b>${count.toLocaleString("pt-BR")}</b><span>atendem hoje</span></div>
+        <div><b>${fresh}</b><span>novos no último aviso</span></div></div>
+      <div class="st-crit">${strategySummary(s).map((b) => `<span class="tag">${esc(b)}</span>`).join("")}</div>
+      <div class="st-crit">${s.enabled ? (s.email ? "Avisos por e-mail ligados" : "Avisos só no app") : "Avisos desligados"}</div>
+      <div class="st-actions">
+        <button class="btn btn-primary btn-sm" type="button" data-act="view" data-id="${s.id}">Ver imóveis</button>
+        <button class="btn btn-sm" type="button" data-act="edit" data-id="${s.id}">Editar</button>
+        <button class="btn btn-sm" type="button" data-act="dup" data-id="${s.id}">Duplicar</button>
+      </div>
+    </article>`;
+  }).join("");
+  v.innerHTML = `<div class="st-head"><h1>Minhas estratégias</h1><span class="spacer"></span>
+      <button class="btn" type="button" id="stFromPreset">Usar modelo: até 50% do mercado</button>
+      <button class="btn btn-primary" type="button" id="stNew">Nova estratégia</button></div>
+    <p class="notice">Cada estratégia é um conjunto de critérios. Todo dia, depois da coleta, o AuctionTraker procura imóveis novos que atendem a cada uma e avisa você${store.mode === "live" ? ` por e-mail (${esc(USER.email || "")})` : ""} e aqui no app.</p>
+    ${cards ? `<div class="st-list">${cards}</div>` : `<div class="empty"><strong>Nenhuma estratégia ainda.</strong><span>Comece pelo modelo “até 50% do mercado” e ajuste os critérios.</span></div>`}`;
+  $("stNew").onclick = () => openEditor(blankStrategy(), true);
+  $("stFromPreset").onclick = () => openEditor(presetStrategy(), true);
+  v.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => {
+    const s = USER.strategies.find((x) => x.id === b.dataset.id);
+    if (b.dataset.act === "view") { activeStrategy = s; shown = PAGE; showTab("lots"); }
+    if (b.dataset.act === "edit") openEditor(s);
+    if (b.dataset.act === "dup") openEditor({ ...JSON.parse(JSON.stringify(s)), id: uid(), name: s.name + " (cópia)" }, true);
+  }));
+}
+
+function openEditor(st, isNew = false) {
+  editing = JSON.parse(JSON.stringify(st));
+  editing._new = isNew;
+  showTab("strategies");
+}
+
+function numVal(v) { return v === "" || v == null ? null : Number(v); }
+
+function editorHTML(st) {
+  const groups = SPEC.groups.map((g) => {
+    const sets = SPEC.sets.filter((s) => s.group === g.key).map((s) => {
+      const c = (st.sets || {})[s.key] || { values: [], unknown: false };
+      return `<div class="field"><span class="label">${esc(s.label)}</span>
+        <div class="chips">${s.options.map(([v, l]) => `<label class="chip-toggle"><input type="checkbox" data-set="${s.key}" value="${v}" ${c.values?.includes(v) ? "checked" : ""}><span>${esc(l)}</span></label>`).join("")}</div>
+        <label class="check"><input type="checkbox" data-set-unknown="${s.key}" ${c.unknown ? "checked" : ""}> Incluir quando não informado</label>
+        ${s.help ? `<span class="help">${esc(s.help)}</span>` : ""}</div>`;
+    }).join("");
+    const ranges = SPEC.ranges.filter((r) => r.group === g.key).map((r) => {
+      const c = (st.ranges || {})[r.key] || {};
+      const ref = r.key === "gdppc" ? ` Média nacional: ${brl.format(SPEC.reference.national_gdp_per_capita)}.` : "";
+      return `<div class="range"><span class="label">${esc(r.label)}${r.unit ? ` <span class="unit">(${esc(r.unit)})</span>` : ""}</span>
+        <div class="minmax">
+          <input class="input" type="number" step="${r.step}" placeholder="mín." aria-label="${esc(r.label)} mínimo" data-range="${r.key}" data-bound="min" value="${c.min ?? ""}">
+          <input class="input" type="number" step="${r.step}" placeholder="máx." aria-label="${esc(r.label)} máximo" data-range="${r.key}" data-bound="max" value="${c.max ?? ""}">
+        </div>
+        <label class="check"><input type="checkbox" data-range-unknown="${r.key}" ${c.unknown ? "checked" : ""}> Incluir quando não informado</label>
+        ${r.help || ref ? `<span class="help">${esc((r.help || "") + ref)}</span>` : ""}</div>`;
+    }).join("");
+    const toggles = SPEC.toggles.filter((t) => t.group === g.key).map((t) =>
+      `<div class="field"><label class="check"><input type="checkbox" data-toggle="${t.key}" ${(st.toggles || {})[t.key] ? "checked" : ""}> ${esc(t.label)}</label>${t.help ? `<span class="help">${esc(t.help)}</span>` : ""}</div>`).join("");
+    let extra = "";
+    if (g.key === "cidade") extra = `<div class="field"><span class="label">Como combinar os critérios da cidade</span>
+        <div class="seg"><label><input type="radio" name="city_mode" value="all" ${st.city_mode !== "any" ? "checked" : ""}><span>Todos</span></label>
+        <label><input type="radio" name="city_mode" value="any" ${st.city_mode === "any" ? "checked" : ""}><span>Pelo menos um</span></label></div>
+        <span class="help">“Pelo menos um” aceita, por exemplo, uma capital OU uma cidade forte no agronegócio.</span></div>`;
+    if (g.key === "local") extra = `<div class="field"><label for="ed-cities">Cidades-alvo (opcional)</label>
+        <textarea class="input" rows="2" id="ed-cities" placeholder="Londrina/PR, Maringá/PR">${esc((st.cities || []).join(", "))}</textarea></div>
+      <div class="field"><label for="ed-hoods">Bairros de boa liquidez (opcional)</label>
+        <textarea class="input" rows="2" id="ed-hoods" placeholder="Centro, Gleba Palhano, Batel">${esc((st.neighborhoods || []).join(", "))}</textarea>
+        <span class="help">O imóvel passa se o bairro ou o título contiver algum destes nomes.</span></div>`;
+    if (g.key === "edital") extra = `<div class="field"><label for="ed-debts">Dívidas de condomínio e IPTU</label>
+        <select class="input" id="ed-debts">${SPEC.debts_options.map(([v, l]) => `<option value="${v}" ${st.debts === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
+        <span class="help">Lido automaticamente do anúncio quando o site informa (Superbid, PGFN). Sempre confirme no edital — o checklist de cada imóvel ajuda nisso, inclusive na pesquisa de ações do ex-mutuário.</span></div>`;
+    if (g.key === "leilao") extra = `<label class="check"><input type="checkbox" id="ed-hide-ended" ${st.hide_ended !== false ? "checked" : ""}> Ignorar leilões encerrados</label>`;
+    const body = sets + ranges + toggles + extra;
+    return body ? `<section class="ed-group"><h3>${esc(g.label)}</h3><div class="ed-grid">${body}</div></section>` : "";
+  }).join("");
+  return `<form class="editor" id="editor">
+    <div class="editor-top">
+      <input class="input" id="ed-name" aria-label="Nome da estratégia" value="${esc(st.name)}">
+      <span class="live-count" id="liveCount"></span><span class="spacer"></span>
+      <button class="btn" type="button" id="edPreview">Ver imóveis</button>
+    </div>
+    ${groups}
+    <section class="ed-group"><h3>Avisos</h3><div class="ed-grid">
+      <label class="check"><input type="checkbox" id="ed-enabled" ${st.enabled !== false ? "checked" : ""}> Procurar novidades todo dia</label>
+      <label class="check"><input type="checkbox" id="ed-email" ${st.email ? "checked" : ""}> Avisar por e-mail</label>
+      <span class="help">${store.mode === "live" ? `E-mails vão para ${esc(USER.email || "")}.` : "Na prévia nada é enviado; no app publicado os avisos vão para o e-mail da sua conta Google."}</span>
+    </div></section>
+    <div class="ed-foot">
+      <button class="btn btn-primary" type="submit">Salvar estratégia</button>
+      <button class="btn" type="button" id="edCancel">Cancelar</button>
+      <span class="spacer"></span>
+      ${st._new ? "" : `<button class="btn btn-danger" type="button" id="edDelete">Excluir</button>`}
+      <span id="edConfirm" hidden><span class="notice">Excluir de vez?</span> <button class="btn btn-danger btn-sm" type="button" id="edDeleteYes">Sim, excluir</button> <button class="btn btn-sm" type="button" id="edDeleteNo">Não</button></span>
+    </div>
+  </form>`;
+}
+
+function readEditor() {
+  const f = $("editor"), st = editing;
+  st.name = $("ed-name").value.trim() || "Estratégia sem nome";
+  st.sets = {};
+  for (const s of SPEC.sets) {
+    const values = [...f.querySelectorAll(`[data-set="${s.key}"]:checked`)].map((i) => i.value);
+    const unknown = f.querySelector(`[data-set-unknown="${s.key}"]`).checked;
+    if (values.length) st.sets[s.key] = { values, unknown };
+  }
+  st.ranges = {};
+  for (const r of SPEC.ranges) {
+    const min = numVal(f.querySelector(`[data-range="${r.key}"][data-bound="min"]`).value);
+    const max = numVal(f.querySelector(`[data-range="${r.key}"][data-bound="max"]`).value);
+    const unknown = f.querySelector(`[data-range-unknown="${r.key}"]`).checked;
+    if (min != null || max != null) st.ranges[r.key] = { min, max, unknown };
+  }
+  st.toggles = {};
+  for (const t of SPEC.toggles) if (f.querySelector(`[data-toggle="${t.key}"]`).checked) st.toggles[t.key] = true;
+  st.city_mode = f.querySelector('input[name="city_mode"]:checked')?.value || "all";
+  const list = (v) => v.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
+  st.cities = list($("ed-cities").value);
+  st.neighborhoods = list($("ed-hoods").value);
+  st.debts = $("ed-debts").value;
+  st.hide_ended = $("ed-hide-ended").checked;
+  st.enabled = $("ed-enabled").checked;
+  st.email = $("ed-email").checked;
+  return st;
+}
+
+function wireEditor() {
+  const f = $("editor");
+  const recount = () => {
+    readEditor();
+    const n = ALL.filter((x) => matchesStrategy(SPEC, editing, x, NOW_S)).length;
+    $("liveCount").textContent = `${n.toLocaleString("pt-BR")} imóve${n === 1 ? "l atende" : "is atendem"} hoje`;
+  };
+  let t;
+  f.addEventListener("input", () => { clearTimeout(t); t = setTimeout(recount, 120); });
+  f.addEventListener("change", recount);
+  recount();
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const st = readEditor();
+    const clean = { ...st }; delete clean._new;
+    const i = USER.strategies.findIndex((s) => s.id === clean.id);
+    if (i >= 0) USER.strategies[i] = clean; else USER.strategies.push(clean);
+    await store.saveStrategies(USER.strategies);
+    if (activeStrategy?.id === clean.id) activeStrategy = clean;
+    editing = null; renderStrategies();
+  });
+  $("edCancel").onclick = () => { editing = null; renderStrategies(); };
+  $("edPreview").onclick = () => { activeStrategy = { ...readEditor() }; editing = null; shown = PAGE; showTab("lots"); };
+  if ($("edDelete")) {
+    $("edDelete").onclick = () => { $("edConfirm").hidden = false; $("edDelete").hidden = true; };
+    $("edDeleteNo").onclick = () => { $("edConfirm").hidden = true; $("edDelete").hidden = false; };
+    $("edDeleteYes").onclick = async () => {
+      USER.strategies = USER.strategies.filter((s) => s.id !== editing.id);
+      if (activeStrategy?.id === editing.id) activeStrategy = null;
+      await store.saveStrategies(USER.strategies);
+      editing = null; renderStrategies();
+    };
+  }
+}
+
+/* ---------- tabs ---------- */
+function showTab(name) {
+  $("tab-lots").setAttribute("aria-selected", String(name === "lots"));
+  $("tab-strategies").setAttribute("aria-selected", String(name === "strategies"));
+  $("lotsView").hidden = name !== "lots";
+  $("strategiesView").hidden = name !== "strategies";
+  if (name === "lots") render(); else renderStrategies();
+  window.scrollTo(0, 0);
+}
+
+function updateNewBadge() {
+  const n = newIds().size;
+  $("newBadge").hidden = !n;
+  $("newBadge").textContent = n;
 }
 
 function start(items, updatedAt, note) {
   ALL = items.map(enrich);
   $("freshness").textContent = updatedAt ? `Atualizado ${dLong.format(new Date(updatedAt))}` : "";
   $("footnote").textContent = note || "";
+  $("gateView").hidden = true;
+  $("tabs").hidden = false;
+  $("tab-lots").onclick = () => showTab("lots");
+  $("tab-strategies").onclick = () => { editing = null; showTab("strategies"); };
   buildControls();
-  render();
+  updateNewBadge();
+  showTab("lots");
 }
 
 function showGate(html) {
-  $("main").innerHTML = `<div class="gate">${html}</div>`;
-  $("filters").hidden = true;
+  $("gateView").innerHTML = `<div class="gate">${html}</div>`;
+  $("gateView").hidden = false;
+  $("lotsView").hidden = true; $("strategiesView").hidden = true; $("tabs").hidden = true;
+}
+
+/* ---------- persistence ---------- */
+function browserStore() {
+  const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+  const set = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage blocked: keep in memory */ } };
+  return {
+    mode: "preview",
+    async load() {
+      let strategies = get("at.strategies", null);
+      if (!strategies) { strategies = [presetStrategy()]; set("at.strategies", strategies); }
+      return { strategies, checklists: get("at.checklists", {}), alertState: {} };
+    },
+    async saveStrategies(list) { set("at.strategies", list); },
+    async saveChecklist(k, ck) { const all = get("at.checklists", {}); all[k] = ck; set("at.checklists", all); },
+  };
+}
+
+function firestoreStore(fs, db, user) {
+  const userRef = fs.doc(db, "users", user.uid);
+  return {
+    mode: "live",
+    async load() {
+      const [u, a] = await Promise.all([fs.getDoc(userRef), fs.getDoc(fs.doc(db, "alert_state", user.uid))]);
+      const data = u.exists() ? u.data() : {};
+      let strategies = data.strategies;
+      // keep name and email current: the alert job emails this address
+      await fs.setDoc(userRef, { email: user.email, name: user.displayName || "" }, { merge: true });
+      if (!strategies) { strategies = [presetStrategy()]; await fs.setDoc(userRef, { strategies }, { merge: true }); }
+      return { strategies, checklists: data.checklists || {}, alertState: a.exists() ? a.data() : {} };
+    },
+    async saveStrategies(list) { await fs.setDoc(userRef, { strategies: list }, { merge: true }); },
+    async saveChecklist(k, ck) { await fs.setDoc(userRef, { checklists: { [k]: ck } }, { merge: true }); },
+  };
 }
 
 /* ---------- data sources ---------- */
+async function loadSpec() {
+  const r = await fetch("strategy-fields.json");
+  if (!r.ok) throw new Error(`strategy-fields.json: HTTP ${r.status}`);
+  SPEC = await r.json();
+}
+
 async function startPreview() {
   $("previewBadge").hidden = false;
   try {
+    await loadSpec();
     const r = await fetch("listings.json");
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
+    store = browserStore();
+    Object.assign(USER, await store.load());
     const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(d.run_id || "");
     const when = m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : null;
-    start(d.items, when, "Prévia com os dados de uma coleta real. No app publicado, os dados vêm do Firestore depois do login com Google, e as fotos dos lotes aparecem.");
+    start(d.items, when, "Prévia com os dados de uma coleta real. Estratégias e checklists ficam salvos só neste navegador; no app publicado ficam na sua conta e os avisos chegam por e-mail.");
   } catch (e) {
     showGate(`<h1>Não foi possível carregar os dados</h1><p class="error">${esc(e.message)}</p><p>Gere o arquivo com <code>python -m auction_tracker export-web data/&lt;run-id&gt;</code>.</p>`);
   }
@@ -478,6 +918,7 @@ async function startPreview() {
 
 async function startLive(config) {
   showImages = true;
+  await loadSpec();
   const base = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK}`;
   const [{ initializeApp }, auth, fs] = await Promise.all([
     import(`${base}/firebase-app.js`), import(`${base}/firebase-auth.js`), import(`${base}/firebase-firestore.js`),
@@ -485,7 +926,6 @@ async function startLive(config) {
   const app = initializeApp(config);
   const a = auth.getAuth(app);
   const db = fs.getFirestore(app);
-  const mainHTML = $("main").innerHTML;
   let loaded = false;
 
   auth.onAuthStateChanged(a, async (user) => {
@@ -493,9 +933,9 @@ async function startLive(config) {
     if (!user) {
       box.hidden = true;
       showGate(`<h1>Leilões de 7 sites em uma só lista</h1>
-        <p>Entre com sua conta Google para ver as oportunidades coletadas do Portal Zuk, Biasi, Frazão, Superbid, Picelli, Alfa e PGFN Comprei.</p>
-        <button class="btn btn-primary" id="signin" type="button">Entrar com Google</button>`);
-      $("signin").addEventListener("click", () => auth.signInWithPopup(a, new auth.GoogleAuthProvider()).catch((e) => alert(e.message)));
+        <p>Entre com sua conta Google para ver as oportunidades do Portal Zuk, Biasi, Frazão, Superbid, Picelli, Alfa e PGFN Comprei, salvar suas estratégias e receber avisos.</p>
+        <button class="btn btn-primary" id="signin" type="button">Entrar com Google</button><p class="error" id="signinError"></p>`);
+      $("signin").addEventListener("click", () => auth.signInWithPopup(a, new auth.GoogleAuthProvider()).catch((e) => { $("signinError").textContent = e.message; }));
       loaded = false;
       return;
     }
@@ -503,10 +943,11 @@ async function startLive(config) {
     box.innerHTML = `<span>${esc(user.displayName || user.email)}</span><button class="btn" id="signout" type="button">Sair</button>`;
     $("signout").addEventListener("click", () => auth.signOut(a));
     if (loaded) return;
-    $("main").innerHTML = mainHTML;
-    $("filters").hidden = false;
     try {
-      const snap = await fs.getDocs(fs.collection(db, "summaries"));
+      store = firestoreStore(fs, db, user);
+      USER.email = user.email;
+      const [snap, mine] = await Promise.all([fs.getDocs(fs.collection(db, "summaries")), store.load()]);
+      Object.assign(USER, mine);
       let items = [], updated = null;
       snap.forEach((doc) => {
         const d = doc.data();
@@ -514,7 +955,7 @@ async function startLive(config) {
         if (!updated || d.updated_at > updated) updated = d.updated_at;
       });
       if (!items.length) {
-        showGate(`<h1>Ainda não há dados</h1><p>O Firestore está vazio. Rode <code>python -m auction_tracker scrape --firestore</code> para fazer a primeira carga.</p>`);
+        showGate(`<h1>Ainda não há dados</h1><p>O Firestore está vazio. A coleta diária vai preencher em breve.</p>`);
         return;
       }
       loaded = true;

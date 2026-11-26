@@ -1,0 +1,361 @@
+{
+ "source": "Índice FipeZAP — preço médio de anúncios de venda (R$/m²)",
+ "month": "2026-10",
+ "built": "2026-11-26",
+ "cities": {
+  "sao paulo|SP": {
+   "city": "São Paulo",
+   "uf": "SP",
+   "residential": 12254,
+   "residential_1d": 14423,
+   "residential_2d": 10807,
+   "residential_3d": 11891,
+   "residential_4d": 14609,
+   "commercial": 10685
+  },
+  "barueri|SP": {
+   "city": "Barueri",
+   "uf": "SP",
+   "residential": 12259
+  },
+  "campinas|SP": {
+   "city": "Campinas",
+   "uf": "SP",
+   "residential": 8239,
+   "residential_1d": 9026,
+   "residential_2d": 7648,
+   "residential_3d": 8379,
+   "residential_4d": 7877,
+   "commercial": 6886
+  },
+  "diadema|SP": {
+   "city": "Diadema",
+   "uf": "SP",
+   "residential": 6974
+  },
+  "guaruja|SP": {
+   "city": "Guarujá",
+   "uf": "SP",
+   "residential": 6944,
+   "residential_1d": 7268,
+   "residential_2d": 5963,
+   "residential_3d": 7480,
+   "residential_4d": 7434
+  },
+  "guarulhos|SP": {
+   "city": "Guarulhos",
+   "uf": "SP",
+   "residential": 7555
+  },
+  "osasco|SP": {
+   "city": "Osasco",
+   "uf": "SP",
+   "residential": 8813
+  },
+  "praia grande|SP": {
+   "city": "Praia Grande",
+   "uf": "SP",
+   "residential": 6800,
+   "residential_1d": 6616,
+   "residential_2d": 6740,
+   "residential_3d": 7740,
+   "residential_4d": 9059
+  },
+  "ribeirao preto|SP": {
+   "city": "Ribeirão Preto",
+   "uf": "SP",
+   "residential": 5358,
+   "residential_1d": 5841,
+   "residential_2d": 5414,
+   "residential_3d": 5084,
+   "residential_4d": 4149
+  },
+  "santo andre|SP": {
+   "city": "Santo André",
+   "uf": "SP",
+   "residential": 7988
+  },
+  "santos|SP": {
+   "city": "Santos",
+   "uf": "SP",
+   "residential": 8678,
+   "residential_1d": 9722,
+   "residential_2d": 8045,
+   "residential_3d": 8339,
+   "residential_4d": 10620
+  },
+  "sao bernardo do campo|SP": {
+   "city": "São Bernardo do Campo",
+   "uf": "SP",
+   "residential": 7536,
+   "residential_1d": 7685,
+   "residential_2d": 7376,
+   "residential_3d": 7886,
+   "residential_4d": 7301
+  },
+  "sao caetano do sul|SP": {
+   "city": "São Caetano do Sul",
+   "uf": "SP",
+   "residential": 9652
+  },
+  "sao jose do rio preto|SP": {
+   "city": "São José do Rio Preto",
+   "uf": "SP",
+   "residential": 6092
+  },
+  "sao jose dos campos|SP": {
+   "city": "São José dos Campos",
+   "uf": "SP",
+   "residential": 9689
+  },
+  "sao vicente|SP": {
+   "city": "São Vicente",
+   "uf": "SP",
+   "residential": 5175
+  },
+  "rio de janeiro|RJ": {
+   "city": "Rio de Janeiro",
+   "uf": "RJ",
+   "residential": 11372,
+   "residential_1d": 14380,
+   "residential_2d": 9626,
+   "residential_3d": 10757,
+   "residential_4d": 12902,
+   "commercial": 8546
+  },
+  "niteroi|RJ": {
+   "city": "Niterói",
+   "uf": "RJ",
+   "residential": 8170,
+   "residential_1d": 10260,
+   "residential_2d": 7138,
+   "residential_3d": 7853,
+   "residential_4d": 9539,
+   "commercial": 8175
+  },
+  "belo horizonte|MG": {
+   "city": "Belo Horizonte",
+   "uf": "MG",
+   "residential": 10696,
+   "residential_1d": 14443,
+   "residential_2d": 10524,
+   "residential_3d": 9330,
+   "residential_4d": 10231,
+   "commercial": 6548
+  },
+  "betim|MG": {
+   "city": "Betim",
+   "uf": "MG",
+   "residential": 5133
+  },
+  "contagem|MG": {
+   "city": "Contagem",
+   "uf": "MG",
+   "residential": 6215
+  },
+  "porto alegre|RS": {
+   "city": "Porto Alegre",
+   "uf": "RS",
+   "residential": 7577,
+   "residential_1d": 8410,
+   "residential_2d": 6573,
+   "residential_3d": 8011,
+   "residential_4d": 7976,
+   "commercial": 6269
+  },
+  "canoas|RS": {
+   "city": "Canoas",
+   "uf": "RS",
+   "residential": 5961
+  },
+  "caxias do sul|RS": {
+   "city": "Caxias do Sul",
+   "uf": "RS",
+   "residential": 6514
+  },
+  "novo hamburgo|RS": {
+   "city": "Novo Hamburgo",
+   "uf": "RS",
+   "residential": 5446
+  },
+  "pelotas|RS": {
+   "city": "Pelotas",
+   "uf": "RS",
+   "residential": 4739
+  },
+  "santa maria|RS": {
+   "city": "Santa Maria",
+   "uf": "RS",
+   "residential": 5492
+  },
+  "sao leopoldo|RS": {
+   "city": "São Leopoldo",
+   "uf": "RS",
+   "residential": 5140
+  },
+  "curitiba|PR": {
+   "city": "Curitiba",
+   "uf": "PR",
+   "residential": 11716,
+   "residential_1d": 13394,
+   "residential_2d": 11262,
+   "residential_3d": 11262,
+   "residential_4d": 10271,
+   "commercial": 9581
+  },
+  "londrina|PR": {
+   "city": "Londrina",
+   "uf": "PR",
+   "residential": 5938
+  },
+  "sao jose dos pinhais|PR": {
+   "city": "São José dos Pinhais",
+   "uf": "PR",
+   "residential": 6457
+  },
+  "florianopolis|SC": {
+   "city": "Florianópolis",
+   "uf": "SC",
+   "residential": 13690,
+   "residential_1d": 15543,
+   "residential_2d": 13099,
+   "residential_3d": 12929,
+   "residential_4d": 13428,
+   "commercial": 9334
+  },
+  "balneario camboriu|SC": {
+   "city": "Balneário Camboriú",
+   "uf": "SC",
+   "residential": 15325
+  },
+  "blumenau|SC": {
+   "city": "Blumenau",
+   "uf": "SC",
+   "residential": 8232
+  },
+  "itajai|SC": {
+   "city": "Itajaí",
+   "uf": "SC",
+   "residential": 13511
+  },
+  "itapema|SC": {
+   "city": "Itapema",
+   "uf": "SC",
+   "residential": 15232
+  },
+  "joinville|SC": {
+   "city": "Joinville",
+   "uf": "SC",
+   "residential": 8458
+  },
+  "sao jose|SC": {
+   "city": "São José",
+   "uf": "SC",
+   "residential": 9081
+  },
+  "vitoria|ES": {
+   "city": "Vitória",
+   "uf": "ES",
+   "residential": 15938
+  },
+  "vila velha|ES": {
+   "city": "Vila Velha",
+   "uf": "ES",
+   "residential": 11536
+  },
+  "brasilia|DF": {
+   "city": "Brasília",
+   "uf": "DF",
+   "residential": 10646,
+   "residential_1d": 11863,
+   "residential_2d": 8772,
+   "residential_3d": 10796,
+   "residential_4d": 14400,
+   "commercial": 7085
+  },
+  "goiania|GO": {
+   "city": "Goiânia",
+   "uf": "GO",
+   "residential": 8531,
+   "residential_1d": 10123,
+   "residential_2d": 8352,
+   "residential_3d": 8202,
+   "residential_4d": 7714
+  },
+  "campo grande|MS": {
+   "city": "Campo Grande",
+   "uf": "MS",
+   "residential": 6609
+  },
+  "cuiaba|MT": {
+   "city": "Cuiabá",
+   "uf": "MT",
+   "residential": 7193
+  },
+  "aracaju|SE": {
+   "city": "Aracaju",
+   "uf": "SE",
+   "residential": 5992
+  },
+  "fortaleza|CE": {
+   "city": "Fortaleza",
+   "uf": "CE",
+   "residential": 9767
+  },
+  "joao pessoa|PB": {
+   "city": "João Pessoa",
+   "uf": "PB",
+   "residential": 8460
+  },
+  "maceio|AL": {
+   "city": "Maceió",
+   "uf": "AL",
+   "residential": 10069
+  },
+  "natal|RN": {
+   "city": "Natal",
+   "uf": "RN",
+   "residential": 6467
+  },
+  "recife|PE": {
+   "city": "Recife",
+   "uf": "PE",
+   "residential": 9179
+  },
+  "salvador|BA": {
+   "city": "Salvador",
+   "uf": "BA",
+   "residential": 8696,
+   "residential_1d": 12543,
+   "residential_2d": 7644,
+   "residential_3d": 7949,
+   "residential_4d": 8967,
+   "commercial": 5760
+  },
+  "sao luis|MA": {
+   "city": "São Luís",
+   "uf": "MA",
+   "residential": 9055
+  },
+  "teresina|PI": {
+   "city": "Teresina",
+   "uf": "PI",
+   "residential": 6139
+  },
+  "jaboatao dos guararapes|PE": {
+   "city": "Jaboatão dos Guararapes",
+   "uf": "PE",
+   "residential": 6512
+  },
+  "belem|PA": {
+   "city": "Belém",
+   "uf": "PA",
+   "residential": 8779
+  },
+  "manaus|AM": {
+   "city": "Manaus",
+   "uf": "AM",
+   "residential": 7862
+  }
+ }
+}

@@ -39,6 +39,7 @@ jobs:
         run: python -m pytest -q
 
       - name: Write service-account credentials
+        id: creds
         env:
           FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
@@ -47,6 +48,15 @@ jobs:
 
       - name: Scrape and upload to Firestore
         run: python -m auction_tracker scrape --firestore --project auctiontraker
+
+      # Runs even if one site failed: the others' new listings still count.
+      # Emails need the RESEND_API_KEY secret; without it alerts show only in the app.
+      - name: Strategy alerts
+        if: always() && steps.creds.outcome == 'success'
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_FROM: ${{ vars.ALERT_FROM }}
+        run: python -m auction_tracker alerts --project auctiontraker
 
       - name: Keep the run report
         if: always()
