@@ -1,0 +1,41 @@
+# Publishes the website (web/) to Firebase Hosting and the Firestore security
+# rules, using the same FIREBASE_SERVICE_ACCOUNT secret as the scraper.
+# Runs when the site or rules change on main, or from the Actions tab.
+
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "firebase.json"
+      - "firestore.rules"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Deploy hosting and Firestore rules
+        run: npx --yes firebase-tools deploy --only hosting,firestore:rules --project auctiontraker --non-interactive
