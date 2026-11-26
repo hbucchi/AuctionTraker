@@ -1,0 +1,1274 @@
+{
+ "now": 1796000000,
+ "cases": [
+  {
+   "name": "empty strategy matches",
+   "strategy": {},
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "ptm within max",
+   "strategy": {
+    "ranges": {
+     "ptm": {
+      "min": null,
+      "max": 50,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "ptm above max",
+   "strategy": {
+    "ranges": {
+     "ptm": {
+      "min": null,
+      "max": 30,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "unknown ptm rejected by default",
+   "strategy": {
+    "ranges": {
+     "ptm": {
+      "min": null,
+      "max": 50,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "unknown ptm allowed",
+   "strategy": {
+    "ranges": {
+     "ptm": {
+      "min": null,
+      "max": 50,
+      "unknown": true
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "inactive range ignores unknown",
+   "strategy": {
+    "ranges": {
+     "beds": {
+      "min": null,
+      "max": null,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "beds min",
+   "strategy": {
+    "ranges": {
+     "beds": {
+      "min": 4,
+      "max": null,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "set match",
+   "strategy": {
+    "sets": {
+     "kind": {
+      "values": [
+       "casa",
+       "apartamento"
+      ]
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "set miss",
+   "strategy": {
+    "sets": {
+     "kind": {
+      "values": [
+       "apartamento"
+      ]
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "set unknown rejected",
+   "strategy": {
+    "sets": {
+     "modality": {
+      "values": [
+       "judicial"
+      ],
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "set unknown allowed",
+   "strategy": {
+    "sets": {
+     "modality": {
+      "values": [
+       "judicial"
+      ],
+      "unknown": true
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "city all fails on one",
+   "strategy": {
+    "city_mode": "all",
+    "ranges": {
+     "pop": {
+      "min": 100000,
+      "max": null,
+      "unknown": false
+     },
+     "gdppc": {
+      "min": 53887,
+      "max": null,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "city any passes on one",
+   "strategy": {
+    "city_mode": "any",
+    "ranges": {
+     "pop": {
+      "min": 100000,
+      "max": null,
+      "unknown": false
+     },
+     "gdppc": {
+      "min": 53887,
+      "max": null,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "capital toggle",
+   "strategy": {
+    "toggles": {
+     "capital": true
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "capital OR agro",
+   "strategy": {
+    "city_mode": "any",
+    "toggles": {
+     "capital": true
+    },
+    "ranges": {
+     "agro": {
+      "min": 20,
+      "max": null,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 25,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "official value only",
+   "strategy": {
+    "toggles": {
+     "official_mv": true
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": false,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "days until next round",
+   "strategy": {
+    "ranges": {
+     "days": {
+      "min": null,
+      "max": 5,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "days too far",
+   "strategy": {
+    "ranges": {
+     "days": {
+      "min": null,
+      "max": 2,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "cities allow-list",
+   "strategy": {
+    "cities": [
+     "londrina/PR"
+    ]
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "cities allow-list miss",
+   "strategy": {
+    "cities": [
+     "Maringá/PR"
+    ]
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "neighborhood match accents",
+   "strategy": {
+    "neighborhoods": [
+     "centro"
+    ]
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro Histórico",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "neighborhood miss",
+   "strategy": {
+    "neighborhoods": [
+     "Gleba Palhano"
+    ]
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "debts not_buyer drops buyer",
+   "strategy": {
+    "debts": "not_buyer"
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ],
+    "debts": true
+   },
+   "expect": false
+  },
+  {
+   "name": "debts not_buyer keeps unknown",
+   "strategy": {
+    "debts": "not_buyer"
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": true
+  },
+  {
+   "name": "debts seller_only needs false",
+   "strategy": {
+    "debts": "seller_only"
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ]
+   },
+   "expect": false
+  },
+  {
+   "name": "debts seller_only ok",
+   "strategy": {
+    "debts": "seller_only"
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-12-10T10:00:00-03:00",
+    "rounds": [
+     {
+      "n": 1,
+      "d": "2026-12-03T10:00:00-03:00",
+      "v": 400000
+     },
+     {
+      "n": 2,
+      "d": "2026-12-10T10:00:00-03:00",
+      "v": 200000
+     }
+    ],
+    "debts": false
+   },
+   "expect": true
+  },
+  {
+   "name": "ended hidden",
+   "strategy": {},
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-11-01T10:00:00-03:00",
+    "rounds": []
+   },
+   "expect": false
+  },
+  {
+   "name": "ended shown when not hiding",
+   "strategy": {
+    "hide_ended": false
+   },
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-11-01T10:00:00-03:00",
+    "rounds": []
+   },
+   "expect": true
+  },
+  {
+   "name": "ended but taking proposals",
+   "strategy": {},
+   "item": {
+    "id": "zuk:1",
+    "src": "zuk",
+    "url": "https://x",
+    "title": "Casa 3 quartos no Centro",
+    "city": "Londrina",
+    "uf": "PR",
+    "hood": "Centro",
+    "price": 200000,
+    "ptm": 40,
+    "mvo": true,
+    "area": 120,
+    "beds": 3,
+    "kind": "casa",
+    "modn": "extrajudicial",
+    "pop": 555965,
+    "gdppc": 50362,
+    "idhm": 0.778,
+    "agro": 2.6,
+    "cap": false,
+    "end": "2026-11-01T10:00:00-03:00",
+    "rounds": [],
+    "status": "ENVIO DE PROPOSTA"
+   },
+   "expect": true
+  }
+ ]
+}

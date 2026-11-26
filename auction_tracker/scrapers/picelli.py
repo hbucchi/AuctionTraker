@@ -88,21 +88,20 @@ class PicelliScraper(BaseScraper):
 
         captured: list[str] = []
 
-        def on_response(resp):
+        def is_auctions(resp) -> bool:
             u = resp.url
-            if "/rest/v1/auctions" in u and "home_tab=" in u and resp.ok:
-                try:
-                    captured.append(resp.text())
-                except Exception:  # body unavailable (redirect, aborted)
-                    pass
+            return "/rest/v1/auctions" in u and "home_tab=" in u and resp.ok
 
         with sync_playwright() as p:
             exe = os.environ.get("PLAYWRIGHT_CHROMIUM_PATH")
             browser = p.chromium.launch(executable_path=exe) if exe else p.chromium.launch()
             try:
                 page = browser.new_page()
-                page.on("response", on_response)
-                page.goto(BASE + "/", wait_until="networkidle", timeout=90_000)
+                # Wait for the one response we need instead of "network idle":
+                # analytics and chat widgets can keep the network busy forever.
+                with page.expect_response(is_auctions, timeout=120_000) as resp_info:
+                    page.goto(BASE + "/", wait_until="domcontentloaded", timeout=120_000)
+                captured.append(resp_info.value.text())
             finally:
                 browser.close()
 

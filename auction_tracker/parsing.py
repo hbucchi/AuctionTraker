@@ -66,7 +66,20 @@ def parse_area(text: str | None) -> float | None:
     if not text:
         return None
     m = re.search(r"(\d[\d.,]*)\s*m(?:²|2)", text)
-    return parse_brl(m.group(1)) if m else None
+    if not m:
+        return None
+    num = m.group(1).rstrip(".,")
+    if "," in num:
+        # comma present: it is the decimal separator (registries use up to 4
+        # decimals, "25,9531 m²"); dots group thousands
+        num = num.replace(".", "").replace(",", ".")
+    elif num.count(".") > 1 or re.fullmatch(r"\d{1,3}\.\d{3}", num):
+        num = num.replace(".", "")  # "1.005" / "12.500.000": thousands
+    # else a single dot with 1, 2 or 4 decimals is a decimal point: "30.83"
+    try:
+        return float(num)
+    except ValueError:
+        return None
 
 
 _DATE_RE = re.compile(
@@ -160,4 +173,61 @@ def guess_property_type(text: str | None) -> str | None:
     for name, pattern in PROPERTY_TYPES:
         if re.search(pattern, t):
             return name
+    return None
+
+
+_NUM_WORDS = {"um": 1, "uma": 1, "dois": 2, "duas": 2, "tres": 3, "quatro": 4, "cinco": 5, "seis": 6}
+_BEDROOMS_RE = re.compile(
+    r"\b(\d{1,2}|um|uma|dois|duas|tres|quatro|cinco|seis)\s*(?:\(\w+\)\s*)?"
+    r"(?:dormitorios?|quartos?|dorms?\b|qtos?\b|qts?\b|suites?)",
+)
+
+
+def parse_bedrooms(text: str | None) -> int | None:
+    """'Apto 3 dormitórios', 'casa com três quartos', '2 dorms' -> count.
+    Suites count as bedrooms; when several numbers appear (e.g. '3 quartos,
+    sendo 1 suíte') the largest is the bedroom total."""
+    if not text:
+        return None
+    t = strip_accents(text.lower())
+    found = []
+    for m in _BEDROOMS_RE.finditer(t):
+        n = m.group(1)
+        v = int(n) if n.isdigit() else _NUM_WORDS.get(n)
+        if v and 0 < v < 20:
+            found.append(v)
+    return max(found) if found else None
+
+
+_BUYER = r"(arrematante|comprador|adquirente|proponente vencedor)"
+_DEBTS = r"(condom[ií]nio|iptu|d[eé]bitos?|d[ií]vidas?|tributos?|taxas?)"
+_BUYER_PAYS = [
+    re.compile(_DEBTS + r"[^.;]{0,160}(por conta|a cargo|de responsabilidade|sob responsabilidade|ser[aã]o? pag[oa]s? pelo)\s+(do|da|pelo)?\s*" + _BUYER),
+    re.compile(_BUYER + r"[^.;]{0,80}(arcar[aá]?|responsabiliza|respons[aá]vel|pagar[aá]?|quitar)[^.;]{0,80}" + _DEBTS),
+]
+_SELLER_PAYS = [
+    re.compile(r"livres? e desembara[cç]ad[oa]s?|livres? de (quaisquer )?(d[eé]bitos|[oô]nus|d[ií]vidas)"),
+    re.compile(_DEBTS + r"[^.;]{0,160}(por conta|a cargo|de responsabilidade)\s+(do|da)\s+(vendedor|comitente|banco|credor|alienante)"),
+]
+
+
+# texts are accent-stripped before matching, so the patterns must be too
+_BUYER_PAYS_ASCII = [re.compile(strip_accents(p.pattern)) for p in _BUYER_PAYS]
+_SELLER_PAYS_ASCII = [re.compile(strip_accents(p.pattern)) for p in _SELLER_PAYS]
+
+
+def debts_on_buyer(text: str | None) -> bool | None:
+    """Read a listing/edital text and decide whether condominium/IPTU debts
+    stay with the buyer. True = buyer pays, False = seller pays / delivered
+    free of debts, None = text doesn't say. A heuristic: always confirm in the
+    edital before bidding."""
+    if not text:
+        return None
+    t = strip_accents(text.lower())
+    buyer = any(r.search(t) for r in _BUYER_PAYS_ASCII)
+    seller = any(r.search(t) for r in _SELLER_PAYS_ASCII)
+    if buyer and not seller:
+        return True
+    if seller and not buyer:
+        return False
     return None

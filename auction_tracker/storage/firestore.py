@@ -29,6 +29,14 @@ from ..models import Listing
 from ..summary import MAX_DOC_BYTES, to_summary
 
 
+def _eq(field: str, value):
+    try:
+        from google.cloud.firestore_v1.base_query import FieldFilter
+    except ImportError:  # tests use a fake client without the library
+        return (field, "==", value)
+    return FieldFilter(field, "==", value)
+
+
 class FirestoreSink:
     BATCH = 400  # Firestore allows at most 500 writes per batch
 
@@ -45,7 +53,7 @@ class FirestoreSink:
         summaries = self.db.collection("summaries")
         # first_seen is carried over from the previous summary (a few reads), so
         # the app can flag listings that appeared since earlier runs.
-        prev_docs = list(summaries.where("source", "==", source).stream())
+        prev_docs = list(summaries.where(filter=_eq("source", source)).stream())
         first_seen: dict[str, str] = {}
         for doc in prev_docs:
             for it in (doc.to_dict() or {}).get("items", []):

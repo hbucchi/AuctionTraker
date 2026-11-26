@@ -23,6 +23,7 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .enrich import enrich
 from .health import SiteReport, assess
 from .scrapers import REGISTRY
 from .storage import JsonlSink
@@ -65,7 +66,7 @@ def cmd_scrape(args: argparse.Namespace) -> int:
         listings = []
         t0 = time.monotonic()
         try:
-            listings = scraper.run()
+            listings = [enrich(x) for x in scraper.run()]
         except Exception as e:  # one broken site must not stop the others
             logging.getLogger(name).exception("scrape failed")
             rep.error = f"{type(e).__name__}: {e}"
@@ -100,6 +101,20 @@ def cmd_scrape(args: argparse.Namespace) -> int:
     return 1 if any(r.status == "FAIL" for r in reports) else 0
 
 
+def cmd_alerts(args: argparse.Namespace) -> int:
+    """Check every user's strategies against the listings now in Firestore."""
+    from . import alerts
+    from .storage.firestore import FirestoreSink
+
+    db = FirestoreSink(project_id=args.project).db
+    items = []
+    for doc in db.collection("summaries").stream():
+        items += (doc.to_dict() or {}).get("items", [])
+    stats = alerts.run(db, items)
+    print(f"alerts: {stats['users']} users, {stats['new']} new matches, {stats['emails']} emails sent")
+    return 0
+
+
 def cmd_export_web(args: argparse.Namespace) -> int:
     """Concatenate a run's JSONL files into the compact JSON the web app reads."""
     from .summary import from_dict
@@ -132,6 +147,8 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--out", default="data", help="output directory (default: data)")
     sp.add_argument("--firestore", action="store_true", help="also upload to Firestore")
     sp.add_argument("--project", default="auctiontraker", help="Firebase project id")
+    ap_al = sub.add_parser("alerts", help="email users about listings that newly match their strategies")
+    ap_al.add_argument("--project", default="auctiontraker", help="Firebase project id")
     ep = sub.add_parser("export-web", help="build the web app's data file from a run")
     ep.add_argument("run_dir")
     ep.add_argument("out", nargs="?", default="web/listings.json")
@@ -147,6 +164,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "export-web":
         return cmd_export_web(args)
+    if args.cmd == "alerts":
+        return cmd_alerts(args)
     return cmd_scrape(args)
 
 

@@ -32,6 +32,10 @@ def test_parse_area():
     assert parse_area("47,60m² construída") == 47.6
     assert parse_area("Terreno com 1.005m²") == 1005.0
     assert parse_area("Casa 35m2") == 35.0
+    assert parse_area("área total de 25,9531m²") == 25.9531
+    assert parse_area("1.234,56 m²") == 1234.56
+    assert parse_area("Sala comercial, 30.83 m2") == 30.83
+    assert parse_area("270.0 m2") == 270.0
     assert parse_area("sem área") is None
 
 

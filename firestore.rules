@@ -1,13 +1,14 @@
 rules_version = '2';
 
 // Who can do what from the browser (the web app).
-// The scraper writes with a service account, which bypasses these rules,
-// so browsers never need write access.
+// The scraper and the alert job use a service account, which bypasses these
+// rules, so browsers never need write access to shared data.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Any signed-in Google account can read. To restrict access to specific
-    // people, replace `signedIn()` with `allowed()` and list their emails.
+    // Any signed-in Google account can use the app. To restrict access to
+    // specific people, replace `signedIn()` with `allowed()` below and list
+    // their emails.
     function signedIn() {
       return request.auth != null;
     }
@@ -15,19 +16,25 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email_verified == true
         && request.auth.token.email in ['someone@example.com'];
     }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
 
-    match /summaries/{doc} {
-      allow read: if signedIn();
+    // shared, read-only data written by the daily job
+    match /summaries/{doc} { allow read: if signedIn(); allow write: if false; }
+    match /listings/{doc}  { allow read: if signedIn(); allow write: if false; }
+    match /runs/{doc}      { allow read: if signedIn(); allow write: if false; }
+
+    // each user's own strategies and checklists: only they can read/write
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+    // what the alert job found for each user: they can read, only the job writes
+    match /alert_state/{uid} {
+      allow read: if isOwner(uid);
       allow write: if false;
     }
-    match /listings/{doc} {
-      allow read: if signedIn();
-      allow write: if false;
-    }
-    match /runs/{doc} {
-      allow read: if signedIn();
-      allow write: if false;
-    }
+
     // everything else: closed
     match /{document=**} {
       allow read, write: if false;

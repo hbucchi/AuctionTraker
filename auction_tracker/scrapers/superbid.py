@@ -22,7 +22,7 @@ from typing import Any, Iterator
 from bs4 import BeautifulSoup
 
 from ..models import AuctionRound, Listing
-from ..parsing import clean, iso_from_sql, parse_brl, split_city_uf, state_to_uf
+from ..parsing import clean, debts_on_buyer, iso_from_sql, parse_bedrooms, parse_brl, split_city_uf, state_to_uf
 from .base import BaseScraper, ScraperError
 
 BASE = "https://www.superbid.net"
@@ -58,6 +58,26 @@ def _template_value(product: dict, prop_id: str) -> str | None:
     return None
 
 
+def _modality(product: dict) -> str | None:
+    if product.get("judicial"):  # judicial auctions carry the court case details
+        return "judicial"
+    kind = (_template_value(product, "tipodevenda") or "").lower()
+    return {
+        "leilaoparticular": "extrajudicial",
+        "leilaoextrajudicial": "extrajudicial",
+        "leilaojudicial": "judicial",
+        "vendadireta": "venda direta",
+    }.get(kind, kind or None)
+
+
+def _bedrooms(product: dict) -> int | None:
+    for key in ("dormitorios", "quartos", "numerodedormitorios", "numerodequartos"):
+        v = _template_value(product, key)
+        if v and v.strip().isdigit():
+            return int(v)
+    return parse_bedrooms(product.get("shortDesc"))
+
+
 def offer_to_listing(o: dict[str, Any], links: dict[str, str], category: str) -> Listing:
     oid = str(o["id"])
     product = o.get("product") or {}
@@ -83,7 +103,9 @@ def offer_to_listing(o: dict[str, Any], links: dict[str, str], category: str) ->
     appraisal = parse_brl(am.group(1)) if am else None
 
     sub = product.get("subCategory") or {}
-    area = _template_value(product, "areaprivativa") or _template_value(product, "areatotal")
+    # built area first: it is what price-per-m² indices (FipeZAP) refer to
+    area = (_template_value(product, "areaconstruida") or _template_value(product, "areaprivativa")
+            or _template_value(product, "areatotal"))
     status = o.get("offerStatus") or {}
     status_txt = (
         "vendido" if status.get("sold") else
@@ -92,6 +114,16 @@ def offer_to_listing(o: dict[str, Any], links: dict[str, str], category: str) ->
         "proposta" if status.get("makeYourProposal") else None
     )
     price = detail.get("currentMinBid") or o.get("price")
+    # who pays condo/IPTU debts: Superbid has a structured field for it on
+    # many offers; otherwise read the description text
+    resp = (_template_value(product, "responsabilidadedopagamentodosdebitos") or "").lower()
+    if resp in ("comprador", "arrematante"):
+        debts, debts_source = True, "Superbid: campo do anúncio"
+    elif resp in ("vendedor", "comitente"):
+        debts, debts_source = False, "Superbid: campo do anúncio"
+    else:
+        debts = debts_on_buyer(desc_text)
+        debts_source = "descrição do anúncio" if debts is not None else None
     return Listing(
         source="superbid",
         source_id=oid,
@@ -100,7 +132,7 @@ def offer_to_listing(o: dict[str, Any], links: dict[str, str], category: str) ->
         title=clean((product.get("shortDesc") or "").replace(" ¿ ", " – ")) or oid,
         category=category,
         property_type=clean(sub.get("description")),
-        modality=clean(auction.get("modalityDesc")),
+        modality=_modality(product),
         status=status_txt,
         seller=clean(((o.get("seller") or {}).get("company") or [{}])[0].get("fantasyName"))
         or clean((o.get("store") or {}).get("name")),
@@ -113,6 +145,9 @@ def offer_to_listing(o: dict[str, Any], links: dict[str, str], category: str) ->
         current_price=float(price) if price is not None else None,
         rounds=[AuctionRound(number=1, date=iso_from_sql(o.get("endDate")), min_bid=detail.get("initialBidValue"))],
         end_date=iso_from_sql(o.get("endDate")),
+        bedrooms=_bedrooms(product),
+        buyer_pays_debts=debts,
+        debts_source=debts_source,
         image_url=product.get("thumbnailUrl"),
         bids_count=o.get("totalBids"),
         extra={

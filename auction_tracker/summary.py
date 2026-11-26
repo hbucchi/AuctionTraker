@@ -44,8 +44,25 @@ def to_summary(x: Listing) -> dict[str, Any]:
         "img": x.image_url,
         "bids": x.bids_count,
         "rounds": [{"n": r.number, "d": r.date, "v": r.min_bid} for r in x.rounds],
+        # strategy fields (see enrich.py and web/strategy-fields.json)
+        "beds": x.bedrooms,
+        "kind": x.kind,
+        "modn": x.modality_norm,
+        "mv": round(x.market_value) if x.market_value else None,
+        "mvs": x.market_value_source,
+        "ptm": x.price_to_market_pct,
+        # True when the market value is the official appraisal (not a FipeZAP estimate)
+        "mvo": bool(x.market_value_source) and not x.market_value_source.startswith("FipeZAP"),
+        "debts": x.buyer_pays_debts,
+        "debtsrc": x.debts_source,
+        "pop": x.city_population,
+        "gdppc": x.city_gdp_per_capita,
+        "idhm": x.city_idhm,
+        "agro": x.city_agro_share,
+        "cap": x.city_capital,
     }
-    return {k: v for k, v in d.items() if v not in (None, [], "")}
+    # keep False (e.g. debts=False means "seller pays"), drop only empty values
+    return {k: v for k, v in d.items() if v is not None and v != [] and v != ""}
 
 
 def from_dict(d: dict[str, Any]) -> dict[str, Any]:
@@ -54,4 +71,6 @@ def from_dict(d: dict[str, Any]) -> dict[str, Any]:
 
     rounds = [AuctionRound(**r) for r in d.get("rounds") or []]
     fields = {k: v for k, v in d.items() if k in Listing.__dataclass_fields__ and k != "rounds"}
-    return to_summary(Listing(**fields, rounds=rounds))
+    from .enrich import enrich
+
+    return to_summary(enrich(Listing(**fields, rounds=rounds)))

@@ -61,6 +61,33 @@ firebase login
 firebase deploy --only hosting,firestore:rules
 ```
 
+## Strategies and alerts
+
+Users save **strategies**: sets of criteria with min/max values, e.g. an
+investor's rule set of judicial/extrajudicial auctions, houses, apartments
+or commercial property ≥ 80 m² with 3+ bedrooms, a minimum bid ≤ 50% of
+market value, and cities with > 100k inhabitants, an HDI ≥ 0.7 and GDP per
+capita above the national average.
+
+- Criteria are defined once in `web/strategy-fields.json`. The browser
+  (`web/strategy.js`) and the alert job (`auction_tracker/strategy.py`) both
+  follow it, and `tests/strategy_cases.json` checks that they agree.
+- Every numeric criterion has an "include when unknown" switch, because
+  sites don't always publish bedrooms, area or appraisal.
+- **Market value** comes from the auction's appraisal, or the 1st-round
+  minimum bid (which equals the appraisal by law: CPC art. 891 / Lei
+  9.514 art. 27), or as a rough fallback FipeZAP R$/m² × area.
+- **City data** comes from IBGE (Census 2022 population, municipal GDP and
+  agribusiness share) and PNUD (municipal HDI 2010), in
+  `auction_tracker/data/` (rebuild: `python scripts/build_reference_data.py`).
+- **Debts** (who pays condo/IPTU) are read from Superbid's structured field
+  or from listing text; always confirm in the edital.
+- **Lawsuits** against the bank are a manual step in each property's
+  due-diligence checklist. The app never collects CPFs.
+- **Alerts:** after each daily scrape, `python -m auction_tracker alerts`
+  finds new matches per user, stores them for the app's "Novo" badges, and
+  emails them through Resend when the `RESEND_API_KEY` secret is set.
+
 ## The data model
 
 Every site maps into `auction_tracker.models.Listing`. Its main fields:

@@ -1,0 +1,400 @@
+{
+  "_doc": "Single source of truth for strategy filters. Read by the web app (web/index.html) and by the alert job (auction_tracker/strategy.py) so both apply exactly the same rules. 'attr' is the key in the compact listing (auction_tracker/summary.py).",
+  "groups": [
+    {
+      "key": "leilao",
+      "label": "Leilão"
+    },
+    {
+      "key": "imovel",
+      "label": "Imóvel"
+    },
+    {
+      "key": "valor",
+      "label": "Valor"
+    },
+    {
+      "key": "cidade",
+      "label": "Cidade-alvo"
+    },
+    {
+      "key": "local",
+      "label": "Localização"
+    },
+    {
+      "key": "edital",
+      "label": "Edital"
+    }
+  ],
+  "sets": [
+    {
+      "key": "modality",
+      "attr": "modn",
+      "group": "leilao",
+      "label": "Tipo de leilão",
+      "options": [
+        [
+          "judicial",
+          "Judicial"
+        ],
+        [
+          "extrajudicial",
+          "Extrajudicial"
+        ],
+        [
+          "venda_direta",
+          "Venda direta"
+        ]
+      ],
+      "help": "Quando o site não informa, inferimos pelo comitente: tribunal → judicial; banco ou financeira → extrajudicial."
+    },
+    {
+      "key": "kind",
+      "attr": "kind",
+      "group": "imovel",
+      "label": "Tipo de imóvel",
+      "options": [
+        [
+          "casa",
+          "Casa de rua"
+        ],
+        [
+          "casa_condominio",
+          "Casa em condomínio"
+        ],
+        [
+          "apartamento",
+          "Apartamento"
+        ],
+        [
+          "comercial",
+          "Comercial"
+        ],
+        [
+          "galpao",
+          "Galpão"
+        ],
+        [
+          "terreno",
+          "Terreno"
+        ],
+        [
+          "rural",
+          "Rural"
+        ],
+        [
+          "outros",
+          "Outros"
+        ]
+      ]
+    },
+    {
+      "key": "uf",
+      "attr": "uf",
+      "group": "local",
+      "label": "Estados",
+      "options": [
+        [
+          "AC",
+          "AC"
+        ],
+        [
+          "AL",
+          "AL"
+        ],
+        [
+          "AM",
+          "AM"
+        ],
+        [
+          "AP",
+          "AP"
+        ],
+        [
+          "BA",
+          "BA"
+        ],
+        [
+          "CE",
+          "CE"
+        ],
+        [
+          "DF",
+          "DF"
+        ],
+        [
+          "ES",
+          "ES"
+        ],
+        [
+          "GO",
+          "GO"
+        ],
+        [
+          "MA",
+          "MA"
+        ],
+        [
+          "MG",
+          "MG"
+        ],
+        [
+          "MS",
+          "MS"
+        ],
+        [
+          "MT",
+          "MT"
+        ],
+        [
+          "PA",
+          "PA"
+        ],
+        [
+          "PB",
+          "PB"
+        ],
+        [
+          "PE",
+          "PE"
+        ],
+        [
+          "PI",
+          "PI"
+        ],
+        [
+          "PR",
+          "PR"
+        ],
+        [
+          "RJ",
+          "RJ"
+        ],
+        [
+          "RN",
+          "RN"
+        ],
+        [
+          "RO",
+          "RO"
+        ],
+        [
+          "RR",
+          "RR"
+        ],
+        [
+          "RS",
+          "RS"
+        ],
+        [
+          "SC",
+          "SC"
+        ],
+        [
+          "SE",
+          "SE"
+        ],
+        [
+          "SP",
+          "SP"
+        ],
+        [
+          "TO",
+          "TO"
+        ]
+      ]
+    }
+  ],
+  "ranges": [
+    {
+      "key": "days",
+      "attr": "days",
+      "group": "leilao",
+      "label": "Dias até o encerramento",
+      "unit": "dias",
+      "step": 1
+    },
+    {
+      "key": "area",
+      "attr": "area",
+      "group": "imovel",
+      "label": "Área",
+      "unit": "m²",
+      "step": 10
+    },
+    {
+      "key": "beds",
+      "attr": "beds",
+      "group": "imovel",
+      "label": "Quartos",
+      "unit": "",
+      "step": 1,
+      "help": "Muitos sites só mostram os quartos na página do imóvel; por isso a opção de incluir imóveis sem essa informação."
+    },
+    {
+      "key": "price",
+      "attr": "price",
+      "group": "valor",
+      "label": "Lance mínimo / preço",
+      "unit": "R$",
+      "step": 10000
+    },
+    {
+      "key": "ptm",
+      "attr": "ptm",
+      "group": "valor",
+      "label": "Lance em % do valor de mercado",
+      "unit": "%",
+      "step": 5,
+      "help": "Valor de mercado = avaliação do leilão; ou o lance do 1º leilão (que por lei é a avaliação); ou preço médio do m² do Índice FipeZAP na cidade × área."
+    },
+    {
+      "key": "disc",
+      "attr": "disc",
+      "group": "valor",
+      "label": "Desconto anunciado",
+      "unit": "%",
+      "step": 5
+    },
+    {
+      "key": "pop",
+      "attr": "pop",
+      "group": "cidade",
+      "city": true,
+      "label": "População",
+      "unit": "hab.",
+      "step": 10000,
+      "help": "IBGE, Censo 2022."
+    },
+    {
+      "key": "gdppc",
+      "attr": "gdppc",
+      "group": "cidade",
+      "city": true,
+      "label": "PIB per capita",
+      "unit": "R$",
+      "step": 1000,
+      "help": "IBGE, PIB dos Municípios. A média nacional aparece como referência."
+    },
+    {
+      "key": "idhm",
+      "attr": "idhm",
+      "group": "cidade",
+      "city": true,
+      "label": "IDH-M",
+      "unit": "",
+      "step": 0.01,
+      "help": "PNUD, Atlas 2010 (edição municipal mais recente). 0,700–0,799 = alto; 0,800+ = muito alto."
+    },
+    {
+      "key": "agro",
+      "attr": "agro",
+      "group": "cidade",
+      "city": true,
+      "label": "Agronegócio no PIB da cidade",
+      "unit": "%",
+      "step": 1,
+      "help": "Participação da agropecuária no valor adicionado do município (IBGE)."
+    }
+  ],
+  "toggles": [
+    {
+      "key": "capital",
+      "attr": "cap",
+      "group": "cidade",
+      "city": true,
+      "label": "Somente capitais"
+    },
+    {
+      "key": "official_mv",
+      "attr": "mvo",
+      "group": "valor",
+      "label": "Só valor de mercado oficial (avaliação)",
+      "help": "Ignora estimativas pelo FipeZAP, que usam a área informada no anúncio (às vezes a do terreno)."
+    }
+  ],
+  "debts_options": [
+    [
+      "any",
+      "Mostrar todos (só informar)"
+    ],
+    [
+      "not_buyer",
+      "Excluir quando as dívidas ficam com o arrematante"
+    ],
+    [
+      "seller_only",
+      "Somente quando confirmado que o vendedor paga"
+    ]
+  ],
+  "presets": {
+    "abaixo50": {
+      "name": "Imóveis a até 50% do mercado",
+      "enabled": true,
+      "email": true,
+      "hide_ended": true,
+      "city_mode": "all",
+      "debts": "any",
+      "sets": {
+        "modality": {
+          "values": [
+            "judicial",
+            "extrajudicial"
+          ],
+          "unknown": true
+        },
+        "kind": {
+          "values": [
+            "casa",
+            "casa_condominio",
+            "apartamento",
+            "comercial"
+          ],
+          "unknown": false
+        }
+      },
+      "ranges": {
+        "area": {
+          "min": 80,
+          "max": null,
+          "unknown": true
+        },
+        "beds": {
+          "min": 3,
+          "max": null,
+          "unknown": true
+        },
+        "ptm": {
+          "min": null,
+          "max": 50,
+          "unknown": false
+        },
+        "pop": {
+          "min": 100000,
+          "max": null,
+          "unknown": false
+        },
+        "gdppc": {
+          "min": "NATIONAL_GDP_PC",
+          "max": null,
+          "unknown": false
+        },
+        "idhm": {
+          "min": 0.7,
+          "max": null,
+          "unknown": false
+        }
+      },
+      "cities": [],
+      "neighborhoods": [],
+      "toggles": {
+        "official_mv": true
+      }
+    }
+  },
+  "reference": {
+    "national_gdp_per_capita": 53887,
+    "gdp_year": 2023,
+    "source": "IBGE PIB dos Municípios 2023 (SIDRA 5938)"
+  }
+}
