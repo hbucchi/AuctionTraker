@@ -64,6 +64,10 @@ class Listing:
     bedrooms: int | None = None
     buyer_pays_debts: bool | None = None   # condo/IPTU debts on the buyer (arrematante)?
     debts_source: str | None = None        # where buyer_pays_debts came from
+    occupied: bool | None = None           # someone lives there (eviction cost and delay)
+    lat: float | None = None
+    lon: float | None = None
+    geo: str | None = None                 # "exato" (site or geocoded address) | "cidade" (municipality center)
 
     # --- enrichment (auction_tracker/enrich.py; derived, not scraped) ----
     kind: str | None = None                # casa | casa_condominio | apartamento | comercial | terreno | rural | galpao | outros

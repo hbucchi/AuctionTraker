@@ -22,12 +22,18 @@ def main() -> int:
     page = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
     head = page.split("<!-- preview:strip-above -->", 1)[1].split("<!-- preview:strip-below -->", 1)[0]
     body = page.split("<body>", 1)[1].rsplit("</body>", 1)[0]
-    module = (ROOT / "web" / "strategy.js").read_text(encoding="utf-8").replace("export function", "function")
-    body = body.replace('import { matchesStrategy, nextDeadline } from "./strategy.js";', module)
+    def inline(name: str) -> str:
+        js = (ROOT / "web" / name).read_text(encoding="utf-8")
+        js = "\n".join(line for line in js.splitlines() if not line.startswith("import "))
+        return js.replace("export function", "function").replace("export const", "const")
+
+    body = body.replace('import { matchesStrategy, nextDeadline } from "./strategy.js";', inline("roe.js") + "\n" + inline("strategy.js"))
+    body = body.replace('import { roeRange, roeAssumptions, flip } from "./roe.js";', "")
     (out / "index.html").write_text(head.strip() + "\n" + body.strip() + "\n", encoding="utf-8")
     (out / "firebase-config.js").write_text("// preview build: no Firebase\nwindow.FIREBASE_CONFIG = null;\n")
     shutil.copy(ROOT / "web" / "strategy-fields.json", out / "strategy-fields.json")
     shutil.copy(ROOT / "web" / "valuation-meta.json", out / "valuation-meta.json")
+    shutil.copy(ROOT / "web" / "brazil-states.json", out / "brazil-states.json")
     print(f"preview written to {out}")
     return 0
 

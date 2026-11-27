@@ -55,13 +55,16 @@ def to_summary(x: Listing) -> dict[str, Any]:
         "mvo": bool(x.market_value_source) and not x.market_value_source.startswith("FipeZAP"),
         "debts": x.buyer_pays_debts,
         "debtsrc": x.debts_source,
+        "occ": x.occupied,
+        "lat": x.lat, "lon": x.lon, "geo": x.geo,
         "pop": x.city_population,
         "gdppc": x.city_gdp_per_capita,
         "idhm": x.city_idhm,
         "agro": x.city_agro_share,
         "cap": x.city_capital,
         # five-method valuation: range, central value, confidence, per-method values
-        "val": {k: x.valuation[k] for k in ("lo", "mid", "hi", "n", "conf")} if x.valuation else None,
+        "val": {k: x.valuation[k] for k in ("lo", "mid", "hi", "lo50", "hi50", "n", "conf", "flag") if x.valuation.get(k) is not None}
+        if x.valuation else None,
         "vm": x.valuation["methods"] if x.valuation else None,
         "ptmv": x.price_to_valuation_pct,
     }

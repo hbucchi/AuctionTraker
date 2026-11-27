@@ -47,6 +47,9 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
 
       - name: Scrape and upload to Firestore
+        env:
+          # optional: street-level map pins (server key restricted to the Geocoding API)
+          GOOGLE_GEOCODING_KEY: ${{ secrets.GOOGLE_GEOCODING_KEY }}
         run: python -m auction_tracker scrape --firestore --project auctiontraker
 
       # Runs even if one site failed: the others' new listings still count.

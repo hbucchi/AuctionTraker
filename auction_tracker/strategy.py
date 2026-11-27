@@ -31,6 +31,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from .roe import roe_range
+
 SPEC_PATH = Path(__file__).resolve().parents[1] / "web" / "strategy-fields.json"
 DAY = 86400.0
 
@@ -66,10 +68,14 @@ def is_ended(item: dict, now: float) -> bool:
     return end is not None and end < now and not takes_proposals
 
 
-def attr_value(item: dict, attr: str, now: float) -> Any:
+def attr_value(item: dict, attr: str, now: float, strategy: dict | None = None) -> Any:
     if attr == "days":
         t = next_deadline(item, now)
         return None if t is None else (t - now) / DAY
+    if attr in ("roe", "roelo"):
+        # computed with the strategy's own cost assumptions (roe.py)
+        r = roe_range(item, (strategy or {}).get("roe_assumptions"))
+        return None if r is None else r["mid" if attr == "roe" else "lo"]
     return item.get(attr)
 
 
@@ -110,7 +116,7 @@ def matches(strategy: dict, item: dict, now: float | None = None) -> bool:
         cfg = (strategy.get("ranges") or {}).get(r["key"])
         if not range_active(cfg):
             continue
-        ok = range_ok(attr_value(item, r["attr"], now), cfg)
+        ok = range_ok(attr_value(item, r["attr"], now, strategy), cfg)
         if r.get("city"):
             city_results.append(ok)
         elif not ok:

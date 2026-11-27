@@ -23,13 +23,15 @@ For each listing:
 
 from __future__ import annotations
 
+import hashlib
 import json
+import math
 import re
 from functools import lru_cache
 from pathlib import Path
 
 from .models import Listing
-from .parsing import parse_bedrooms, strip_accents
+from .parsing import parse_bedrooms, parse_occupied, strip_accents
 
 DATA = Path(__file__).parent / "data"
 
@@ -163,6 +165,9 @@ def enrich(x: Listing) -> Listing:
     if x.bedrooms is None:
         x.bedrooms = parse_bedrooms(x.title)
     x.kind = classify_kind(x)
+    if x.occupied is None:
+        occ = str((x.extra or {}).get("occupancy") or "")  # Superbid's structured field
+        x.occupied = parse_occupied(occ) if occ else parse_occupied(x.title)
     x.modality_norm = classify_modality(x)
     if x.city and x.state:
         m = municipios()["by_key"].get(f"{_norm(x.city)}|{x.state}")
@@ -173,7 +178,29 @@ def enrich(x: Listing) -> Listing:
             x.city_agro_share = m.get("agro_share")
             x.city_capital = m.get("capital")
     estimate_market_value(x)
+    place(x)
     return x
+
+
+def place(x: Listing) -> None:
+    """Coordinates for the map: the site's own (Superbid), else the
+    municipality's center with a small fixed offset per listing so pins in
+    the same city don't stack (geocode.py can replace these with street-level
+    positions when a Google Geocoding key is configured)."""
+    if x.lat is not None and x.lon is not None:
+        return
+    ex = x.extra or {}
+    if ex.get("lat") is not None and ex.get("lon") is not None:
+        x.lat, x.lon, x.geo = float(ex["lat"]), float(ex["lon"]), "exato"
+        return
+    if x.city and x.state:
+        m = municipios()["by_key"].get(f"{_norm(x.city)}|{x.state}")
+        if m and m.get("lat") is not None:
+            h = int(hashlib.md5(x.id.encode()).hexdigest()[:8], 16)
+            angle, radius = (h % 360) * math.pi / 180, 0.004 + (h >> 9) % 100 / 100 * 0.016  # 0.4-2 km
+            x.lat = round(m["lat"] + radius * math.sin(angle), 5)
+            x.lon = round(m["lon"] + radius * math.cos(angle), 5)
+            x.geo = "cidade"
 
 
 def national_gdp_per_capita() -> int:

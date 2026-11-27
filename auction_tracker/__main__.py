@@ -88,6 +88,12 @@ def cmd_scrape(args: argparse.Namespace) -> int:
     # Valuation compares listings across all sites (auction comparables), so
     # it runs once everything is scraped, before anything is written.
     valuate_all([x for _, listings, _ in results for x in listings])
+    if fs is not None:
+        from . import geocode
+
+        g = geocode.apply([x for _, listings, _ in results for x in listings], fs.db)
+        if g["new"] or g["cached"]:
+            print(f"geocoding: {g['new']} new lookups, {g['cached']} cached, {g['precise']} street-level pins")
     for name, listings, rep in results:
         if listings:
             sink.write(name, listings)

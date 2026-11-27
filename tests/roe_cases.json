@@ -1,0 +1,175 @@
+{
+ "cases": [
+  {
+   "name": "vacant, defaults",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000
+    }
+   },
+   "custom": null,
+   "expect": {
+    "lo": 9.0,
+    "mid": 44.8,
+    "hi": 78.3,
+    "annual": 44.8,
+    "months": 12.0,
+    "equity": 246200
+   }
+  },
+  {
+   "name": "buyer pays debts",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000
+    },
+    "debts": true
+   },
+   "custom": null,
+   "expect": {
+    "lo": 3.8,
+    "mid": 35.1,
+    "hi": 63.2,
+    "annual": 35.1,
+    "months": 12.0,
+    "equity": 266200
+   }
+  },
+  {
+   "name": "occupied adds eviction and months",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000
+    },
+    "occ": true
+   },
+   "custom": null,
+   "expect": {
+    "lo": 4.9,
+    "mid": 37.1,
+    "hi": 66.3,
+    "annual": 23.4,
+    "months": 18.0,
+    "equity": 261800
+   }
+  },
+  {
+   "name": "unknown occupancy treated as occupied",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000
+    }
+   },
+   "custom": {
+    "assume_occupied": 1
+   },
+   "expect": {
+    "lo": 4.9,
+    "mid": 37.1,
+    "hi": 66.3,
+    "annual": 23.4,
+    "months": 18.0,
+    "equity": 261800
+   }
+  },
+  {
+   "name": "custom costs",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000
+    }
+   },
+   "custom": {
+    "renovation_pct": 15,
+    "holding_months": 6,
+    "itbi_pct": 2
+   },
+   "expect": {
+    "lo": 0.5,
+    "mid": 28.9,
+    "hi": 53.6,
+    "annual": 66.1,
+    "months": 6.0,
+    "equity": 280600
+   }
+  },
+  {
+   "name": "loss when value below cost",
+   "item": {
+    "price": 380000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000
+    }
+   },
+   "custom": null,
+   "expect": {
+    "lo": -39.5,
+    "mid": -15.2,
+    "hi": 7.0,
+    "annual": -15.2,
+    "months": 12.0,
+    "equity": 443300
+   }
+  },
+  {
+   "name": "flagged valuation gives none",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "flag": "lance_atipico"
+    }
+   },
+   "custom": null,
+   "expect": null
+  },
+  {
+   "name": "no price gives none",
+   "item": {
+    "price": null,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000
+    }
+   },
+   "custom": null,
+   "expect": null
+  }
+ ]
+}

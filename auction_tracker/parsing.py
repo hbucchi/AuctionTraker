@@ -280,3 +280,15 @@ def parse_share(text: str | None) -> float | None:
             if 0 < v < 1:
                 return v
     return None
+
+
+def parse_occupied(text: str | None) -> bool | None:
+    """'DESOCUPADO', 'imóvel vago' -> False; 'Imóvel ocupado' -> True; else None."""
+    if not text:
+        return None
+    t = strip_accents(text.lower())
+    if re.search(r"\b(desocupad[oa]s?|vago|vazio|livre de ocupa|livre e desocupad)", t):
+        return False
+    if re.search(r"\bocupad[oa]s?\b", t):
+        return True
+    return None

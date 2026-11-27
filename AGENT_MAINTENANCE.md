@@ -74,6 +74,17 @@ anything you couldn't fix.
   check `auction_tracker/enrich.py` and the site's scraper; users' alerts
   depend on these fields.
 
+## Valuation
+
+- After refreshing FipeZAP/SINAPI, or when coverage changes a lot, recalibrate:
+  `python scripts/calibrate_valuation.py data/<run-id>`. Commit
+  `auction_tracker/data/valuation_calibration.json` and `web/valuation-meta.json`.
+  Report the printed errors; if the combined median error gets worse than
+  ~45%, look for an area or classification parsing regression first.
+- Bids under 20% of the estimate are flagged as suspicious, not ranked. If the
+  flagged count jumps, a scraper is probably reading the wrong area or missing
+  a fractional-share marker.
+
 ## Baselines (2026-11-26)
 
 | site | listings | notes |

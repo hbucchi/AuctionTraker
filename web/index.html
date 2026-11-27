@@ -192,6 +192,25 @@ body::before {
 .dd-help { color: var(--muted); font-size: 12px; margin-left: 26px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .dd-help a { color: var(--accent); }
 
+/* ---- map ---- */
+.map-wrap { display: grid; gap: 8px; }
+.map { position: relative; height: max(440px, 68vh); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.map svg { width: 100%; height: 100%; display: block; }
+.map svg .uf { fill: var(--bg); stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.map svg .pin { stroke: var(--surface); stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; }
+.map svg .pin:hover, .map svg .pin.sel { stroke: var(--ink); stroke-width: 2; }
+.map-pop {
+  position: absolute; z-index: 3; width: min(300px, calc(100% - 24px)); background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 8px 24px rgb(0 0 0 / .18); padding: 12px; display: grid; gap: 6px; font-size: 13px;
+}
+.map-pop .close { position: absolute; top: 6px; right: 8px; border: 0; background: none; font-size: 18px; cursor: pointer; color: var(--muted); }
+.map-pop a.title { font-weight: 600; text-decoration: none; padding-right: 18px; }
+.map-pop .go { justify-self: start; text-decoration: none; }
+.gm-pop { display: grid; gap: 6px; font: 13px/1.4 var(--font-body); color: #15202c; max-width: 280px; }
+.gm-pop a { color: #1f4fd1; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); align-items: center; }
+.map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+
 /* ---- valuation ---- */
 .val { border-top: 1px solid var(--line); padding: 12px 12px 14px; display: grid; gap: 12px; }
 .val-head { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; }
@@ -333,17 +352,26 @@ body::before {
     <div class="toolbar">
       <span class="result-count" id="resultCount"></span>
       <span class="spacer"></span>
+      <div class="seg" role="radiogroup" aria-label="Visualização">
+        <label><input type="radio" name="view" value="list" checked><span>Lista</span></label>
+        <label><input type="radio" name="view" value="map"><span>Mapa</span></label>
+      </div>
       <label for="sort" class="notice">Ordenar</label>
       <select class="input" id="sort">
         <option value="ending">Encerra primeiro</option>
         <option value="ptm">Menor % do mercado</option>
         <option value="ptmv">Menor % da avaliação do modelo</option>
+        <option value="roe">Maior ROE estimado</option>
         <option value="discount">Maior desconto</option>
         <option value="priceAsc">Menor preço</option>
         <option value="priceDesc">Maior preço</option>
       </select>
     </div>
     <div class="list" id="list"></div>
+    <div class="map-wrap" id="mapWrap" hidden>
+      <div class="map" id="map"></div>
+      <div class="map-legend"><span><i style="background:var(--good)"></i>ROE ≥ 20%</span><span><i style="background:var(--warn)"></i>0–20%</span><span><i style="background:var(--bad)"></i>prejuízo</span><span><i style="background:var(--muted)"></i>sem avaliação</span><span id="mapNote"></span></div>
+    </div>
     <button class="btn more" id="more" type="button" hidden>Mostrar mais</button>
     <p class="notice" id="footnote"></p>
   </main>
@@ -354,6 +382,7 @@ body::before {
 <script src="firebase-config.js"></script>
 <script type="module">
 import { matchesStrategy, nextDeadline } from "./strategy.js";
+import { roeRange, roeAssumptions, flip } from "./roe.js";
 
 const FIREBASE_SDK = "13.4.0";
 const PAGE = 40;
@@ -441,10 +470,131 @@ const SORTS = {
   ending: (a, b) => (isNaN(a.nextT) ? 1 : 0) - (isNaN(b.nextT) ? 1 : 0) || (a.nextT < NOW) - (b.nextT < NOW) || a.nextT - b.nextT,
   ptm: (a, b) => (a.ptm ?? Infinity) - (b.ptm ?? Infinity),
   ptmv: (a, b) => (a.ptmv ?? Infinity) - (b.ptmv ?? Infinity),
+  roe: (a, b) => (roeFor(b)?.mid ?? -Infinity) - (roeFor(a)?.mid ?? -Infinity),
   discount: (a, b) => (b.disc ?? -1) - (a.disc ?? -1),
   priceAsc: (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
   priceDesc: (a, b) => (b.price ?? -1) - (a.price ?? -1),
 };
+
+/* ---------- map ---------- */
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pinColor = (x) => cssVar(`--${{ good: "good", warn: "warn", bad: "bad", mute: "muted" }[roeClass(roeFor(x))]}`);
+
+function popupHTML(x) {
+  const r = roeFor(x);
+  const where = [x.hood, x.city && x.uf ? `${x.city}/${x.uf}` : ""].filter(Boolean).join(", ");
+  return `<a class="title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
+    <span class="notice">${esc(where)} · ${esc(SITES[x.src] || x.src)}${x.geo === "cidade" ? " · posição aproximada (centro da cidade)" : ""}</span>
+    <span><b>${x.price != null ? brl.format(x.price) : "—"}</b>${x.val ? ` · avaliação ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}` : ""}</span>
+    ${r ? `<span>ROE estimado <b>${pct(r.lo)} a ${pct(r.hi)}</b> (${pct(r.annual)} a.a. no central)</span>` : ""}
+    ${isNaN(x.nextT) ? "" : `<span>Próxima data: ${dLong.format(x.nextT)}</span>`}
+    <a class="btn btn-primary btn-sm go" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">Abrir no site do leiloeiro ↗</a>`;
+}
+
+let mapTimer;
+function renderMap(rows) {
+  clearTimeout(mapTimer);
+  mapTimer = setTimeout(() => drawMap(rows), 60);
+}
+
+async function drawMap(rows) {
+  const pts = rows.filter((x) => x.lat != null && x.lon != null);
+  const exact = pts.filter((x) => x.geo === "exato").length;
+  $("mapNote").textContent = `${pts.length.toLocaleString("pt-BR")} de ${rows.length.toLocaleString("pt-BR")} no mapa · ${exact.toLocaleString("pt-BR")} com endereço exato, os demais no centro da cidade`;
+  if (window.GOOGLE_MAPS_KEY) {
+    try { await googleMap(pts); return; } catch (e) { $("mapNote").textContent += ` · Google Maps indisponível (${e.message}); usando o mapa simplificado`; }
+  }
+  await svgMap(pts);
+}
+
+/* Google Maps (when GOOGLE_MAPS_KEY is set in firebase-config.js) */
+let gm = null;
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script"); s.src = src; s.async = true;
+    s.onload = resolve; s.onerror = () => reject(new Error("falha ao carregar " + new URL(src).host));
+    document.head.appendChild(s);
+  });
+}
+async function googleMap(pts) {
+  if (!gm) {
+    const ready = new Promise((r) => (window.__gmReady = r));
+    await Promise.all([
+      loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(window.GOOGLE_MAPS_KEY)}&v=weekly&language=pt-BR&region=BR&callback=__gmReady`).then(() => ready),
+      loadScript("https://unpkg.com/@googlemaps/markerclusterer@2.5.3/dist/index.min.js"),
+    ]);
+    const map = new google.maps.Map($("map"), { center: { lat: -14.5, lng: -51 }, zoom: 4, mapTypeControl: false, streetViewControl: false, gestureHandling: "greedy" });
+    gm = { map, info: new google.maps.InfoWindow(), markers: [], cluster: new markerClusterer.MarkerClusterer({ map }) };
+  }
+  gm.cluster.clearMarkers();
+  gm.markers.forEach((m) => m.setMap(null));
+  gm.markers = pts.map((x) => {
+    const m = new google.maps.Marker({
+      position: { lat: x.lat, lng: x.lon }, title: x.title,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: pinColor(x), fillOpacity: 0.95, strokeColor: "#ffffff", strokeWeight: 1.5 },
+    });
+    m.addListener("click", () => { gm.info.setContent(`<div class="gm-pop">${popupHTML(x)}</div>`); gm.info.open({ map: gm.map, anchor: m }); });
+    return m;
+  });
+  gm.cluster.addMarkers(gm.markers);
+  if (pts.length) {
+    const b = new google.maps.LatLngBounds();
+    pts.forEach((x) => b.extend({ lat: x.lat, lng: x.lon }));
+    gm.map.fitBounds(b, 40);
+    if (pts.length === 1) gm.map.setZoom(14);
+  }
+}
+
+/* Schematic map (no key needed): IBGE state outlines + one dot per property */
+let STATES = null;
+async function svgMap(pts) {
+  if (!STATES) { try { STATES = (await (await fetch("brazil-states.json")).json()).states; } catch { STATES = []; } }
+  let [w, e, s, n] = [-74.2, -34.6, -33.9, 5.4];   // Brazil
+  if (pts.length && pts.length < ALL.length * 0.5) {  // a filtered set: zoom to it
+    const lons = pts.map((x) => x.lon), lats = pts.map((x) => x.lat);
+    const pad = 0.6;
+    [w, e, s, n] = [Math.min(...lons) - pad, Math.max(...lons) + pad, Math.min(...lats) - pad, Math.max(...lats) + pad];
+  }
+  const k = Math.cos(((s + n) / 2) * Math.PI / 180);   // shrink longitude so shapes keep their proportions
+  const X = (lon) => (lon - w) * k, Y = (lat) => n - lat;
+  const vw = (e - w) * k, vh = n - s, r = Math.max(vw, vh) / 260;
+  const ring = (pts2) => "M" + pts2.map(([lon, lat]) => `${X(lon).toFixed(3)},${Y(lat).toFixed(3)}`).join("L") + "Z";
+  const outlines = STATES.map((st) => `<path class="uf" d="${st.rings.map(ring).join("")}"><title>${st.uf}</title></path>`).join("");
+  const dots = pts.map((x, i) => `<circle class="pin" data-i="${i}" cx="${X(x.lon).toFixed(3)}" cy="${Y(x.lat).toFixed(3)}" r="${r.toFixed(3)}" fill="${pinColor(x)}"><title>${esc(x.title)}</title></circle>`).join("");
+  $("map").innerHTML = `<svg viewBox="0 0 ${vw.toFixed(3)} ${vh.toFixed(3)}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa dos imóveis filtrados">${outlines}${dots}</svg><div class="map-pop" id="mapPop" hidden></div>`;
+  $("map").querySelector("svg").addEventListener("click", (ev) => {
+    const c = ev.target.closest("circle.pin");
+    const pop = $("mapPop");
+    $("map").querySelectorAll(".pin.sel").forEach((el) => el.classList.remove("sel"));
+    if (!c) { pop.hidden = true; return; }
+    c.classList.add("sel");
+    const x = pts[Number(c.dataset.i)];
+    const box = $("map").getBoundingClientRect();
+    pop.innerHTML = `<button class="close" type="button" aria-label="Fechar">×</button>${popupHTML(x)}`;
+    pop.hidden = false;
+    const left = Math.min(Math.max(ev.clientX - box.left + 12, 8), box.width - pop.offsetWidth - 8);
+    const top = Math.min(Math.max(ev.clientY - box.top + 12, 8), box.height - pop.offsetHeight - 8);
+    pop.style.left = `${left}px`; pop.style.top = `${top}px`;
+    pop.querySelector(".close").onclick = () => { pop.hidden = true; c.classList.remove("sel"); };
+  });
+}
+
+/* ---------- ROE (cost assumptions: the applied strategy's, else defaults) ---------- */
+const roeCache = new Map();
+let roeKey = "";
+function roeFor(x) {
+  const key = JSON.stringify(activeStrategy?.roe_assumptions || {});
+  if (key !== roeKey) { roeCache.clear(); roeKey = key; }
+  if (!roeCache.has(x.id)) roeCache.set(x.id, roeRange(x, activeStrategy?.roe_assumptions));
+  return roeCache.get(x.id);
+}
+const roeClass = (r) => (r == null ? "mute" : r.mid >= 20 ? "good" : r.mid >= 0 ? "warn" : "bad");
+const pct = (n) => `${Math.round(n)}%`;
+function roePill(x) {
+  const r = roeFor(x);
+  if (!r) return x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo da avaliação estimada: costuma ser fração do imóvel ou área errada no anúncio">conferir dados</span>` : "";
+  return `<span class="pill ${roeClass(r)}" title="Retorno sobre o capital, comprando à vista e revendendo na faixa provável de avaliação (premissas na estratégia). Anualizado no cenário central: ${pct(r.annual)} a.a. em ${r.months} meses.">ROE ${pct(r.lo)} a ${pct(r.hi)}</span>`;
+}
 
 /* ---------- "new" listings from the alert job ---------- */
 function newIds() {
@@ -513,6 +663,7 @@ function lotHTML(x, isNew) {
         ${x.appraisal ? `<div class="appraisal">Avaliação ${brl.format(x.appraisal)}</div>` : ""}
         ${ptmPill(x)}${disc}
         ${x.val ? `<div class="appraisal" title="Faixa provável (80%): ${brl.format(x.val.lo)} – ${brl.format(x.val.hi)}">Avaliação do modelo ${brlShort.format(x.val.mid)}${x.ptmv != null ? ` · lance ${Math.round(x.ptmv)}%` : ""}</div>` : ""}
+        ${roePill(x)}
         ${deadline(x)}
         <div class="tags" style="justify-content:flex-end">
           ${x.val && VMETA ? `<button class="btn btn-sm" type="button" data-val="${esc(x.id)}" aria-expanded="${openVal.has(x.id)}">${openVal.has(x.id) ? "Fechar avaliação" : "Avaliação"}</button>` : ""}
@@ -523,6 +674,31 @@ function lotHTML(x, isNew) {
     ${openVal.has(x.id) && x.val && VMETA ? valHTML(x) : ""}
     ${open ? ddHTML(x) : ""}
   </article>`;
+}
+
+/* ---------- ROE breakdown (central scenario) ---------- */
+function roeBreakdown(x) {
+  const r = roeFor(x);
+  if (!r) return "";
+  const a = roeAssumptions(activeStrategy?.roe_assumptions);
+  const v = x.val.mid, p = x.price;
+  const occ = x.occ === true || (x.occ == null && a.assume_occupied >= 1);
+  const lines = [
+    ["Lance", p],
+    [`Comissão, ITBI e registro (${a.commission_pct + a.itbi_pct + a.registry_pct}% do lance)`, p * (a.commission_pct + a.itbi_pct + a.registry_pct) / 100],
+    [`Reforma (${a.renovation_pct}% do valor)`, v * a.renovation_pct / 100],
+    ...(x.debts === true ? [[`Dívidas com o arrematante (${a.debts_pct}%)`, v * a.debts_pct / 100]] : []),
+    ...(occ ? [[`Desocupação (${a.eviction_pct}%)`, v * a.eviction_pct / 100]] : []),
+    [`Condomínio + IPTU por ${r.months} meses`, v * a.carrying_pct_month / 100 * r.months],
+  ];
+  const f = flip(p, v, x.debts, x.occ, a);
+  return `<div class="table-wrap"><table class="vt"><thead><tr><th>Retorno no cenário central (venda por ${brl.format(v)})</th><th class="num">R$</th></tr></thead><tbody>
+    ${lines.map(([k, n]) => `<tr><td class="name">${esc(k)}</td><td class="num">${brl.format(n)}</td></tr>`).join("")}
+    <tr><td class="name"><b>Capital investido</b></td><td class="num"><b>${brl.format(f.equity)}</b></td></tr>
+    <tr><td class="name">Venda menos corretagem (${a.broker_pct}%) e IR (${a.tax_pct}% do lucro)</td><td class="num">${brl.format(f.equity + f.profit)}</td></tr>
+    <tr><td class="name"><b>Lucro líquido · ROE</b></td><td class="num"><b>${brl.format(f.profit)} · ${pct(100 * f.roe)}</b></td></tr>
+  </tbody></table></div>
+  <p class="help">ROE de ${pct(r.lo)} a ${pct(r.hi)} vendendo entre ${brl.format(x.val.lo50)} e ${brl.format(x.val.hi50)} (faixa em que caem metade das avaliações reais); ${pct(r.annual)} ao ano no cenário central. À vista, sem financiamento.${x.occ == null ? " Ocupação não informada: tratada como " + (occ ? "ocupado" : "desocupado") + "." : ""}</p>`;
 }
 
 /* ---------- valuation panel ---------- */
@@ -560,6 +736,7 @@ function valHTML(x) {
     </div>
     <div class="legend"><span><i style="background:var(--accent-soft)"></i>faixa provável</span><span><i style="background:var(--accent)"></i>valor central</span><span><i style="border:2px solid var(--accent);border-radius:50%"></i>cada método</span><span><i style="background:var(--good)"></i>lance</span>${official ? `<span><i style="background:var(--warn)"></i>avaliação oficial</span>` : ""}</div>
     <div class="table-wrap"><table class="vt"><thead><tr><th>Método</th><th class="num">Valor</th><th class="num">Erro mediano medido</th><th class="num">Peso</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${roeBreakdown(x)}
     <p class="help">Cada método foi calibrado e testado contra ${VMETA.n_official} avaliações oficiais de leilão que ele não tinha visto. O valor central combina os métodos dando mais peso aos mais precisos e errou em mediana ${Math.round(c.mdape * 100)}%; a faixa provável contém a avaliação real em cerca de 8 de cada 10 casos. Use como referência, não como laudo. FipeZAP ${esc(VMETA.sources.fipezap)}, SINAPI ${esc(VMETA.sources.sinapi)}.</p>
   </div>`;
 }
@@ -646,13 +823,19 @@ function render() {
   }
 
   $("resultCount").textContent = `${rows.length.toLocaleString("pt-BR")} resultado${rows.length === 1 ? "" : "s"}`;
+  const onMap = document.querySelector('input[name="view"]:checked')?.value === "map";
+  $("list").hidden = onMap; $("mapWrap").hidden = !onMap;
+  if (onMap) { $("more").hidden = true; renderMap(rows); setActiveCount(); return; }
   const page = rows.slice(0, shown);
   $("list").innerHTML = page.length
     ? page.map((x) => lotHTML(x, fresh.has(x.id))).join("")
     : `<div class="empty"><strong>Nenhum lote com esses filtros.</strong><span>Tente ampliar o preço, remover o estado ou desmarcar “Ocultar encerrados”.</span></div>`;
   $("more").hidden = rows.length <= shown;
   $("more").textContent = `Mostrar mais (${(rows.length - shown).toLocaleString("pt-BR")} restantes)`;
+  setActiveCount();
+}
 
+function setActiveCount() {
   const n = state.src.size + (state.cat.size && !(state.cat.size === 1 && state.cat.has("imovel")) ? 1 : 0) +
     [state.q, state.uf, state.ptype, state.pmin, state.pmax, state.dmin].filter((v) => v !== "" && v != null).length + (state.onlyReview ? 1 : 0);
   $("activeCount").textContent = n ? `${n} ativo${n > 1 ? "s" : ""}` : "";
@@ -675,6 +858,7 @@ function buildControls() {
   $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(rerender, 150); });
   for (const id of ["uf", "ptype", "dmin", "hideEnded", "onlyReview", "sort", "pmin", "pmax"]) $(id).addEventListener("change", rerender);
   $("srcChips").addEventListener("change", rerender);
+  document.querySelectorAll('input[name="view"]').forEach((i) => i.addEventListener("change", rerender));
   $("catChips").addEventListener("change", rerender);
   $("more").addEventListener("click", () => { shown += PAGE; render(); });
   $("reset").addEventListener("click", () => {
@@ -801,6 +985,10 @@ function editorHTML(st) {
       <div class="field"><label for="ed-hoods">Bairros de boa liquidez (opcional)</label>
         <textarea class="input" rows="2" id="ed-hoods" placeholder="Centro, Gleba Palhano, Batel">${esc((st.neighborhoods || []).join(", "))}</textarea>
         <span class="help">O imóvel passa se o bairro ou o título contiver algum destes nomes.</span></div>`;
+    if (g.key === "retorno") extra = `<div class="field" style="grid-column: 1 / -1"><span class="label">Premissas de custo (deixe em branco para usar o padrão)</span>
+        <div class="ed-grid">${SPEC.roe_assumptions.map(([k, label, unit]) => `<div class="field"><label for="roe-${k}">${esc(label)}${unit ? ` <span class="unit">(${esc(unit)})</span>` : ""}</label>
+          <input class="input" type="number" step="any" id="roe-${k}" data-roe="${k}" placeholder="${roeAssumptions()[k]}" value="${(st.roe_assumptions || {})[k] ?? ""}"></div>`).join("")}</div>
+        <span class="help">Comprando à vista no leilão e revendendo. O ROE é calculado na faixa provável da avaliação, então muda imóvel a imóvel.</span></div>`;
     if (g.key === "edital") extra = `<div class="field"><label for="ed-debts">Dívidas de condomínio e IPTU</label>
         <select class="input" id="ed-debts">${SPEC.debts_options.map(([v, l]) => `<option value="${v}" ${st.debts === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
         <span class="help">Lido automaticamente do anúncio quando o site informa (Superbid, PGFN). Sempre confirme no edital — o checklist de cada imóvel ajuda nisso, inclusive na pesquisa de ações do ex-mutuário.</span></div>`;
@@ -856,6 +1044,8 @@ function readEditor() {
   st.hide_ended = $("ed-hide-ended").checked;
   st.enabled = $("ed-enabled").checked;
   st.email = $("ed-email").checked;
+  st.roe_assumptions = {};
+  f.querySelectorAll("[data-roe]").forEach((i) => { if (i.value !== "") st.roe_assumptions[i.dataset.roe] = Number(i.value); });
   return st;
 }
 
