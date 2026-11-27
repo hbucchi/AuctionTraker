@@ -18,9 +18,18 @@ concurrency:
   group: scrape
   cancel-in-progress: false
 
+# Two optional repository variables (Settings > Secrets and variables > Actions > Variables):
+#   SCRAPE_RUNNER          label of a self-hosted runner (e.g. a small machine in Brazil)
+#                          to run on instead of GitHub's servers, which Superbid and
+#                          Picelli refuse. Unset = ubuntu-latest.
+#   SCRAPE_KNOWN_BLOCKED   sites expected to refuse this runner: reported as BLOCKED
+#                          instead of failing the run. Default "superbid,picelli";
+#                          set it to "none" on a runner that reaches every site.
+# A red run therefore means something new broke.
+
 jobs:
   scrape:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.SCRAPE_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +57,7 @@ jobs:
 
       - name: Scrape and upload to Firestore
         env:
+          SCRAPE_KNOWN_BLOCKED: ${{ vars.SCRAPE_KNOWN_BLOCKED || 'superbid,picelli' }}
           # optional: street-level map pins (server key restricted to the Geocoding API)
           GOOGLE_GEOCODING_KEY: ${{ secrets.GOOGLE_GEOCODING_KEY }}
         run: python -m auction_tracker scrape --firestore --project auctiontraker

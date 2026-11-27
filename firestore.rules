@@ -112,7 +112,8 @@ service cloud.firestore {
     }
     function quotaOk(q, g) { return q is number && q >= g.quota_min && q <= g.quota_max; }
     function validGroup(g) {
-      return g.keys().hasOnly(['name', 'description', 'visibility', 'leader', 'quota_min', 'quota_max', 'max_members', 'member_count', 'target_title', 'target_url', 'target_price', 'created_at', 'updated_at'])
+      return g.keys().hasOnly(['name', 'description', 'visibility', 'leader', 'quota_min', 'quota_max', 'max_members', 'member_count', 'target_title', 'target_url', 'target_price', 'deal', 'created_at', 'updated_at'])
+        && (!('deal' in g) || g.deal is map)
         && g.name is string && g.name.size() >= 3 && g.name.size() <= 80
         && g.visibility in ['public', 'private']
         && g.quota_min is number && g.quota_max is number && g.quota_min > 0 && g.quota_min <= g.quota_max
@@ -149,7 +150,7 @@ service cloud.firestore {
         allow read: if isOwner(uid) || isLeader(gid)
           || (isMember(gid) && resource.data.status == 'approved');
         allow create: if signedIn() && request.resource.data.uid == uid
-          && request.resource.data.keys().hasOnly(['uid', 'status', 'role', 'quota', 'name', 'contact', 'created_at', 'updated_at']) && (
+          && request.resource.data.keys().hasOnly(['uid', 'status', 'role', 'quota', 'name', 'contact', 'agreed_version', 'created_at', 'updated_at']) && (
           // the leader's own seat, written together with the group
           (isOwner(uid) && request.resource.data.role == 'leader' && request.resource.data.status == 'approved'
             && getAfter(groupPath(gid)).data.leader == uid
@@ -176,9 +177,10 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'quota', 'name', 'contact', 'updated_at'])
             && quotaOk(request.resource.data.quota, get(groupPath(gid)).data)
             && getAfter(groupPath(gid)).data.member_count == get(groupPath(gid)).data.member_count + 1)
-          // a member updates their own quota or contact
+          // a member updates their own quota or contact, or agrees to a version of the contract terms
           || (isOwner(uid) && request.resource.data.status == resource.data.status
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quota', 'name', 'contact', 'updated_at'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quota', 'name', 'contact', 'agreed_version', 'updated_at'])
+            && (!('agreed_version' in request.resource.data) || request.resource.data.agreed_version is int)
             && quotaOk(request.resource.data.quota, get(groupPath(gid)).data)));
         // leave / withdraw / decline (not the leader: they close the group instead);
         // the leader removes anyone
@@ -187,6 +189,31 @@ service cloud.firestore {
           // closing the group: the leader deletes it and every membership in one write
           || (isLeader(gid) && !existsAfter(groupPath(gid)));
       }
+    }
+
+    // ------------------------------------------------------------ services
+    // Administrators are listed in admins/{uid}, created by hand in the
+    // Firebase console (Firestore > admins > document id = the user's uid).
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    match /admins/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    // Professionals directory: the owner creates or edits their own listing,
+    // which always goes back to 'pending'; only an administrator publishes it.
+    function validPro(p) {
+      return p.keys().hasOnly(['name', 'category', 'uf', 'cities', 'description', 'phone', 'email', 'site', 'registration', 'status', 'created_at', 'updated_at', 'reviewed_at'])
+        && p.name is string && p.name.size() >= 3 && p.name.size() <= 80
+        && p.category in ['advogado', 'despachante', 'engenheiro', 'reforma', 'contador', 'corretor', 'avaliador', 'outro']
+        && (!('description' in p) || (p.description is string && p.description.size() <= 800));
+    }
+    match /pros/{uid} {
+      allow read: if signedIn() && (resource.data.status == 'approved' || request.auth.uid == uid || isAdmin());
+      allow create: if isOwner(uid) && request.resource.data.status == 'pending' && validPro(request.resource.data);
+      allow update: if (isOwner(uid) && request.resource.data.status == 'pending' && validPro(request.resource.data))
+        || (isAdmin() && request.resource.data.status in ['approved', 'rejected']
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewed_at']));
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     // "my groups and invites": a collection-group query on members by uid

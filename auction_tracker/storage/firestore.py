@@ -7,8 +7,10 @@ Layout:
                        1 MiB document limit is split into several. The web app
                        reads this whole collection: ~8 reads per page view.
   listings/{id}        one document per lot (full Listing), upserted each run,
-                       with first_seen_at / last_seen_at, for detail views and
-                       history later.
+                       with first_seen_at / last_seen_at, plus the auction's
+                       history: snap.YYYYMMDD = {p: price, b: bids, s: status}
+                       once a day, and when a lot leaves its site, ended_at
+                       and its final price, bids, status and outcome.
   runs/{run_id}        the health report of each run.
   meta/latest          {run_id, updated_at}: one tiny document the web app reads
                        first. If its updated_at matches the copy the browser
@@ -27,6 +29,7 @@ is never committed to git.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -52,16 +55,22 @@ class FirestoreSink:
             client = firestore.Client(project=project_id)
         self.db = client
 
-    def write(self, source: str, listings: list[Listing]) -> None:
+    def write(self, source: str, listings: list[Listing], complete: bool = False) -> None:
+        """Upload one site's run. ``complete`` means the run covered the whole
+        site (no page cap, status OK): only then do lots missing from it
+        count as ended."""
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        day = now[:10].replace("-", "")
 
         summaries = self.db.collection("summaries")
         # first_seen is carried over from the previous summary (a few reads), so
         # the app can flag listings that appeared since earlier runs.
         prev_docs = list(summaries.where(filter=_eq("source", source)).stream())
         first_seen: dict[str, str] = {}
+        previous: dict[str, dict] = {}
         for doc in prev_docs:
             for it in (doc.to_dict() or {}).get("items", []):
+                previous[it["id"]] = it
                 if it.get("first_seen"):
                     first_seen[it["id"]] = it["first_seen"]
 
@@ -86,13 +95,24 @@ class FirestoreSink:
         batch.commit()
 
         col = self.db.collection("listings")
-        for i in range(0, len(listings), self.BATCH):
+        writes = []
+        for x in listings:
+            doc = x.to_dict()
+            doc["first_seen_at"] = first_seen.get(x.id, now)
+            doc["last_seen_at"] = now
+            doc["ended_at"] = None  # a lot can come back (e.g. relisted for a new round)
+            # one snapshot a day: merge=True adds the day's key to the map
+            doc["snap"] = {day: {"p": x.current_price, "b": x.bids_count, "s": x.status}}
+            writes.append((x.id, doc))
+        if complete:
+            seen = {x.id for x in listings}
+            for lid, it in previous.items():
+                if lid not in seen:
+                    writes.append((lid, ended_record(it, now)))
+        for i in range(0, len(writes), self.BATCH):
             batch = self.db.batch()
-            for x in listings[i : i + self.BATCH]:
-                doc = x.to_dict()
-                doc["first_seen_at"] = first_seen.get(x.id, now)
-                doc["last_seen_at"] = now
-                batch.set(col.document(x.id), doc, merge=True)
+            for lid, doc in writes[i : i + self.BATCH]:
+                batch.set(col.document(lid), doc, merge=True)
             batch.commit()
 
     def write_report(self, run_id: str, report: dict[str, Any]) -> None:
@@ -102,6 +122,22 @@ class FirestoreSink:
         """Mark a new data version, after all summaries of the run are written."""
         now = datetime.now(timezone.utc).isoformat(timespec="seconds")
         self.db.collection("meta").document("latest").set({"run_id": run_id, "updated_at": now})
+
+
+SOLD = re.compile(r"arrematad|vendid|sold", re.I)
+
+
+def ended_record(it: dict[str, Any], now: str) -> dict[str, Any]:
+    """What we know about a lot the day it left its site: its last price,
+    bids and status. "sold" only when the site said so; otherwise "gone"
+    (sold, unsold, suspended or withdrawn: the site doesn't say)."""
+    return {
+        "ended_at": now,
+        "final_price": it.get("price"),
+        "final_bids": it.get("bids"),
+        "final_status": it.get("status"),
+        "outcome": "sold" if SOLD.search(it.get("status") or "") else "gone",
+    }
 
 
 def chunk_by_size(items: list[dict[str, Any]], max_bytes: int) -> list[list[dict[str, Any]]]:

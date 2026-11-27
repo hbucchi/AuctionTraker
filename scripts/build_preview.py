@@ -30,6 +30,11 @@ def main() -> int:
 
     body = body.replace('import { matchesStrategy, nextDeadline } from "./strategy.js";', inline("roe.js") + "\n" + inline("strategy.js"))
     body = re.sub(r'^import \{[^}]*\} from "\./roe\.js";\n', "", body, flags=re.M)
+    body = body.replace('import { risk } from "./risk.js";', inline("risk.js"))
+    # docs.js has helpers named like the page's (esc, brl): give it its own scope
+    names = "dealContract, TEMPLATES, docHTML, docPDF, fileName"
+    body = body.replace('import { %s } from "./docs.js";' % names,
+                        "const { %s } = (() => {\n%s\nreturn { %s };\n})();" % (names, inline("docs.js"), names))
     body = body.replace('import { handle, similarity, cardFromStrategies, pairId, quotaOk, GOALS, sharedListings, rankByShared, sharedSummary, combinedTicket } from "./partners.js";', inline("partners.js"))
     (out / "index.html").write_text(head.strip() + "\n" + body.strip() + "\n", encoding="utf-8")
     (out / "firebase-config.js").write_text("// preview build: no Firebase\nwindow.FIREBASE_CONFIG = null;\n")

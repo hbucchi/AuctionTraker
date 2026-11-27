@@ -170,6 +170,47 @@ partner code run end to end on the Firestore emulator. The deploy workflow
 runs them before every deploy. In the preview, the tab runs on sample
 investors (labelled "exemplo") kept in the browser.
 
+## Maximum bid, risk factors and lot history
+
+- **Maximum bid** (`max_bid` in `roe.py` / `maxBid` in `roe.js`): the highest
+  bid that still gives a target ROE, solved exactly from the same cost model
+  as the ROE (capital invested is linear in the bid). Shown at the central
+  value and at the value the property beats with a chosen probability (75%
+  by default, from the measured valuation errors). Strategy filter:
+  "Lance em % do lance máximo".
+- **Risk factors** (`risk.py` / `risk.js`, shared cases in
+  `tests/risk_cases.json`): a published points table (occupied 3, debts on
+  the buyer 2, fraction of the property 2, judicial 1…). Missing information
+  counts as risk; ticking the checklist clears it. Strategy filter and sort.
+- **History**: the daily job adds `snap.YYYYMMDD = {p, b, s}` (price, bids,
+  status) to `listings/{id}`, and when a lot leaves its site after a complete
+  run, `ended_at`, final price/bids/status and `outcome` ("sold" when the site
+  said so). The detail sheet shows the days on which something changed.
+
+## Group contracts, templates and professionals
+
+- In a group, the leader saves the contract terms (`groups/{gid}.deal`, with a
+  version); each member agrees to a version (`agreed_version` on their member
+  document). The draft ("minuta") is generated in the browser from the terms
+  and the approved quotas, shown on screen and downloadable as PDF (jsPDF,
+  loaded on demand). CPF and address can be typed in but stay in that browser.
+- **Modelos e serviços** tab: six templates (`web/docs.js`) and a directory of
+  professionals (`pros/{uid}`). A listing is created `pending` by its owner
+  and published only by an administrator. To make someone an administrator,
+  create the document `admins/{their uid}` in the Firebase console
+  (Firestore > Start collection `admins` > document id = the uid shown in
+  Authentication > Users).
+
+## Daily scraping
+
+Superbid and Picelli refuse GitHub's servers. They are listed in the
+repository variable `SCRAPE_KNOWN_BLOCKED` (default `superbid,picelli`) and
+reported as BLOCKED instead of failing the run, so a red run means something
+new broke. To collect them, register a self-hosted runner on a machine that
+can reach them and set the variable `SCRAPE_RUNNER` to its label (and
+`SCRAPE_KNOWN_BLOCKED` to `none`). The app hides a site's lots once its data
+is more than 3 days old.
+
 ## The data model
 
 Every site maps into `auction_tracker.models.Listing`. Its main fields:

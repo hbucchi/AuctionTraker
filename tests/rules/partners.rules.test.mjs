@@ -114,6 +114,34 @@ await t("invitee accepts (2/2)", () => assertSucceeds(accept("eva", 100000, 2)))
 await t("invitee can't join a full group", async () => { await assertSucceeds(invite("duda")); await assertFails(accept("duda", 100000, 3)); });
 await t("invitee declines by deleting their invite", () => assertSucceeds(deleteDoc(doc(db("duda"), "groups/g3/members/duda"))));
 
+// ---------------------------------------------------------------- contract terms
+await t("leader saves contract terms", async () => { await createGroup("g4", { ...g, max_members: 3 }); await assertSucceeds(updateDoc(doc(db("ana"), "groups/g4"), { deal: { max_bid: 400000, version: 1 } })); });
+await t("terms must be a map", () => assertFails(updateDoc(doc(db("ana"), "groups/g4"), { deal: "anything" })));
+await seed((f) => setDoc(doc(f, "groups/g4/members/bia"), { uid: "bia", role: "member", status: "approved", quota: 60000, name: "Bia", contact: "b" }));
+await seed((f) => updateDoc(doc(f, "groups/g4"), { member_count: 2 }));
+await t("a member can't change the terms", () => assertFails(updateDoc(doc(db("bia"), "groups/g4"), { deal: { max_bid: 9e9, version: 2 } })));
+await t("a member agrees to a version", () => assertSucceeds(updateDoc(doc(db("bia"), "groups/g4/members/bia"), { agreed_version: 1 })));
+await t("agreement must be a number", () => assertFails(updateDoc(doc(db("bia"), "groups/g4/members/bia"), { agreed_version: "yes" })));
+await t("nobody agrees on someone else's behalf", () => assertFails(updateDoc(doc(db("ana"), "groups/g4/members/bia"), { agreed_version: 1 })));
+
+// ---------------------------------------------------------------- professionals
+const pro = { name: "Ana Advocacia", category: "advogado", uf: "SP", cities: "São Paulo", description: "Leilões", phone: "11", email: "a@x.com", site: "", registration: "OAB", status: "pending" };
+await t("apply to be listed (pending)", () => assertSucceeds(setDoc(doc(db("ana"), "pros/ana"), pro)));
+await t("can't list yourself as approved", () => assertFails(setDoc(doc(db("ana"), "pros/ana"), { ...pro, status: "approved" })));
+await t("can't create someone else's listing", () => assertFails(setDoc(doc(db("bia"), "pros/ana"), pro)));
+await t("unknown category refused", () => assertFails(setDoc(doc(db("ana"), "pros/ana"), { ...pro, category: "astrologo" })));
+await t("pending listing hidden from others", () => assertFails(getDoc(doc(db("bia"), "pros/ana"))));
+await t("owner sees own pending listing", () => assertSucceeds(getDoc(doc(db("ana"), "pros/ana"))));
+await t("non-admin can't approve", () => assertFails(updateDoc(doc(db("bia"), "pros/ana"), { status: "approved" })));
+await t("nobody makes themselves admin", () => assertFails(setDoc(doc(db("bia"), "admins/bia"), { since: 1 })));
+await seed((f) => setDoc(doc(f, "admins/caio"), { since: 1 }));
+await t("admin sees pending listings", () => assertSucceeds(getDocs(query(collection(db("caio"), "pros"), where("status", "==", "pending")))));
+await t("admin approves", () => assertSucceeds(updateDoc(doc(db("caio"), "pros/ana"), { status: "approved" })));
+await t("admin can't edit the listing's content", () => assertFails(updateDoc(doc(db("caio"), "pros/ana"), { phone: "000" })));
+await t("approved listing visible to signed-in users", () => assertSucceeds(getDocs(query(collection(db("bia"), "pros"), where("status", "==", "approved")))));
+await t("…not to signed-out visitors", () => assertFails(getDoc(doc(anon, "pros/ana"))));
+await t("editing sends it back to review", async () => { await assertFails(updateDoc(doc(db("ana"), "pros/ana"), { phone: "22" })); await assertSucceeds(setDoc(doc(db("ana"), "pros/ana"), { ...pro, phone: "22", status: "pending" })); });
+
 console.log(`${n - failed}/${n} rule checks passed`);
 await env.cleanup();
 process.exit(failed ? 1 : 0);

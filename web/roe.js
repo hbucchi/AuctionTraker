@@ -110,3 +110,39 @@ export function chances(item, quantiles, custom, targetRoePct = 20) {
   const tgt = valueNeeded(price, targetRoePct / 100, item.debts, item.occ, a, j);
   return { profit: halfUp(100 * chanceValueAtLeast(be, val.mid, q)), target: halfUp(100 * chanceValueAtLeast(tgt, val.mid, q)), breakeven: halfUp(be) };
 }
+
+// Highest bid that still gives targetRoe if the property sells for `value`:
+// valueNeeded() solved for the price. 0 when no bid works. See roe.py.
+export function maxBid(value, targetRoe, debts, occupied, a, judicial = false, renovationPct = null) {
+  if (renovationPct == null) renovationPct = (a.renovation_min_pct + a.renovation_max_pct) / 2;
+  const { occ, lawyer, months } = context(debts, occupied, judicial, a);
+  const k = 1 + (a.commission_pct + a.itbi_pct + a.registry_pct) / 100;
+  const fixed = a.docs_fixed + (lawyer ? a.legal_fixed : 0);
+  const c = (renovationPct + a.furniture_pct + (debts === true ? a.debts_pct : 0) + (occ ? a.eviction_pct : 0) + a.carrying_pct_month * months) / 100;
+  const s = targetRoe > 0 ? targetRoe / (1 - a.tax_pct / 100) : targetRoe;
+  const price = (value * (1 - a.broker_pct / 100 - c * (1 + s)) / (1 + s) - fixed) / k;
+  return Math.max(price, 0);
+}
+
+// The value the property beats with probability `chance` (0..1). See roe.py.
+export function valueAtChance(mid, quantiles, chance) {
+  const cdf = 1 - chance;
+  const qs = quantiles.map((_, i) => (5 * (i + 1)) / 100);
+  if (cdf <= qs[0]) return mid * quantiles[0];
+  if (cdf >= qs[qs.length - 1]) return mid * quantiles[quantiles.length - 1];
+  for (let i = 0; i < qs.length - 1; i++) {
+    if (qs[i] <= cdf && cdf <= qs[i + 1]) return mid * (quantiles[i] + (quantiles[i + 1] - quantiles[i]) * (cdf - qs[i]) / (qs[i + 1] - qs[i]));
+  }
+  return mid;
+}
+
+export function ceilings(item, quantiles, custom, targetRoePct = 20, chancePct = 75) {
+  const val = item.val, price = item.price;
+  if (!val || !price || price < 1000 || val.flag) return null;
+  const a = roeAssumptions(custom);
+  const j = item.modn === "judicial", t = targetRoePct / 100;
+  const out = { central: halfUp(maxBid(val.mid, t, item.debts, item.occ, a, j)) };
+  const q = quantiles && (quantiles[(val.n || 0) >= 3 ? "many" : "few"] || quantiles.many);
+  if (q) out.safe = halfUp(maxBid(valueAtChance(val.mid, q, chancePct / 100), t, item.debts, item.occ, a, j));
+  return out;
+}

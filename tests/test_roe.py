@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from auction_tracker import roe
 from auction_tracker.roe import assumptions, chances, flip, roe_range, value_needed
 
 DATA = json.loads((Path(__file__).parent / "roe_cases.json").read_text(encoding="utf-8"))
@@ -57,3 +58,23 @@ def test_breakeven_gives_zero_and_target_gives_target():
             t = value_needed(200_000, 0.2, debts, occ, a, judicial)
             assert abs(flip(200_000, be, debts, occ, a, judicial)["roe"]) < 1e-9
             assert abs(flip(200_000, t, debts, occ, a, judicial)["roe"] - 0.2) < 1e-9
+
+
+@pytest.mark.parametrize("case", DATA["ceiling_cases"], ids=lambda c: c["name"])
+def test_ceiling_cases(case):
+    q = DATA["quantiles"]
+    assert roe.ceilings(case["item"], q, None, case["target"], case["chance"]) == case["expect"]
+
+
+@pytest.mark.parametrize("target", [0, 0.1, 0.2, 0.35])
+@pytest.mark.parametrize("debts,occ,judicial", [(None, None, False), (True, True, True), (False, False, False)])
+def test_max_bid_gives_exactly_the_target(target, debts, occ, judicial):
+    a = roe.assumptions()
+    bid = roe.max_bid(450_000, target, debts, occ, a, judicial)
+    assert roe.flip(bid, 450_000, debts, occ, a, judicial)["roe"] == pytest.approx(target, abs=1e-9)
+
+
+def test_value_at_chance_reads_the_quantiles():
+    q = [0.5 + 0.05 * i for i in range(19)]  # 5th pct = 0.5 … 95th = 1.4
+    assert roe.value_at_chance(100, q, 0.75) == pytest.approx(100 * q[4])  # 25th percentile
+    assert roe.value_at_chance(100, q, 0.5) == pytest.approx(100 * q[9])

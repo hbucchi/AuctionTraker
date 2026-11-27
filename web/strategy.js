@@ -1,7 +1,8 @@
 // Strategy matching — the JavaScript twin of auction_tracker/strategy.py.
 // Both are tested against tests/strategy_cases.json; change them together.
 
-import { roeRange, chances } from "./roe.js";
+import { roeRange, chances, ceilings } from "./roe.js";
+import { risk } from "./risk.js";
 
 const DAY_S = 86400; // seconds
 
@@ -24,6 +25,13 @@ function attrValue(spec, item, attr, now, st) {
   if (attr === "chance") {
     const c = chances(item, spec.reference?.residual_quantiles, (st || {}).roe_assumptions);
     return c == null ? null : c.profit;
+  }
+  if (attr === "risk") return risk(item).points;
+  if (attr === "ceilpct") {
+    // bid as % of the maximum bid for the strategy's minimum ROE (20% if none)
+    const t = (st || {}).ranges?.roe?.min ?? 20;
+    const c = ceilings(item, null, (st || {}).roe_assumptions, t);
+    return c == null || !c.central ? null : Math.round(1000 * item.price / c.central) / 10;
   }
   if (attr === "roe" || attr === "roelo") {
     // computed with the strategy's own cost assumptions (roe.js)

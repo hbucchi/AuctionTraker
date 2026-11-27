@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from dataclasses import asdict
@@ -59,6 +60,7 @@ def cmd_scrape(args: argparse.Namespace) -> int:
 
         fs = FirestoreSink(project_id=args.project)
     prev = _previous_counts(data_dir)
+    known_blocked = {n.strip() for n in (args.known_blocked or "").split(",") if n.strip() and n.strip() != "none"}
     reports = []
     results = []
 
@@ -81,6 +83,11 @@ def cmd_scrape(args: argparse.Namespace) -> int:
             limited=args.max_pages is not None,
             reported_total=scraper.reported_total,
         )
+        if rep.status == "FAIL" and name in known_blocked:
+            # a site that refuses this server's address (e.g. GitHub's): expected,
+            # reported, but not a reason to mark the whole run as failed
+            rep.status = "BLOCKED"
+            rep.reasons.append("site blocks this server (listed in SCRAPE_KNOWN_BLOCKED); run from another machine to collect it")
         reports.append(rep)
         results.append((name, listings, rep))
         print(f"{rep.status:4} {name:9} {rep.count:6} listings  {rep.seconds:6.1f}s  {'; '.join(rep.reasons)}")
@@ -99,7 +106,7 @@ def cmd_scrape(args: argparse.Namespace) -> int:
             sink.write(name, listings)
         if fs is not None and listings and rep.status != "FAIL":
             # a WARN run still uploads (data is usable); a FAIL keeps yesterday's data
-            fs.write(name, listings)
+            fs.write(name, listings, complete=rep.status == "OK" and args.max_pages is None)
 
     summary = {
         "run_id": run_id,
@@ -174,6 +181,8 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--out", default="data", help="output directory (default: data)")
     sp.add_argument("--firestore", action="store_true", help="also upload to Firestore")
     sp.add_argument("--project", default="auctiontraker", help="Firebase project id")
+    sp.add_argument("--known-blocked", default=os.environ.get("SCRAPE_KNOWN_BLOCKED", ""),
+                    help="comma-separated sites known to block this machine: reported as BLOCKED, not FAIL")
     ap_al = sub.add_parser("alerts", help="email users about listings that newly match their strategies")
     ap_al.add_argument("--project", default="auctiontraker", help="Firebase project id")
     pp = sub.add_parser("portfolio", help="value users' own properties and count interested users")

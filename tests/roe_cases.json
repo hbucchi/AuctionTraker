@@ -440,5 +440,343 @@
    "custom": null,
    "expect": null
   }
+ ],
+ "ceiling_cases": [
+  {
+   "name": "item0 roe20 chance75",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "target": 20,
+   "chance": 75,
+   "expect": {
+    "central": 251763,
+    "safe": 181823
+   }
+  },
+  {
+   "name": "item0 roe0 chance50",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "target": 0,
+   "chance": 50,
+   "expect": {
+    "central": 317169,
+    "safe": 331726
+   }
+  },
+  {
+   "name": "item0 roe35 chance90",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "target": 35,
+   "chance": 90,
+   "expect": {
+    "central": 217017,
+    "safe": 95026
+   }
+  },
+  {
+   "name": "item1 roe20 chance75",
+   "item": {
+    "price": 320000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "target": 20,
+   "chance": 75,
+   "expect": {
+    "central": 251763,
+    "safe": 181823
+   }
+  },
+  {
+   "name": "item1 roe0 chance50",
+   "item": {
+    "price": 320000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "target": 0,
+   "chance": 50,
+   "expect": {
+    "central": 317169,
+    "safe": 331726
+   }
+  },
+  {
+   "name": "item1 roe35 chance90",
+   "item": {
+    "price": 320000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "target": 35,
+   "chance": 90,
+   "expect": {
+    "central": 217017,
+    "safe": 95026
+   }
+  },
+  {
+   "name": "item2 roe20 chance75",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "debts": true,
+    "occ": true
+   },
+   "target": 20,
+   "chance": 75,
+   "expect": {
+    "central": 213773,
+    "safe": 152815
+   }
+  },
+  {
+   "name": "item2 roe0 chance50",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "debts": true,
+    "occ": true
+   },
+   "target": 0,
+   "chance": 50,
+   "expect": {
+    "central": 279178,
+    "safe": 292250
+   }
+  },
+  {
+   "name": "item2 roe35 chance90",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "debts": true,
+    "occ": true
+   },
+   "target": 35,
+   "chance": 90,
+   "expect": {
+    "central": 179026,
+    "safe": 75196
+   }
+  },
+  {
+   "name": "item3 roe20 chance75",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 2
+    }
+   },
+   "target": 20,
+   "chance": 75,
+   "expect": {
+    "central": 251763,
+    "safe": 140562
+   }
+  },
+  {
+   "name": "item3 roe0 chance50",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 2
+    }
+   },
+   "target": 0,
+   "chance": 50,
+   "expect": {
+    "central": 317169,
+    "safe": 283276
+   }
+  },
+  {
+   "name": "item3 roe35 chance90",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 2
+    }
+   },
+   "target": 35,
+   "chance": 90,
+   "expect": {
+    "central": 217017,
+    "safe": 68798
+   }
+  },
+  {
+   "name": "item4 roe20 chance75",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "modn": "judicial"
+   },
+   "target": 20,
+   "chance": 75,
+   "expect": {
+    "central": 246284,
+    "safe": 176343
+   }
+  },
+  {
+   "name": "item4 roe0 chance50",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "modn": "judicial"
+   },
+   "target": 0,
+   "chance": 50,
+   "expect": {
+    "central": 311689,
+    "safe": 326247
+   }
+  },
+  {
+   "name": "item4 roe35 chance90",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "modn": "judicial"
+   },
+   "target": 35,
+   "chance": 90,
+   "expect": {
+    "central": 211537,
+    "safe": 89547
+   }
+  },
+  {
+   "name": "item5 roe20 chance75",
+   "item": {
+    "price": 1
+   },
+   "target": 20,
+   "chance": 75,
+   "expect": null
+  },
+  {
+   "name": "item5 roe0 chance50",
+   "item": {
+    "price": 1
+   },
+   "target": 0,
+   "chance": 50,
+   "expect": null
+  },
+  {
+   "name": "item5 roe35 chance90",
+   "item": {
+    "price": 1
+   },
+   "target": 35,
+   "chance": 90,
+   "expect": null
+  }
  ]
 }
