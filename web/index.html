@@ -323,6 +323,40 @@ details.how[open] { display: grid; gap: 8px; }
 .seg input:checked + span { font-weight: 500; }
 .seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
 @media (prefers-reduced-motion: no-preference) { .lot { transition: border-color .2s, box-shadow .2s; } .lot:hover { border-color: color-mix(in srgb, var(--gold) 55%, var(--line)); } }
+
+/* ---- floating legend: how to read the bars ---- */
+.lf { position: fixed; z-index: 20; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); display: grid; justify-items: end; gap: 10px; pointer-events: none; }
+.lf > * { pointer-events: auto; }
+.lf-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--ink); color: var(--surface); padding: 10px 16px; font-weight: 500; cursor: pointer; box-shadow: 0 8px 24px -8px rgb(29 27 24 / .45); }
+.lf-btn .q { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--gold); color: var(--gold); font: 600 12px/1 var(--font-body); }
+.lf-panel { width: min(400px, calc(100vw - 32px)); max-height: min(78vh, 720px); overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 24px 60px -20px rgb(70 52 20 / .35); padding: 18px 20px 20px; display: grid; gap: 18px; }
+.lf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lf-head h2 { font: 600 24px/1.1 var(--font-display); margin: 0; }
+.lf-x { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.lf-x:hover { color: var(--ink); }
+.lf section { display: grid; gap: 10px; }
+.lf section + section { border-top: 1px solid var(--line); padding-top: 16px; }
+.lf h3 { font: 600 18px/1.2 var(--font-display); margin: 0; }
+.lf-demo { position: relative; padding-top: 22px; }
+.lf-demo .rbar { width: 100%; height: 30px; margin: 0; }
+.lf-n { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 600 11px/1 var(--font-body); flex: none; }
+.lf-demo .lf-n { position: absolute; top: 0; transform: translateX(-50%); }
+.lf-key { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13px; }
+.lf-key li { display: grid; grid-template-columns: 18px 22px 1fr; gap: 8px; align-items: start; }
+.lf-key li > .lf-n, .lf-key li > .sw { margin-top: 1px; }
+.lf-tip { margin: 0; font-size: 12px; color: var(--muted); border-left: 2px solid var(--gold); padding-left: 10px; }
+.sw { display: inline-block; width: 22px; height: 12px; border-radius: 6px; position: relative; margin-top: 3px; }
+.sw-80 { background: var(--accent-soft); border: 1px solid var(--line); }
+.sw-50 { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.sw-mid::after, .sw-be::after, .sw-rmid::after { content: ""; position: absolute; left: 10px; top: -2px; width: 2px; height: 16px; background: var(--accent); }
+.sw-be::after { background: var(--bad); }
+.sw-rmid::after { background: var(--ink); }
+.sw-bid::after { content: ""; position: absolute; left: 5px; top: 1px; border: 6px solid transparent; border-bottom: 8px solid var(--good); border-top: 0; }
+.sw-tgt::after { content: ""; position: absolute; left: 10px; top: -2px; height: 16px; border-left: 2px dashed var(--good); }
+.sw-roe { background: color-mix(in srgb, var(--good) 40%, transparent); }
+.hint { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 4px; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--muted); font: 600 10px/1 var(--font-body); cursor: pointer; vertical-align: 1px; padding: 0; }
+.hint:hover { color: var(--ink); border-color: var(--gold); }
+@media (max-width: 640px) { .lf-btn .lbl { display: none; } .lf-btn { padding: 10px 12px; } }
 </style>
 <!-- preview:strip-below -->
 </head>
@@ -435,6 +469,43 @@ details.how[open] { display: grid; gap: 8px; }
   </main>
 </div>
 
+
+<aside class="lf" id="legend" hidden>
+  <div class="lf-panel" id="legendPanel" role="dialog" aria-labelledby="lfTitle" hidden>
+    <div class="lf-head"><h2 id="lfTitle">Como ler as barras</h2><button class="lf-x" id="legendClose" type="button" aria-label="Fechar legenda">×</button></div>
+    <section>
+      <h3>Valor estimado do imóvel</h3>
+      <div class="lf-demo" aria-hidden="true">
+        <span class="lf-n" style="left:8%">1</span><span class="lf-n" style="left:20%">2</span><span class="lf-n" style="left:28%">3</span><span class="lf-n" style="left:42%">4</span><span class="lf-n" style="left:56%">5</span>
+        <div class="rbar"><div class="rb-track"></div><div class="rb-80" style="left:4%;right:4%"></div><div class="rb-50" style="left:34%;right:32%"></div><div class="rb-mid" style="left:56%"></div><div class="rb-be" style="left:28%"></div><div class="rb-bid" style="left:20%"></div></div>
+      </div>
+      <ol class="lf-key">
+        <li><span class="lf-n">1</span><i class="sw sw-80"></i><span><b>Faixa clara: valor possível.</b> 8 em cada 10 imóveis parecidos foram avaliados dentro dela.</span></li>
+        <li><span class="lf-n">2</span><i class="sw sw-bid"></i><span><b>Triângulo verde: o lance.</b> Quanto você pagaria hoje.</span></li>
+        <li><span class="lf-n">3</span><i class="sw sw-be"></i><span><b>Traço vermelho: empate.</b> O menor valor de venda que paga o lance e todos os custos (taxas, reforma, dívidas, corretagem, imposto). Abaixo dele, prejuízo.</span></li>
+        <li><span class="lf-n">4</span><i class="sw sw-50"></i><span><b>Faixa escura: valor provável.</b> Metade das avaliações cai aqui. É a faixa escrita em números no cartão.</span></li>
+        <li><span class="lf-n">5</span><i class="sw sw-mid"></i><span><b>Traço bronze: valor central,</b> a melhor estimativa única.</span></li>
+      </ol>
+      <p class="lf-tip">Leitura rápida: triângulo e traço vermelho bem à esquerda da faixa escura = margem de segurança. Traço vermelho dentro ou à direita dela = o lucro depende de vender acima do provável.</p>
+    </section>
+    <section>
+      <h3>Retorno estimado (ROE)</h3>
+      <div class="lf-demo" aria-hidden="true">
+        <span class="lf-n" style="left:12%">1</span><span class="lf-n" style="left:30%">2</span><span class="lf-n" style="left:48%">3</span><span class="lf-n" style="left:62%">4</span><span class="lf-n" style="left:84%">5</span>
+        <div class="rbar roe good"><div class="rb-track"></div><div class="rb-50" style="left:12%;right:16%"></div><div class="rb-mid" style="left:48%"></div><div class="rb-be" style="left:30%"></div><div class="rb-tgt" style="left:62%"></div></div>
+      </div>
+      <ol class="lf-key">
+        <li><span class="lf-n">1</span><i class="sw sw-roe"></i><span><b>Início da faixa: cenário pessimista.</b> Venda no piso do valor provável, com a reforma máxima.</span></li>
+        <li><span class="lf-n">2</span><i class="sw sw-be"></i><span><b>Traço vermelho: 0%.</b> À esquerda dele, prejuízo.</span></li>
+        <li><span class="lf-n">3</span><i class="sw sw-rmid"></i><span><b>Traço escuro: cenário central.</b></span></li>
+        <li><span class="lf-n">4</span><i class="sw sw-tgt"></i><span><b>Tracejado verde: meta de 20%</b> de retorno.</span></li>
+        <li><span class="lf-n">5</span><i class="sw sw-roe"></i><span><b>Fim da faixa: cenário otimista.</b> Venda no teto do valor provável, com a reforma mínima.</span></li>
+      </ol>
+      <p class="lf-tip">ROE = lucro líquido ÷ capital investido, comprando à vista. Cor da faixa: verde quando o cenário central passa de 20%, âmbar entre 0 e 20%, vermelha com prejuízo. Abra a ficha (seta ⌄) para ver cada custo e simular.</p>
+    </section>
+  </div>
+  <button class="lf-btn" id="legendBtn" type="button" aria-expanded="false" aria-controls="legendPanel"><span class="q">?</span><span class="lbl">Como ler as barras</span></button>
+</aside>
 <div class="single" id="strategiesView" hidden></div>
 <div class="single" id="portfolioView" hidden></div>
 
@@ -552,20 +623,32 @@ function popupHTML(x) {
 }
 
 let mapTimer;
+let lastRowsForMap = [];
 function renderMap(rows) {
+  lastRowsForMap = rows;
   clearTimeout(mapTimer);
   mapTimer = setTimeout(() => drawMap(rows), 60);
 }
 
+let lastPts = [], gmFailed = "";
 async function drawMap(rows) {
   const pts = rows.filter((x) => x.lat != null && x.lon != null);
+  lastPts = pts;
   const exact = pts.filter((x) => x.geo === "exato").length;
   $("mapNote").textContent = `${pts.length.toLocaleString("pt-BR")} de ${rows.length.toLocaleString("pt-BR")} no mapa · ${exact.toLocaleString("pt-BR")} com endereço exato, os demais no centro da cidade`;
-  if (window.GOOGLE_MAPS_KEY) {
-    try { await googleMap(pts); return; } catch (e) { $("mapNote").textContent += ` · Google Maps indisponível (${e.message}); usando o mapa simplificado`; }
+  if (window.GOOGLE_MAPS_KEY && !gmFailed) {
+    try { await googleMap(pts); return; } catch (e) { gmFailed = e.message; }
   }
+  if (gmFailed) $("mapNote").textContent += ` · Google Maps indisponível (${gmFailed}); usando o mapa simplificado`;
   await svgMap(pts);
 }
+// Google calls this when it refuses the key (wrong website restriction, API
+// not enabled, billing): the map would stay grey, so switch to the schematic one.
+window.gm_authFailure = () => {
+  gmFailed = "a chave foi recusada pelo Google: confira as restrições de site da chave";
+  gm = null;
+  if (!$("mapWrap").hidden) drawMap(lastRowsForMap);
+};
 
 /* Google Maps (when GOOGLE_MAPS_KEY is set in firebase-config.js) */
 let gm = null;
@@ -580,7 +663,7 @@ async function googleMap(pts) {
   if (!gm) {
     const ready = new Promise((r) => (window.__gmReady = r));
     await Promise.all([
-      loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(window.GOOGLE_MAPS_KEY)}&v=weekly&language=pt-BR&region=BR&callback=__gmReady`).then(() => ready),
+      loadScript(`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(window.GOOGLE_MAPS_KEY)}&v=weekly&loading=async&language=pt-BR&region=BR&callback=__gmReady`).then(() => ready),
       loadScript("https://unpkg.com/@googlemaps/markerclusterer@2.5.3/dist/index.min.js"),
     ]);
     const map = new google.maps.Map($("map"), { center: { lat: -14.5, lng: -51 }, zoom: 4, mapTypeControl: false, streetViewControl: false, gestureHandling: "greedy" });
@@ -723,8 +806,8 @@ function lotHTML(x, isNew) {
       </div>
       <div class="price-col">
         <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
-        ${x.val && !x.val.flag ? `<div class="bar-cap">Valor est. ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}</div>${rangeBar(x)}` : ""}
-        ${r ? `<div class="bar-cap">ROE est. ${pct(r.lo)} a ${pct(r.hi)}</div>${roeBar(r)}` : ""}
+        ${x.val && !x.val.flag ? `<div class="bar-cap">Valor est. ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}<button class="hint" type="button" data-legend aria-label="Como ler a barra de valor">?</button></div>${rangeBar(x)}` : ""}
+        ${r ? `<div class="bar-cap">ROE est. ${pct(r.lo)} a ${pct(r.hi)}<button class="hint" type="button" data-legend aria-label="Como ler a barra de ROE">?</button></div>${roeBar(r)}` : ""}
         <div class="tags" style="justify-content:flex-end">${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">conferir dados</span>` : ""}${deadline(x)}</div>
       </div>
       <button class="expand" type="button" data-ficha="${esc(x.id)}" aria-expanded="${open}" aria-label="${open ? "Fechar ficha" : "Abrir ficha completa"}" title="${open ? "Fechar ficha" : "Ficha completa: custos, ROE, cidade e checklist"}">
@@ -735,6 +818,19 @@ function lotHTML(x, isNew) {
   </article>`;
 }
 
+
+/* ---------- floating legend ---------- */
+function openLegend(open) {
+  $("legendPanel").hidden = !open;
+  $("legendBtn").setAttribute("aria-expanded", String(open));
+}
+$("legendBtn").addEventListener("click", () => openLegend($("legendPanel").hidden));
+$("legendClose").addEventListener("click", () => { openLegend(false); $("legendBtn").focus(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("legendPanel").hidden) openLegend(false); });
+// a click anywhere else closes it, so it never sits on top of the list
+document.addEventListener("click", (e) => {
+  if (!$("legendPanel").hidden && !e.target.closest("#legend") && !e.target.closest("[data-legend]")) openLegend(false);
+});
 
 /* ---------- ficha (detail sheet) ---------- */
 const simState = new Map();   // per lot: resale value and cost sliders in the simulator
@@ -857,10 +953,10 @@ function roeBar(r, big = false) {
   const cls = r.mid >= 20 ? "good" : r.mid >= 0 ? "warn" : "bad";
   return `<div class="rbar roe ${cls}${big ? " big" : ""}" role="img" aria-label="ROE estimado de ${pct(r.lo)} a ${pct(r.hi)}, central ${pct(r.mid)}">
     <div class="rb-track"></div>
-    <div class="rb-50" style="left:${pos(r.lo)};right:calc(100% - ${pos(r.hi)})"></div>
-    <div class="rb-mid" style="left:${pos(r.mid)}"></div>
+    <div class="rb-50" style="left:${pos(r.lo)};right:calc(100% - ${pos(r.hi)})" title="ROE de ${pct(r.lo)} (pessimista) a ${pct(r.hi)} (otimista)"></div>
+    <div class="rb-mid" style="left:${pos(r.mid)}" title="Cenário central: ${pct(r.mid)}"></div>
     <div class="rb-be" style="left:${pos(0)}" title="0%: empate"></div>
-    <div class="rb-tgt" style="left:${pos(20)}" title="20%"></div>
+    <div class="rb-tgt" style="left:${pos(20)}" title="Meta: 20%"></div>
     ${big ? `<span class="rb-lbl" style="left:${pos(0)}">0%</span><span class="rb-lbl" style="left:${pos(20)}">20%</span>` : ""}
   </div>`;
 }
@@ -920,11 +1016,11 @@ function rangeBar(x, big = false) {
   const label = `Valor provável entre ${brl.format(v.lo50)} e ${brl.format(v.hi50)}; lance ${brl.format(x.price)}${ch ? `; empate em ${brl.format(ch.breakeven)}` : ""}`;
   return `<div class="rbar${big ? " big" : ""}" role="img" aria-label="${esc(label)}" title="${esc(label)}">
     <div class="rb-track"></div>
-    <div class="rb-80" style="left:${pos(v.lo)};right:calc(100% - ${pos(v.hi)})"></div>
-    <div class="rb-50" style="left:${pos(v.lo50)};right:calc(100% - ${pos(v.hi50)})"></div>
-    <div class="rb-mid" style="left:${pos(v.mid)}"></div>
-    ${ch ? `<div class="rb-be" style="left:${pos(ch.breakeven)}"></div>` : ""}
-    <div class="rb-bid" style="left:${pos(x.price)}"></div>
+    <div class="rb-80" style="left:${pos(v.lo)};right:calc(100% - ${pos(v.hi)})" title="Valor possível (8 em 10): ${brl.format(v.lo)} a ${brl.format(v.hi)}"></div>
+    <div class="rb-50" style="left:${pos(v.lo50)};right:calc(100% - ${pos(v.hi50)})" title="Valor provável (5 em 10): ${brl.format(v.lo50)} a ${brl.format(v.hi50)}"></div>
+    <div class="rb-mid" style="left:${pos(v.mid)}" title="Valor central: ${brl.format(v.mid)}"></div>
+    ${ch ? `<div class="rb-be" style="left:${pos(ch.breakeven)}" title="Empate (sem lucro nem prejuízo): ${brl.format(ch.breakeven)}"></div>` : ""}
+    <div class="rb-bid" style="left:${pos(x.price)}" title="Lance: ${brl.format(x.price)}"></div>
     ${big ? `<span class="rb-lbl" style="left:${lpos(v.lo)}">${brlShort.format(v.lo)}</span>
       <span class="rb-lbl" style="left:${lpos(v.mid)}">${brlShort.format(v.mid)}</span>
       <span class="rb-lbl" style="left:${lpos(v.hi)}">${brlShort.format(v.hi)}</span>
@@ -1017,6 +1113,7 @@ function render() {
   $("resultCount").textContent = `${rows.length.toLocaleString("pt-BR")} resultado${rows.length === 1 ? "" : "s"}`;
   const onMap = document.querySelector('input[name="view"]:checked')?.value === "map";
   $("list").hidden = onMap; $("mapWrap").hidden = !onMap;
+  $("legend").hidden = onMap;
   if (onMap) { $("more").hidden = true; renderMap(rows); setActiveCount(); return; }
   const page = rows.slice(0, shown);
   $("list").innerHTML = page.length
@@ -1063,6 +1160,7 @@ function strategyFromFilters() {
   return st;
 }
 
+let controlsWired = false;
 function buildControls() {
   const count = (key) => ALL.reduce((m, x) => (m[x[key]] = (m[x[key]] || 0) + 1, m), {});
   const srcN = count("src"), catN = count("cat");
@@ -1075,6 +1173,8 @@ function buildControls() {
   const types = Object.entries(count("type")).filter(([t, n]) => t !== "undefined" && n >= 3).sort((a, b) => b[1] - a[1]);
   $("ptype").innerHTML = `<option value="">Todos</option>` + types.map(([t]) => `<option>${esc(t)}</option>`).join("");
 
+  if (controlsWired) return;  // listeners added twice would toggle every sheet open and shut again
+  controlsWired = true;
   const rerender = () => { shown = PAGE; render(); persistFilters(); };
   $("saveAsStrategy").addEventListener("click", () => openEditor(strategyFromFilters(), true));
   let timer;
@@ -1092,6 +1192,7 @@ function buildControls() {
     rerender();
   });
   $("list").addEventListener("click", (e) => {
+    if (e.target.closest("[data-legend]")) { openLegend(true); return; }
     const won = e.target.closest("[data-won]");
     if (won) { const x = ALL.find((l) => l.id === won.dataset.won); if (x) { editingProp = propertyFromListing(x); showTab("portfolio"); } return; }
     const b = e.target.closest("[data-ficha]");
@@ -1455,6 +1556,7 @@ function showTab(name) {
     $(`tab-${t}`).setAttribute("aria-selected", String(name === t));
     $(`${t}View`).hidden = name !== t;
   }
+  if (name !== "lots") $("legend").hidden = true;
   if (name === "lots") render(); else if (name === "strategies") renderStrategies(); else renderPortfolio();
   window.scrollTo(0, 0);
 }
@@ -1580,7 +1682,7 @@ async function startLive(config) {
   const app = initializeApp(config);
   const a = auth.getAuth(app);
   const db = fs.getFirestore(app);
-  let loaded = false;
+  let loaded = false, loadingFor = null;
 
   auth.onAuthStateChanged(a, async (user) => {
     const box = $("userBox");
@@ -1590,13 +1692,16 @@ async function startLive(config) {
         <p>Entre com sua conta Google para ver as oportunidades do Portal Zuk, Biasi, Frazão, Superbid, Picelli, Alfa e PGFN Comprei, salvar suas estratégias e receber avisos.</p>
         <button class="btn btn-primary" id="signin" type="button">Entrar com Google</button><p class="error" id="signinError"></p>`);
       $("signin").addEventListener("click", () => auth.signInWithPopup(a, new auth.GoogleAuthProvider()).catch((e) => { $("signinError").textContent = e.message; }));
-      loaded = false;
+      loaded = false; loadingFor = null;
       return;
     }
     box.hidden = false;
     box.innerHTML = `<span>${esc(user.displayName || user.email)}</span><button class="btn" id="signout" type="button">Sair</button>`;
     $("signout").addEventListener("click", () => auth.signOut(a));
-    if (loaded) return;
+    // Firebase can report the same sign-in twice in a row (popup, token
+    // refresh); only the first one loads the data.
+    if (loaded || loadingFor === user.uid) return;
+    loadingFor = user.uid;
     try {
       store = firestoreStore(fs, db, user);
       USER.email = user.email;
@@ -1616,6 +1721,8 @@ async function startLive(config) {
       start(items, updated, `${snap.size} documentos lidos do Firestore.`);
     } catch (e) {
       showGate(`<h1>Sem acesso aos dados</h1><p class="error">${esc(e.message)}</p><p>Confira as regras do Firestore (firestore.rules).</p>`);
+    } finally {
+      loadingFor = null;
     }
   });
 }

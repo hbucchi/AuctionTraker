@@ -11,11 +11,17 @@ For each listing:
                       alienação fiduciária, Lei 9.514/97).
 * city statistics     population, GDP per capita, HDI, agribusiness share,
                       capital — joined from data/municipios.json by city + UF.
+                      Names that don't match exactly ("Casa no Centro em São
+                      Carlos", "Antônio da Platina") are recovered by
+                      find_municipio(); the city is then renamed to IBGE's.
 * ``market_value``    the auction's own appraisal (valor de avaliação) when
                       published; else the 1st round's minimum bid, which the
                       law sets at the appraisal; otherwise FipeZAP's average asking price per
                       m² in that city (by bedroom count when known; the
                       commercial index for commercial property) × the area.
+                      Only FipeZAP's own 56 cities: a nearby city's price,
+                      even adjusted, missed official appraisals by a median
+                      195% in testing (see valuation.py), so it isn't used.
 * ``price_to_market_pct``  current price as a % of that market value: her
                       rule "lance mínimo ≤ 50% do valor de mercado" is
                       price_to_market_pct ≤ 50.
@@ -26,6 +32,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import difflib
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -52,6 +59,65 @@ def municipios() -> dict:
 def fipezap() -> dict:
     return json.loads((DATA / "fipezap.json").read_text(encoding="utf-8"))
 
+
+# ------------------------------------------------------- city matching ---
+
+# "Casa no Jardim Alah em Açailândia", "Apartamento no Centro de São Carlos":
+# some sites put the whole headline in the city field; the city is the tail.
+_CITY_TAIL = re.compile(r"\b(?:em|de|do|da)\s+(.+)$")
+
+
+@lru_cache(maxsize=1)
+def _by_uf() -> dict[str, dict[str, dict]]:
+    out: dict[str, dict[str, dict]] = {}
+    for m in municipios()["municipios"]:
+        out.setdefault(m["uf"], {})[_norm(m["name"])] = m
+    return out
+
+
+@lru_cache(maxsize=8192)
+def _find(city: str, uf: str) -> dict | None:
+    names = _by_uf().get(uf) or {}
+    n = _norm(city)
+    if not n or n == _norm(uf):
+        return None
+    if n in names:
+        return names[n]
+    # the longest tail after "em/de/do/da" that is a municipality
+    cand = n
+    while (t := _CITY_TAIL.search(cand)):
+        cand = t.group(1)
+        if cand in names:
+            return names[cand]
+    # a dropped first word ("Antônio da Platina" for Santo Antônio da Platina)
+    tails = [k for k in names if k.endswith(" " + n)]
+    if len(tails) == 1:
+        return names[tails[0]]
+    # spelling variants ("Santana do Livramento" for Sant'Ana do Livramento)
+    close = difflib.get_close_matches(n, names, n=1, cutoff=0.88)
+    return names[close[0]] if close else None
+
+
+def km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance (haversine)."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2
+    return 6371 * 2 * math.asin(math.sqrt(a))
+
+
+def find_municipio(city: str | None, uf: str | None, lat: float | None = None, lon: float | None = None) -> dict | None:
+    """IBGE municipality for a scraped city name; failing that, the one
+    nearest to the listing's own coordinates (within 30 km)."""
+    if city and uf:
+        m = municipios()["by_key"].get(f"{_norm(city)}|{uf}") or _find(city, uf)
+        if m:
+            return m
+    if lat is not None and lon is not None:
+        best = min((m for m in municipios()["municipios"] if m.get("lat") is not None),
+                   key=lambda m: (m["lat"] - lat) ** 2 + (m["lon"] - lon) ** 2, default=None)
+        if best and km(lat, lon, best["lat"], best["lon"]) <= 30:
+            return best
+    return None
 
 # ------------------------------------------------------------------ kind ---
 
@@ -115,8 +181,8 @@ def fipezap_price_m2(x: Listing) -> tuple[float, str] | None:
     if x.kind in ("comercial", "galpao") and c.get("commercial"):
         return c["commercial"], f"FipeZAP comercial {c['city']} {fz['month']}"
     if x.kind in ("casa", "casa_condominio", "apartamento"):
-        key = f"residential_{min(x.bedrooms, 4)}d" if x.bedrooms else "residential"
-        v = c.get(key) or c.get("residential")
+        k = f"residential_{min(x.bedrooms, 4)}d" if x.bedrooms else "residential"
+        v = c.get(k) or c.get("residential")
         if v:
             label = f"{min(x.bedrooms, 4)}{'+' if x.bedrooms and x.bedrooms >= 4 else ''} quartos " if x.bedrooms else ""
             return v, f"FipeZAP {label}{c['city']} {fz['month']}".replace("  ", " ")
@@ -169,14 +235,16 @@ def enrich(x: Listing) -> Listing:
         occ = str((x.extra or {}).get("occupancy") or "")  # Superbid's structured field
         x.occupied = parse_occupied(occ) if occ else parse_occupied(x.title)
     x.modality_norm = classify_modality(x)
-    if x.city and x.state:
-        m = municipios()["by_key"].get(f"{_norm(x.city)}|{x.state}")
-        if m:
-            x.city_population = m.get("population")
-            x.city_gdp_per_capita = m.get("gdp_per_capita")
-            x.city_idhm = m.get("idhm")
-            x.city_agro_share = m.get("agro_share")
-            x.city_capital = m.get("capital")
+    ex = x.extra or {}
+    m = find_municipio(x.city, x.state, ex.get("lat"), ex.get("lon"))
+    if m:
+        if _norm(x.city or "") != _norm(m["name"]) or x.state != m["uf"]:
+            x.city, x.state = m["name"], m["uf"]  # IBGE's spelling, so later lookups match
+        x.city_population = m.get("population")
+        x.city_gdp_per_capita = m.get("gdp_per_capita")
+        x.city_idhm = m.get("idhm")
+        x.city_agro_share = m.get("agro_share")
+        x.city_capital = m.get("capital")
     estimate_market_value(x)
     place(x)
     return x
