@@ -26,6 +26,9 @@ class FakeDoc:
     def delete(self):
         self.store.get(self.col, {}).pop(self.id, None)
 
+    def collection(self, name):
+        return FakeCollection(self.store, f"{self.col}/{self.id}/{name}")
+
 
 class FakeQuery:
     def __init__(self, store, col, field, value):

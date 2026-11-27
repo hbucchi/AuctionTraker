@@ -23,6 +23,7 @@ web/roe.js is the browser twin; tests/roe_cases.json checks they agree.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 DEFAULTS: dict[str, float] = {
@@ -79,4 +80,61 @@ def roe_range(item: dict, custom: dict[str, Any] | None = None) -> dict[str, flo
     return {
         "lo": round(100 * lo["roe"], 1), "mid": round(100 * mid["roe"], 1), "hi": round(100 * hi["roe"], 1),
         "annual": round(100 * mid["annual"], 1), "months": mid["months"], "equity": round(mid["equity"]),
+    }
+
+
+def _half_up(x: float) -> int:
+    """Round halves up, like JavaScript's Math.round (Python's round() rounds
+    halves to even, which would make the two twins disagree by 1 now and then)."""
+    return math.floor(x + 0.5)
+
+
+def value_needed(price: float, target_roe: float, debts: bool | None, occupied: bool | None, a: dict[str, float]) -> float:
+    """Resale value that gives exactly ``target_roe`` (0 = breakeven).
+
+    equity  = price·k + value·c          (k: purchase fees, c: value-linked costs)
+    profit  = (value·(1−b) − equity)·(1−tax)   for a gain
+    profit ≥ t·equity  ⇔  value ≥ price·k·(1+s) / (1 − b − c·(1+s)),  s = t / (1−tax)
+    """
+    occ = occupied is True or (occupied is None and a["assume_occupied"] >= 1)
+    months = a["holding_months"] + (a["eviction_months"] if occ else 0)
+    k = 1 + (a["commission_pct"] + a["itbi_pct"] + a["registry_pct"]) / 100
+    c = (a["renovation_pct"] + (a["debts_pct"] if debts is True else 0) + (a["eviction_pct"] if occ else 0)
+         + a["carrying_pct_month"] * months) / 100
+    s = target_roe / (1 - a["tax_pct"] / 100) if target_roe > 0 else target_roe
+    denom = 1 - a["broker_pct"] / 100 - c * (1 + s)
+    return float("inf") if denom <= 0 else price * k * (1 + s) / denom
+
+
+def chance_value_at_least(needed: float, mid: float, quantiles: list[float]) -> float:
+    """P(true value ≥ needed), from the valuation's measured error
+    distribution: quantiles[i] is the (5·(i+1))th percentile of truth/estimate.
+    Interpolates linearly; clamps to 2.5%/97.5% outside the measured range."""
+    r = needed / mid
+    qs = [(5 * (i + 1)) / 100 for i in range(len(quantiles))]
+    if r <= quantiles[0]:
+        return 0.975
+    if r >= quantiles[-1]:
+        return 0.025
+    for (p0, x0), (p1, x1) in zip(zip(qs, quantiles), zip(qs[1:], quantiles[1:])):
+        if x0 <= r <= x1:
+            cdf = p0 + (p1 - p0) * ((r - x0) / (x1 - x0) if x1 > x0 else 0)
+            return _half_up(1000 * (1 - cdf)) / 1000
+    return 0.5
+
+
+def chances(item: dict, quantiles: dict[str, list[float]], custom: dict[str, Any] | None = None,
+            target_roe_pct: float = 20) -> dict[str, float] | None:
+    """Chance (%) of any profit and of reaching ``target_roe_pct``."""
+    val, price = item.get("val"), item.get("price")
+    if not val or not price or price < 1_000 or val.get("flag") or not quantiles:
+        return None
+    q = quantiles.get("many" if (val.get("n") or 0) >= 3 else "few") or quantiles.get("many")
+    a = assumptions(custom)
+    be = value_needed(price, 0, item.get("debts"), item.get("occ"), a)
+    tgt = value_needed(price, target_roe_pct / 100, item.get("debts"), item.get("occ"), a)
+    return {
+        "profit": _half_up(100 * chance_value_at_least(be, val["mid"], q)),
+        "target": _half_up(100 * chance_value_at_least(tgt, val["mid"], q)),
+        "breakeven": _half_up(be),
     }

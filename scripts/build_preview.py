@@ -7,6 +7,7 @@ keeps strategies in the browser. strategy.js is inlined because some preview
 hosts only allow scripts from the page itself.
 """
 
+import re
 import shutil
 import subprocess
 import sys
@@ -28,7 +29,7 @@ def main() -> int:
         return js.replace("export function", "function").replace("export const", "const")
 
     body = body.replace('import { matchesStrategy, nextDeadline } from "./strategy.js";', inline("roe.js") + "\n" + inline("strategy.js"))
-    body = body.replace('import { roeRange, roeAssumptions, flip } from "./roe.js";', "")
+    body = re.sub(r'^import \{[^}]*\} from "\./roe\.js";\n', "", body, flags=re.M)
     (out / "index.html").write_text(head.strip() + "\n" + body.strip() + "\n", encoding="utf-8")
     (out / "firebase-config.js").write_text("// preview build: no Firebase\nwindow.FIREBASE_CONFIG = null;\n")
     shutil.copy(ROOT / "web" / "strategy-fields.json", out / "strategy-fields.json")

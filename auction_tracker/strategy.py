@@ -31,7 +31,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .roe import roe_range
+from .roe import chances, roe_range
 
 SPEC_PATH = Path(__file__).resolve().parents[1] / "web" / "strategy-fields.json"
 DAY = 86400.0
@@ -72,6 +72,9 @@ def attr_value(item: dict, attr: str, now: float, strategy: dict | None = None) 
     if attr == "days":
         t = next_deadline(item, now)
         return None if t is None else (t - now) / DAY
+    if attr == "chance":
+        c = chances(item, spec().get("reference", {}).get("residual_quantiles"), (strategy or {}).get("roe_assumptions"))
+        return None if c is None else c["profit"]
     if attr in ("roe", "roelo"):
         # computed with the strategy's own cost assumptions (roe.py)
         r = roe_range(item, (strategy or {}).get("roe_assumptions"))

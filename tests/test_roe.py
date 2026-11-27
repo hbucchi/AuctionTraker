@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from auction_tracker.roe import assumptions, flip, roe_range
+from auction_tracker.roe import assumptions, chances, flip, roe_range, value_needed
 
-CASES = json.loads((Path(__file__).parent / "roe_cases.json").read_text(encoding="utf-8"))["cases"]
+DATA = json.loads((Path(__file__).parent / "roe_cases.json").read_text(encoding="utf-8"))
+CASES = DATA["cases"]
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c["name"] for c in CASES])
@@ -33,3 +34,15 @@ def test_javascript_twin_agrees():
         pytest.skip("node not installed")
     r = subprocess.run([node, str(Path(__file__).parent / "roe_cases.test.mjs")], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
+
+
+@pytest.mark.parametrize("case", DATA["chance_cases"], ids=[c["name"] for c in DATA["chance_cases"]])
+def test_chance_cases(case):
+    assert chances(case["item"], DATA["quantiles"], case["custom"]) == case["expect"]
+
+
+def test_breakeven_gives_zero_and_target_gives_target():
+    a = assumptions()
+    for debts, occ in [(None, False), (True, True)]:
+        assert abs(flip(200_000, value_needed(200_000, 0, debts, occ, a), debts, occ, a)["roe"]) < 1e-9
+        assert abs(flip(200_000, value_needed(200_000, 0.2, debts, occ, a), debts, occ, a)["roe"] - 0.2) < 1e-9

@@ -39,3 +39,40 @@ export function roeRange(item, custom) {
   const hi = flip(price, val.hi50, item.debts, item.occ, a);
   return { lo: r1(100 * lo.roe), mid: r1(100 * mid.roe), hi: r1(100 * hi.roe), annual: r1(100 * mid.annual), months: mid.months, equity: Math.round(mid.equity) };
 }
+
+// Resale value that gives exactly targetRoe (0 = breakeven). See roe.py.
+export function valueNeeded(price, targetRoe, debts, occupied, a) {
+  const occ = occupied === true || (occupied == null && a.assume_occupied >= 1);
+  const months = a.holding_months + (occ ? a.eviction_months : 0);
+  const k = 1 + (a.commission_pct + a.itbi_pct + a.registry_pct) / 100;
+  const c = (a.renovation_pct + (debts === true ? a.debts_pct : 0) + (occ ? a.eviction_pct : 0) + a.carrying_pct_month * months) / 100;
+  const s = targetRoe > 0 ? targetRoe / (1 - a.tax_pct / 100) : targetRoe;
+  const denom = 1 - a.broker_pct / 100 - c * (1 + s);
+  return denom <= 0 ? Infinity : price * k * (1 + s) / denom;
+}
+
+// P(true value ≥ needed) from the measured error distribution (see roe.py).
+export function chanceValueAtLeast(needed, mid, quantiles) {
+  const r = needed / mid;
+  if (r <= quantiles[0]) return 0.975;
+  if (r >= quantiles[quantiles.length - 1]) return 0.025;
+  for (let i = 0; i < quantiles.length - 1; i++) {
+    const x0 = quantiles[i], x1 = quantiles[i + 1];
+    if (x0 <= r && r <= x1) {
+      const p0 = (5 * (i + 1)) / 100, p1 = (5 * (i + 2)) / 100;
+      const cdf = p0 + (p1 - p0) * (x1 > x0 ? (r - x0) / (x1 - x0) : 0);
+      return Math.round((1 - cdf) * 1000) / 1000;
+    }
+  }
+  return 0.5;
+}
+
+export function chances(item, quantiles, custom, targetRoePct = 20) {
+  const val = item.val, price = item.price;
+  if (!val || !price || price < 1000 || val.flag || !quantiles) return null;
+  const q = quantiles[(val.n || 0) >= 3 ? "many" : "few"] || quantiles.many;
+  const a = roeAssumptions(custom);
+  const be = valueNeeded(price, 0, item.debts, item.occ, a);
+  const tgt = valueNeeded(price, targetRoePct / 100, item.debts, item.occ, a);
+  return { profit: Math.round(100 * chanceValueAtLeast(be, val.mid, q)), target: Math.round(100 * chanceValueAtLeast(tgt, val.mid, q)), breakeven: Math.round(be) };
+}

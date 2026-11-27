@@ -61,6 +61,13 @@ METHODS = {
     "m4": "Comparáveis de leilão (avaliações oficiais na cidade)",
     "m5": "Custo de reposição (SINAPI + terreno)",
 }
+# The auction's own appraisal (or the 1st-round bid, legally the appraisal),
+# when published. It can't be scored like the others (it is the yardstick they
+# are calibrated against), so it gets an ASSUMED error: professional
+# appraisals typically land within 10-20% of sale prices.
+OFFICIAL_METHOD = "m0"
+OFFICIAL_NAME = "Avaliação oficial do leilão"
+OFFICIAL_ASSUMED_MDAPE = 0.15
 SOUTH_SOUTHEAST = {"SP", "RJ", "MG", "ES", "PR", "SC", "RS"}
 LAND_SHARE = {"apartamento": 0.15, "casa": 0.35, "casa_condominio": 0.30, "comercial": 0.25, "galpao": 0.30}
 ATYPICAL_PCT = 20  # bids under 20% of the estimate are flagged ("conferir"), not ranked as bargains
@@ -344,6 +351,12 @@ def calibrate(listings: list[Listing], folds: int = 5, seed: int = 7) -> dict:
         b: {"q10": round(_quantile(r, 0.10), 3), "q90": round(_quantile(r, 0.90), 3), "n": len(r)}
         for b, r in resid.items() if len(r) >= 20
     }
+    # full error distribution (truth / estimate at every 5th percentile): lets
+    # the app answer "how likely is the property worth at least X?"
+    cal["residual_quantiles"] = {
+        b: [round(_quantile(r, q / 100), 4) for q in range(5, 100, 5)]
+        for b, r in resid.items() if len(r) >= 20
+    }
     # 50% interval (25th-75th percentile): the "likely" band used for ROE ranges
     cal["interval50"] = {
         b: {"q25": round(_quantile(r, 0.25), 3), "q75": round(_quantile(r, 0.75), 3), "n": len(r)}
@@ -355,7 +368,12 @@ def calibrate(listings: list[Listing], folds: int = 5, seed: int = 7) -> dict:
 
 def _combine(est: dict[str, float], cal: dict) -> float:
     """Weighted geometric mean, weight = 1 / MdAPE² (inverse-variance)."""
-    w = {m: 1 / max((cal["scores"].get(m) or {}).get("mdape") or 0.5, 0.05) ** 2 for m in est}
+    def mdape(m: str) -> float:
+        if m == OFFICIAL_METHOD:
+            return OFFICIAL_ASSUMED_MDAPE
+        return (cal["scores"].get(m) or {}).get("mdape") or 0.5
+
+    w = {m: 1 / max(mdape(m), 0.05) ** 2 for m in est}
     return math.exp(sum(w[m] * math.log(v) for m, v in est.items()) / sum(w.values()))
 
 
@@ -374,14 +392,18 @@ def estimate(x: Listing, idx: dict, cal: dict | None = None) -> dict | None:
     m4 = raw_m4(x, idx)
     if m4:
         est["m4"] = m4[0]
+    off = official_value(x)  # whole-property value, like the others
+    if off:
+        est[OFFICIAL_METHOD] = off
     if not est:
         return None
     share = ownership_share(x)
     est = {m: v * share for m, v in est.items()}  # value of the share being sold
     mid = _combine(est, cal)
-    band = cal["interval"].get("many" if len(est) >= 3 else "few") or cal["interval"].get("many")
+    n_models = len([m for m in est if m != OFFICIAL_METHOD])
+    band = cal["interval"].get("many" if n_models >= 3 else "few") or cal["interval"].get("many")
     lo, hi = mid * band["q10"], mid * band["q90"]
-    b50 = (cal.get("interval50") or {}).get("many" if len(est) >= 3 else "few") or {"q25": 0.75, "q75": 1.3}
+    b50 = (cal.get("interval50") or {}).get("many" if n_models >= 3 else "few") or {"q25": 0.75, "q75": 1.3}
     agree = max(est.values()) / min(est.values()) - 1
     conf = "alta" if len(est) >= 3 and agree <= 0.35 else "média" if len(est) >= 2 and agree <= 0.8 else "baixa"
     return {

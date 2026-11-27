@@ -326,6 +326,15 @@
       "unit": "%",
       "step": 5,
       "help": "Mesmo cálculo com a revenda pelo valor baixo da faixa de avaliação (metade das avaliações reais fica acima dele). Use para exigir margem de segurança."
+    },
+    {
+      "key": "chance",
+      "attr": "chance",
+      "group": "retorno",
+      "label": "Chance de lucro",
+      "unit": "%",
+      "step": 5,
+      "help": "Probabilidade de o imóvel valer o suficiente para cobrir lance e todos os custos, medida pelos erros reais do modelo em avaliações que ele não tinha visto."
     }
   ],
   "toggles": [
@@ -426,7 +435,51 @@
   "reference": {
     "national_gdp_per_capita": 53887,
     "gdp_year": 2023,
-    "source": "IBGE PIB dos Municípios 2023 (SIDRA 5938)"
+    "source": "IBGE PIB dos Municípios 2023 (SIDRA 5938)",
+    "residual_quantiles": {
+      "many": [
+        0.2949,
+        0.4414,
+        0.5686,
+        0.6637,
+        0.7237,
+        0.7692,
+        0.8615,
+        0.8987,
+        0.9888,
+        1.0457,
+        1.1008,
+        1.1492,
+        1.2061,
+        1.3142,
+        1.4404,
+        1.5357,
+        1.7752,
+        2.0353,
+        2.7321
+      ],
+      "few": [
+        0.2189,
+        0.3213,
+        0.416,
+        0.4979,
+        0.5607,
+        0.6008,
+        0.6821,
+        0.7434,
+        0.8,
+        0.8936,
+        0.9572,
+        1.0525,
+        1.1202,
+        1.2231,
+        1.3327,
+        1.487,
+        1.5677,
+        1.9486,
+        2.3194
+      ]
+    }
   },
   "roe_assumptions": [
     [

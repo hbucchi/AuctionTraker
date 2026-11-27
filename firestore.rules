@@ -28,6 +28,11 @@ service cloud.firestore {
     // each user's own strategies and checklists: only they can read/write
     match /users/{uid} {
       allow read, write: if isOwner(uid);
+      // the user's own properties; the daily job adds valuations with the
+      // service account. Nobody else can read them: matching shares counts only.
+      match /portfolio/{pid} {
+        allow read, write: if isOwner(uid);
+      }
     }
     // what the alert job found for each user: they can read, only the job writes
     match /alert_state/{uid} {
