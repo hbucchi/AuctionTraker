@@ -231,3 +231,64 @@ def debts_on_buyer(text: str | None) -> bool | None:
     if seller and not buyer:
         return False
     return None
+
+
+_AREA_RE = re.compile(r"(\d[\d.,]*)\s*m(?:²|2)\b")
+_LOT_CTX = re.compile(r"(terreno|lote|area total|area do terreno|gleba|fracao ideal|area de terra|\ba\.?\s?t\.?)\W*(?:de|com|medindo)?\W*$")
+_BUILT_CTX = re.compile(r"(constru\w*|privativ\w*|util|edificad\w*|area real|a\.?\s?p\.?|a\.?\s?c\.?)\W*(?:de|com)?\W*$")
+
+
+def parse_areas(text: str | None) -> tuple[float | None, float | None]:
+    """Split the areas mentioned in a title into (built, lot).
+
+    'Casa 251m² com Terreno 280m²' -> (251, 280); 'Casa com área total de
+    886m²' -> (None, 886); 'Apto 3 dorms 70m² privativos' -> (70, None).
+    An area with no qualifier counts as built, the usual way titles are written."""
+    if not text:
+        return None, None
+    t = strip_accents(text.lower())
+    built = lot = None
+    for m in _AREA_RE.finditer(t):
+        value = parse_area(m.group(0))
+        before = t[max(0, m.start() - 30): m.start()]
+        after = t[m.end(): m.end() + 20]
+        if _LOT_CTX.search(before) or re.match(r"\W*(de\s+)?(terreno|lote)", after):
+            lot = lot or value
+        elif _BUILT_CTX.search(before) or re.match(r"\W*(de\s+)?(area\s+)?(constru|privativ|util)", after) or built is None:
+            built = built or value
+    return built, lot
+
+
+_SHARE_RES = [
+    re.compile(r"^\W*\(\s*(\d{1,3}(?:[.,]\d+)?)\s*%"),                                  # "(25%) Casa..." (Superbid)
+    re.compile(r"\(\s*(\d{1,3}(?:[.,]\d+)?)\s*%\s*-?\s*parte ideal"),                   # "(12,5% - Parte Ideal)"
+    re.compile(r"(?:parte|fracao) ideal (?:de |correspondente a |equivalente a )?(\d{1,3}(?:[.,]\d+)?)\s*%"),
+    re.compile(r"(\d{1,3}(?:[.,]\d+)?)\s*% (?:da|de|do) (?:parte|fracao) ideal"),
+]
+
+
+def parse_share(text: str | None) -> float | None:
+    """Fraction of the property being sold: '(25%) Casa' -> 0.25,
+    'parte ideal de 60%' -> 0.6. None when the whole property is sold."""
+    if not text:
+        return None
+    t = strip_accents(text.lower())
+    for r in _SHARE_RES:
+        m = r.search(t)
+        if m:
+            v = float(m.group(1).replace(",", ".")) / 100
+            if 0 < v < 1:
+                return v
+    return None
+
+
+def parse_occupied(text: str | None) -> bool | None:
+    """'DESOCUPADO', 'imóvel vago' -> False; 'Imóvel ocupado' -> True; else None."""
+    if not text:
+        return None
+    t = strip_accents(text.lower())
+    if re.search(r"\b(desocupad[oa]s?|vago|vazio|livre de ocupa|livre e desocupad)", t):
+        return False
+    if re.search(r"\bocupad[oa]s?\b", t):
+        return True
+    return None

@@ -88,6 +88,27 @@ capita above the national average.
   finds new matches per user, stores them for the app's "Novo" badges, and
   emails them through Resend when the `RESEND_API_KEY` secret is set.
 
+## Valuation, ROE and map
+
+- **Valuation** (`auction_tracker/valuation.py`) runs five methods: FipeZAP
+  comparison, income capitalization, a cross-city regression, auction
+  comparables and SINAPI replacement cost. Each is calibrated against
+  official auction appraisals and scored on appraisals it didn't see
+  (`python scripts/calibrate_valuation.py data/<run-id>`). The app shows the
+  weighted central value, an 80% range, and every method with its measured
+  error.
+- **ROE** (`auction_tracker/roe.py`, browser twin `web/roe.js`) is the return
+  of an all-cash flip at the low/central/high end of the valuation's 50%
+  band, after auction commission, ITBI, registration, renovation, debts,
+  eviction, holding costs, broker and capital-gains tax. Assumptions are
+  editable per strategy, and strategies can filter on ROE.
+- **Map:** Lista/Mapa switch on the Oportunidades tab, showing whatever the
+  filters or strategy select. It uses Google Maps when `window.GOOGLE_MAPS_KEY`
+  is set in `web/firebase-config.js` (a browser key restricted to the site's
+  domains), otherwise a built-in schematic map. Pins are exact for Superbid
+  and for addresses geocoded with the optional `GOOGLE_GEOCODING_KEY` secret;
+  the rest sit at their city's center.
+
 ## The data model
 
 Every site maps into `auction_tracker.models.Listing`. Its main fields:

@@ -64,6 +64,10 @@ class Listing:
     bedrooms: int | None = None
     buyer_pays_debts: bool | None = None   # condo/IPTU debts on the buyer (arrematante)?
     debts_source: str | None = None        # where buyer_pays_debts came from
+    occupied: bool | None = None           # someone lives there (eviction cost and delay)
+    lat: float | None = None
+    lon: float | None = None
+    geo: str | None = None                 # "exato" (site or geocoded address) | "cidade" (municipality center)
 
     # --- enrichment (auction_tracker/enrich.py; derived, not scraped) ----
     kind: str | None = None                # casa | casa_condominio | apartamento | comercial | terreno | rural | galpao | outros
@@ -76,6 +80,9 @@ class Listing:
     city_idhm: float | None = None
     city_agro_share: float | None = None
     city_capital: bool | None = None
+    # five-method valuation (auction_tracker/valuation.py)
+    valuation: dict | None = None          # {lo, mid, hi, n, conf, methods: {m1..m5}, comps}
+    price_to_valuation_pct: float | None = None  # current_price / valuation mid * 100
 
     # --- extras -------------------------------------------------------
     image_url: str | None = None

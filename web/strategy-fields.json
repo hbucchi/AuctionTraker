@@ -14,6 +14,10 @@
       "label": "Valor"
     },
     {
+      "key": "retorno",
+      "label": "Retorno (ROE)"
+    },
+    {
       "key": "cidade",
       "label": "Cidade-alvo"
     },
@@ -249,6 +253,15 @@
       "help": "Valor de mercado = avaliação do leilão; ou o lance do 1º leilão (que por lei é a avaliação); ou preço médio do m² do Índice FipeZAP na cidade × área."
     },
     {
+      "key": "ptmv",
+      "attr": "ptmv",
+      "group": "valor",
+      "label": "Lance em % da avaliação do modelo",
+      "unit": "%",
+      "step": 5,
+      "help": "Avaliação estimada pelos 5 métodos (FipeZAP, renda, regressão entre cidades, comparáveis de leilão e custo de reposição). Cobre mais imóveis que o valor oficial, mas é aproximada: erro mediano em torno de 40%."
+    },
+    {
       "key": "disc",
       "attr": "disc",
       "group": "valor",
@@ -295,6 +308,24 @@
       "unit": "%",
       "step": 1,
       "help": "Participação da agropecuária no valor adicionado do município (IBGE)."
+    },
+    {
+      "key": "roe",
+      "attr": "roe",
+      "group": "retorno",
+      "label": "ROE estimado por negócio",
+      "unit": "%",
+      "step": 5,
+      "help": "Lucro líquido ÷ capital investido, comprando à vista no leilão e revendendo pelo valor central da avaliação, com as premissas de custo abaixo."
+    },
+    {
+      "key": "roelo",
+      "attr": "roelo",
+      "group": "retorno",
+      "label": "ROE no cenário pessimista",
+      "unit": "%",
+      "step": 5,
+      "help": "Mesmo cálculo com a revenda pelo valor baixo da faixa de avaliação (metade das avaliações reais fica acima dele). Use para exigir margem de segurança."
     }
   ],
   "toggles": [
@@ -396,5 +427,67 @@
     "national_gdp_per_capita": 53887,
     "gdp_year": 2023,
     "source": "IBGE PIB dos Municípios 2023 (SIDRA 5938)"
-  }
+  },
+  "roe_assumptions": [
+    [
+      "commission_pct",
+      "Comissão do leiloeiro",
+      "% do lance"
+    ],
+    [
+      "itbi_pct",
+      "ITBI",
+      "% do lance"
+    ],
+    [
+      "registry_pct",
+      "Escritura e registro",
+      "% do lance"
+    ],
+    [
+      "renovation_pct",
+      "Reforma",
+      "% do valor"
+    ],
+    [
+      "debts_pct",
+      "Dívidas, se ficarem com o arrematante",
+      "% do valor"
+    ],
+    [
+      "eviction_pct",
+      "Desocupação, se ocupado",
+      "% do valor"
+    ],
+    [
+      "eviction_months",
+      "Meses extras de desocupação",
+      "meses"
+    ],
+    [
+      "holding_months",
+      "Prazo até vender",
+      "meses"
+    ],
+    [
+      "carrying_pct_month",
+      "Condomínio + IPTU enquanto espera",
+      "% do valor/mês"
+    ],
+    [
+      "broker_pct",
+      "Corretagem na venda",
+      "% do valor"
+    ],
+    [
+      "tax_pct",
+      "IR sobre o lucro",
+      "%"
+    ],
+    [
+      "assume_occupied",
+      "Tratar ocupação desconhecida como ocupado (1 = sim)",
+      ""
+    ]
+  ]
 }

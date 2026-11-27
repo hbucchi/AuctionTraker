@@ -17,7 +17,10 @@ auction_tracker/data/municipios.json  one row per municipality (5 570):
 auction_tracker/data/fipezap.json  latest FipeZAP average asking price, R$/m²,
     per city (56 cities): residential overall and by bedrooms (1-4+), commercial.
 
-Refresh FipeZAP monthly; IBGE data changes yearly at most.
+auction_tracker/data/sinapi.json  construction cost per m² by state (SINAPI),
+    used by the cost (replacement) valuation method.
+
+Refresh FipeZAP and SINAPI monthly; the other IBGE data changes yearly at most.
 """
 
 from __future__ import annotations
@@ -116,6 +119,7 @@ def build_municipios() -> dict:
         if v not in (None, "", "-"):
             idhm[r["localidade"]] = float(v)  # 6-digit code (no check digit)
 
+    centroids = municipal_centroids()
     out = []
     for m in muns:
         code = str(m["id"])
@@ -131,6 +135,8 @@ def build_municipios() -> dict:
             "agro_share": round(100 * g["513"] / g["498"], 1) if g.get("498") and g.get("513") is not None else None,
             "idhm": idhm.get(code[:6]),
             "capital": CAPITALS.get(uf) == m["nome"],
+            "lat": (centroids.get(code) or (None, None))[0],
+            "lon": (centroids.get(code) or (None, None))[1],
         }
         out.append(row)
 
@@ -162,8 +168,11 @@ def build_fipezap() -> dict:
             continue
         rows = list(wb[name].iter_rows(values_only=True))
         header = rows[2]  # metric names
-        sale_res = header.index("Preço médio (R$/m²)")                     # residential sale block
-        sale_com = [i for i, c in enumerate(header) if c == "Preço médio (R$/m²)"][2]  # commercial sale
+        price_cols = [i for i, c in enumerate(header) if c == "Preço médio (R$/m²)"]
+        # blocks, left to right: residential sale, residential rent, commercial sale, commercial rent
+        sale_res, rent_res, sale_com, rent_com = price_cols[:4]
+        yield_res, yield_com = [i for i, c in enumerate(header) if c == "(% - mensalizada)"][:2]  # rental yields
+        var12 = header.index("Var. em 12 meses (%)")                      # residential sale, 12 months
         latest = {}
         for r in rows[4:]:
             if r[1] is None or not hasattr(r[1], "year"):
@@ -171,8 +180,13 @@ def build_fipezap() -> dict:
             vals = {
                 "residential": r[sale_res], "residential_1d": r[sale_res + 1], "residential_2d": r[sale_res + 2],
                 "residential_3d": r[sale_res + 3], "residential_4d": r[sale_res + 4], "commercial": r[sale_com],
+                "rent_residential": r[rent_res], "rent_residential_1d": r[rent_res + 1], "rent_residential_2d": r[rent_res + 2],
+                "rent_residential_3d": r[rent_res + 3], "rent_residential_4d": r[rent_res + 4], "rent_commercial": r[rent_com],
             }
-            vals = {k: round(v) for k, v in vals.items() if isinstance(v, (int, float))}
+            extra = {"yield_monthly_pct": r[yield_res], "yield_commercial_monthly_pct": r[yield_com], "change_12m_pct": r[var12]}
+            vals = {k: round(v, 2) if k.startswith("rent") else round(v) for k, v in vals.items() if isinstance(v, (int, float))}
+            # yield and 12-month change are stored as fractions in the sheet (0.0045 = 0.45%)
+            vals.update({k: round(100 * v, 3) for k, v in extra.items() if isinstance(v, (int, float))})
             if vals.get("residential"):
                 latest = vals
                 month = max(month or r[1], r[1])
@@ -186,6 +200,61 @@ def build_fipezap() -> dict:
     }
 
 
+def _ring_centroid(ring: list[list[float]]) -> tuple[float, float, float]:
+    """Area-weighted centroid of a polygon ring (shoelace formula): (area, lon, lat)."""
+    a = cx = cy = 0.0
+    for (x0, y0), (x1, y1) in zip(ring, ring[1:] + ring[:1]):
+        cross = x0 * y1 - x1 * y0
+        a += cross
+        cx += (x0 + x1) * cross
+        cy += (y0 + y1) * cross
+    if abs(a) < 1e-12:
+        xs, ys = zip(*ring)
+        return 0.0, sum(xs) / len(xs), sum(ys) / len(ys)
+    return abs(a) / 2, cx / (3 * a), cy / (3 * a)
+
+
+def municipal_centroids() -> dict[str, tuple[float, float]]:
+    """IBGE municipal boundaries -> {code: (lat, lon)} of each municipality's
+    largest polygon. Used to place listings on the map when only the city is known."""
+    geo = get(f"{IBGE.replace('/v1', '/v3')}/malhas/paises/BR",
+              params={"intrarregiao": "municipio", "qualidade": "minima", "formato": "application/vnd.geo+json"}).json()
+    out = {}
+    for f in geo["features"]:
+        g = f["geometry"]
+        polys = [g["coordinates"]] if g["type"] == "Polygon" else g["coordinates"]
+        area, lon, lat = max(_ring_centroid(p[0]) for p in polys)
+        out[f["properties"]["codarea"]] = (round(lat, 4), round(lon, 4))
+    return out
+
+
+def build_states_outline() -> dict:
+    """State outlines for the schematic map (coordinates rounded to ~1 km)."""
+    geo = get(f"{IBGE.replace('/v1', '/v3')}/malhas/paises/BR",
+              params={"intrarregiao": "UF", "qualidade": "minima", "formato": "application/vnd.geo+json"}).json()
+    uf_ids = {str(u["id"]): u["sigla"] for u in get(f"{IBGE}/localidades/estados").json()}
+    feats = []
+    for f in geo["features"]:
+        g = f["geometry"]
+        polys = [g["coordinates"]] if g["type"] == "Polygon" else g["coordinates"]
+        feats.append({"uf": uf_ids[f["properties"]["codarea"]],
+                      "rings": [[[round(x, 2), round(y, 2)] for x, y in p[0]] for p in polys]})
+    return {"source": "IBGE malhas territoriais (qualidade mínima)", "states": feats}
+
+
+def build_sinapi() -> dict:
+    """Average construction cost per m² by state (IBGE SINAPI, table 2296)."""
+    rows = sidra("t/2296/n3/all/v/48/p/last")
+    month = rows[0]["D3N"]
+    uf_ids = {str(u["id"]): u["sigla"] for u in get(f"{IBGE}/localidades/estados").json()}
+    return {
+        "source": f"IBGE/CAIXA SINAPI — custo médio m² ({month})",
+        "month": month,
+        "built": date.today().isoformat(),
+        "cost_m2": {uf_ids[r["D1C"]]: float(r["V"]) for r in rows if r["V"].replace(".", "", 1).isdigit()},
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fipezap", action="store_true", help="only refresh the FipeZAP prices")
@@ -194,6 +263,8 @@ def main() -> int:
     if not args.fipezap:
         m = build_municipios()
         (OUT / "municipios.json").write_text(json.dumps(m, ensure_ascii=False, separators=(",", ":")))
+        (ROOT / "web" / "brazil-states.json").write_text(
+            json.dumps(build_states_outline(), ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         print(f"municipios.json: {len(m['municipios'])} rows, national GDP per capita R$ {m['national_gdp_per_capita']}")
         # the web app and the alert job read reference values from the strategy spec
         spec_path = ROOT / "web" / "strategy-fields.json"
@@ -204,6 +275,9 @@ def main() -> int:
             "source": m["sources"]["gdp"],
         }
         spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    sn = build_sinapi()
+    (OUT / "sinapi.json").write_text(json.dumps(sn, ensure_ascii=False, indent=1))
+    print(f"sinapi.json: {len(sn['cost_m2'])} states, {sn['month']}")
     f = build_fipezap()
     (OUT / "fipezap.json").write_text(json.dumps(f, ensure_ascii=False, indent=1))
     print(f"fipezap.json: {len(f['cities'])} cities, month {f['month']}")
