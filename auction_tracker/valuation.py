@@ -68,6 +68,7 @@ METHODS = {
 OFFICIAL_METHOD = "m0"
 OFFICIAL_NAME = "Avaliação oficial do leilão"
 OFFICIAL_ASSUMED_MDAPE = 0.15
+OFFICIAL_WEIGHT_VS_MODELS = 3.0  # official appraisal weighs 3x all public-data methods combined (75%)
 SOUTH_SOUTHEAST = {"SP", "RJ", "MG", "ES", "PR", "SC", "RS"}
 LAND_SHARE = {"apartamento": 0.15, "casa": 0.35, "casa_condominio": 0.30, "comercial": 0.25, "galpao": 0.30}
 ATYPICAL_PCT = 20  # bids under 20% of the estimate are flagged ("conferir"), not ranked as bargains
@@ -374,6 +375,12 @@ def _combine(est: dict[str, float], cal: dict) -> float:
         return (cal["scores"].get(m) or {}).get("mdape") or 0.5
 
     w = {m: 1 / max(mdape(m), 0.05) ** 2 for m in est}
+    if OFFICIAL_METHOD in est:
+        # The public-data methods share inputs (city averages), so they are not
+        # independent votes; a professional who inspected THIS property counts
+        # three times as much as all of them together.
+        models = sum(v for m, v in w.items() if m != OFFICIAL_METHOD)
+        w[OFFICIAL_METHOD] = max(w[OFFICIAL_METHOD], OFFICIAL_WEIGHT_VS_MODELS * models)
     return math.exp(sum(w[m] * math.log(v) for m, v in est.items()) / sum(w.values()))
 
 

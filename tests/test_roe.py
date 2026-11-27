@@ -19,13 +19,21 @@ def test_cases(case):
 
 
 def test_hand_checked_flip():
-    # bid 200k, value 400k, vacant, defaults:
-    # equity = 200k*1.095 + 400k*5% + 400k*0.15%*12 = 219k + 20k + 7.2k = 246.2k
-    # back   = 400k*0.94 = 376k ; gain 129.8k ; tax 19.47k ; profit 110.33k
+    # bid 200k, value 400k, vacant, defaults (renovation midpoint 5%):
+    # equity = 200k + 19k fees (9.5%) + 1.5k docs + 20k renovation + 7.2k condo/IPTU (0.15% x 12) = 247.7k
+    # back   = 400k - 24k broker = 376k ; gain 128.3k ; tax 19,245 ; profit 109,055
     r = flip(200_000, 400_000, None, False, assumptions())
-    assert round(r["equity"]) == 246_200
-    assert round(r["profit"]) == 110_330
-    assert round(r["roe"], 4) == round(110_330 / 246_200, 4)
+    assert round(r["equity"]) == 247_700
+    assert round(r["profit"]) == 109_055
+    assert r["costs"]["legal"] == 0 and r["costs"]["renovation"] == 20_000
+
+
+def test_lawyer_only_when_needed():
+    a = assumptions()
+    assert flip(200_000, 400_000, None, False, a)["costs"]["legal"] == 0
+    assert flip(200_000, 400_000, None, True, a)["costs"]["legal"] == 6000            # occupied
+    assert flip(200_000, 400_000, None, False, a, judicial=True)["costs"]["legal"] == 6000
+    assert flip(200_000, 400_000, None, False, assumptions({"legal_on_judicial": 0}), judicial=True)["costs"]["legal"] == 0
 
 
 def test_javascript_twin_agrees():
@@ -44,5 +52,8 @@ def test_chance_cases(case):
 def test_breakeven_gives_zero_and_target_gives_target():
     a = assumptions()
     for debts, occ in [(None, False), (True, True)]:
-        assert abs(flip(200_000, value_needed(200_000, 0, debts, occ, a), debts, occ, a)["roe"]) < 1e-9
-        assert abs(flip(200_000, value_needed(200_000, 0.2, debts, occ, a), debts, occ, a)["roe"] - 0.2) < 1e-9
+        for judicial in (False, True):
+            be = value_needed(200_000, 0, debts, occ, a, judicial)
+            t = value_needed(200_000, 0.2, debts, occ, a, judicial)
+            assert abs(flip(200_000, be, debts, occ, a, judicial)["roe"]) < 1e-9
+            assert abs(flip(200_000, t, debts, occ, a, judicial)["roe"] - 0.2) < 1e-9
