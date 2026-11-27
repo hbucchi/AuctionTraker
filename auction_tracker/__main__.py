@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .enrich import enrich
+from .valuation import valuate_all
 from .health import SiteReport, assess
 from .scrapers import REGISTRY
 from .storage import JsonlSink
@@ -59,6 +60,7 @@ def cmd_scrape(args: argparse.Namespace) -> int:
         fs = FirestoreSink(project_id=args.project)
     prev = _previous_counts(data_dir)
     reports = []
+    results = []
 
     for name in names:
         scraper = REGISTRY[name](max_pages=args.max_pages)
@@ -71,8 +73,6 @@ def cmd_scrape(args: argparse.Namespace) -> int:
             logging.getLogger(name).exception("scrape failed")
             rep.error = f"{type(e).__name__}: {e}"
         rep.seconds = round(time.monotonic() - t0, 1)
-        if listings:
-            sink.write(name, listings)
         assess(
             rep,
             listings,
@@ -81,11 +81,19 @@ def cmd_scrape(args: argparse.Namespace) -> int:
             limited=args.max_pages is not None,
             reported_total=scraper.reported_total,
         )
+        reports.append(rep)
+        results.append((name, listings, rep))
+        print(f"{rep.status:4} {name:9} {rep.count:6} listings  {rep.seconds:6.1f}s  {'; '.join(rep.reasons)}")
+
+    # Valuation compares listings across all sites (auction comparables), so
+    # it runs once everything is scraped, before anything is written.
+    valuate_all([x for _, listings, _ in results for x in listings])
+    for name, listings, rep in results:
+        if listings:
+            sink.write(name, listings)
         if fs is not None and listings and rep.status != "FAIL":
             # a WARN run still uploads (data is usable); a FAIL keeps yesterday's data
             fs.write(name, listings)
-        reports.append(rep)
-        print(f"{rep.status:4} {name:9} {rep.count:6} listings  {rep.seconds:6.1f}s  {'; '.join(rep.reasons)}")
 
     summary = {
         "run_id": run_id,
@@ -117,13 +125,10 @@ def cmd_alerts(args: argparse.Namespace) -> int:
 
 def cmd_export_web(args: argparse.Namespace) -> int:
     """Concatenate a run's JSONL files into the compact JSON the web app reads."""
-    from .summary import from_dict
+    from .summary import load_run, to_summary
 
     run_dir = Path(args.run_dir)
-    items = []
-    for f in sorted(run_dir.glob("*.jsonl")):
-        with f.open(encoding="utf-8") as fh:
-            items += [from_dict(json.loads(line)) for line in fh if line.strip()]
+    items = [to_summary(x) for x in load_run(run_dir)]
     run_id = run_dir.name
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

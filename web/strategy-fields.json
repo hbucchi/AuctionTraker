@@ -249,6 +249,15 @@
       "help": "Valor de mercado = avaliação do leilão; ou o lance do 1º leilão (que por lei é a avaliação); ou preço médio do m² do Índice FipeZAP na cidade × área."
     },
     {
+      "key": "ptmv",
+      "attr": "ptmv",
+      "group": "valor",
+      "label": "Lance em % da avaliação do modelo",
+      "unit": "%",
+      "step": 5,
+      "help": "Avaliação estimada pelos 5 métodos (FipeZAP, renda, regressão entre cidades, comparáveis de leilão e custo de reposição). Cobre mais imóveis que o valor oficial, mas é aproximada: erro mediano em torno de 40%."
+    },
+    {
       "key": "disc",
       "attr": "disc",
       "group": "valor",

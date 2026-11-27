@@ -27,6 +27,7 @@ def main() -> int:
     (out / "index.html").write_text(head.strip() + "\n" + body.strip() + "\n", encoding="utf-8")
     (out / "firebase-config.js").write_text("// preview build: no Firebase\nwindow.FIREBASE_CONFIG = null;\n")
     shutil.copy(ROOT / "web" / "strategy-fields.json", out / "strategy-fields.json")
+    shutil.copy(ROOT / "web" / "valuation-meta.json", out / "valuation-meta.json")
     print(f"preview written to {out}")
     return 0
 

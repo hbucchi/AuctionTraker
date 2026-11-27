@@ -192,6 +192,29 @@ body::before {
 .dd-help { color: var(--muted); font-size: 12px; margin-left: 26px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .dd-help a { color: var(--accent); }
 
+/* ---- valuation ---- */
+.val { border-top: 1px solid var(--line); padding: 12px 12px 14px; display: grid; gap: 12px; }
+.val-head { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; }
+.val-head b { font: 700 18px var(--font-display); }
+.scale { position: relative; height: 54px; margin: 4px 8px 0; }
+.scale .axis { position: absolute; left: 0; right: 0; top: 22px; height: 2px; background: var(--line); }
+.scale .band { position: absolute; top: 14px; height: 18px; background: var(--accent-soft); border-radius: 4px; }
+.scale .mark { position: absolute; top: 10px; width: 2px; height: 26px; transform: translateX(-1px); }
+.scale .mark.mid { background: var(--accent); }
+.scale .mark.price { background: var(--good); }
+.scale .mark.official { background: var(--warn); }
+.scale .dot { position: absolute; top: 17px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); font-size: 0; }
+.scale .tick { position: absolute; top: 38px; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.table-wrap { overflow-x: auto; }
+.vt { border-collapse: collapse; width: 100%; font-size: 13px; }
+.vt th, .vt td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.vt th { font-size: 12px; color: var(--muted); font-weight: 600; }
+.vt td.num, .vt th.num { text-align: right; }
+.vt td.name { white-space: normal; min-width: 200px; }
+.vt tr.na td { color: var(--muted); }
+
 .more { justify-self: center; }
 .empty, .gate {
   background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius);
@@ -314,6 +337,7 @@ body::before {
       <select class="input" id="sort">
         <option value="ending">Encerra primeiro</option>
         <option value="ptm">Menor % do mercado</option>
+        <option value="ptmv">Menor % da avaliação do modelo</option>
         <option value="discount">Maior desconto</option>
         <option value="priceAsc">Menor preço</option>
         <option value="priceDesc">Maior preço</option>
@@ -350,6 +374,8 @@ const safeUrl = (u) => (typeof u === "string" && /^https:\/\//.test(u) ? u : "#"
 const fold = (s) => String(s ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
 let SPEC = null;
+let VMETA = null;               // valuation methods, measured accuracy (web/valuation-meta.json)
+const openVal = new Set();      // lots with the valuation panel open
 let ALL = [];
 let shown = PAGE;
 let showImages = false;
@@ -414,6 +440,7 @@ function quickMatch(x) {
 const SORTS = {
   ending: (a, b) => (isNaN(a.nextT) ? 1 : 0) - (isNaN(b.nextT) ? 1 : 0) || (a.nextT < NOW) - (b.nextT < NOW) || a.nextT - b.nextT,
   ptm: (a, b) => (a.ptm ?? Infinity) - (b.ptm ?? Infinity),
+  ptmv: (a, b) => (a.ptmv ?? Infinity) - (b.ptmv ?? Infinity),
   discount: (a, b) => (b.disc ?? -1) - (a.disc ?? -1),
   priceAsc: (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
   priceDesc: (a, b) => (b.price ?? -1) - (a.price ?? -1),
@@ -485,12 +512,56 @@ function lotHTML(x, isNew) {
         <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
         ${x.appraisal ? `<div class="appraisal">Avaliação ${brl.format(x.appraisal)}</div>` : ""}
         ${ptmPill(x)}${disc}
+        ${x.val ? `<div class="appraisal" title="Faixa provável (80%): ${brl.format(x.val.lo)} – ${brl.format(x.val.hi)}">Avaliação do modelo ${brlShort.format(x.val.mid)}${x.ptmv != null ? ` · lance ${Math.round(x.ptmv)}%` : ""}</div>` : ""}
         ${deadline(x)}
-        <button class="btn btn-sm dd-toggle" type="button" data-dd="${esc(x.id)}" aria-expanded="${open}">${open ? "Fechar checklist" : "Checklist"}</button>
+        <div class="tags" style="justify-content:flex-end">
+          ${x.val && VMETA ? `<button class="btn btn-sm" type="button" data-val="${esc(x.id)}" aria-expanded="${openVal.has(x.id)}">${openVal.has(x.id) ? "Fechar avaliação" : "Avaliação"}</button>` : ""}
+          <button class="btn btn-sm dd-toggle" type="button" data-dd="${esc(x.id)}" aria-expanded="${open}">${open ? "Fechar checklist" : "Checklist"}</button>
+        </div>
       </div>
     </div>
+    ${openVal.has(x.id) && x.val && VMETA ? valHTML(x) : ""}
     ${open ? ddHTML(x) : ""}
   </article>`;
+}
+
+/* ---------- valuation panel ---------- */
+function valHTML(x) {
+  const v = x.val, methods = VMETA.methods;
+  const weight = (m) => 1 / Math.max(methods[m].mdape || 0.5, 0.05) ** 2;
+  const present = Object.keys(x.vm || {});
+  const wsum = present.reduce((s, m) => s + weight(m), 0);
+  const official = x.mvo && x.mv ? x.mv : null;
+  const pts = [v.lo, v.hi, ...Object.values(x.vm || {}), x.price, official].filter((n) => n > 0);
+  const lo = Math.min(...pts) * 0.95, hi = Math.max(...pts) * 1.05;
+  const pos = (n) => `${(100 * (Math.log(n) - Math.log(lo)) / (Math.log(hi) - Math.log(lo))).toFixed(2)}%`;
+  const ticks = [v.lo, v.mid, v.hi];
+  const rows = Object.entries(methods).map(([m, meta]) => {
+    const val = (x.vm || {})[m];
+    return `<tr class="${val ? "" : "na"}"><td class="name">${esc(meta.name)}</td>
+      <td class="num">${val ? brl.format(val) : "sem dados"}</td>
+      <td class="num">${meta.mdape != null ? Math.round(meta.mdape * 100) + "%" : "—"}</td>
+      <td class="num">${val ? Math.round((100 * weight(m)) / wsum) + "%" : "—"}</td></tr>`;
+  }).join("");
+  const c = VMETA.combined;
+  return `<div class="val">
+    <div class="val-head"><span>Avaliação estimada <b>${brl.format(v.mid)}</b></span>
+      <span>faixa provável (80%) ${brl.format(v.lo)} – ${brl.format(v.hi)}</span>
+      <span class="pill ${v.conf === "alta" ? "good" : v.conf === "média" ? "warn" : "mute"}">confiança ${v.conf}</span>
+      ${x.ptmv != null ? `<span>lance = <b>${Math.round(x.ptmv)}%</b> da avaliação</span>` : ""}</div>
+    <div class="scale" role="img" aria-label="Valores de cada método na mesma escala">
+      <div class="axis"></div>
+      <div class="band" style="left:${pos(v.lo)};width:calc(${pos(v.hi)} - ${pos(v.lo)})"></div>
+      ${Object.entries(x.vm || {}).map(([m, n]) => `<div class="dot" style="left:${pos(n)}" title="${esc(methods[m].name)}: ${brl.format(n)}">${m}</div>`).join("")}
+      <div class="mark mid" style="left:${pos(v.mid)}" title="Avaliação estimada"></div>
+      ${x.price ? `<div class="mark price" style="left:${pos(x.price)}" title="Lance / preço"></div>` : ""}
+      ${official ? `<div class="mark official" style="left:${pos(official)}" title="Avaliação oficial"></div>` : ""}
+      ${ticks.map((n) => `<span class="tick" style="left:${pos(n)}">${brlShort.format(n)}</span>`).join("")}
+    </div>
+    <div class="legend"><span><i style="background:var(--accent-soft)"></i>faixa provável</span><span><i style="background:var(--accent)"></i>valor central</span><span><i style="border:2px solid var(--accent);border-radius:50%"></i>cada método</span><span><i style="background:var(--good)"></i>lance</span>${official ? `<span><i style="background:var(--warn)"></i>avaliação oficial</span>` : ""}</div>
+    <div class="table-wrap"><table class="vt"><thead><tr><th>Método</th><th class="num">Valor</th><th class="num">Erro mediano medido</th><th class="num">Peso</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="help">Cada método foi calibrado e testado contra ${VMETA.n_official} avaliações oficiais de leilão que ele não tinha visto. O valor central combina os métodos dando mais peso aos mais precisos e errou em mediana ${Math.round(c.mdape * 100)}%; a faixa provável contém a avaliação real em cerca de 8 de cada 10 casos. Use como referência, não como laudo. FipeZAP ${esc(VMETA.sources.fipezap)}, SINAPI ${esc(VMETA.sources.sinapi)}.</p>
+  </div>`;
 }
 
 /* ---------- due-diligence checklist ---------- */
@@ -614,10 +685,10 @@ function buildControls() {
     rerender();
   });
   $("list").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-dd]");
+    const b = e.target.closest("[data-dd],[data-val]");
     if (!b) return;
-    const id = b.dataset.dd;
-    openDD.has(id) ? openDD.delete(id) : openDD.add(id);
+    const [set, id] = b.dataset.dd ? [openDD, b.dataset.dd] : [openVal, b.dataset.val];
+    set.has(id) ? set.delete(id) : set.add(id);
     render();
   });
   $("list").addEventListener("change", async (e) => {
@@ -897,6 +968,7 @@ async function loadSpec() {
   const r = await fetch("strategy-fields.json");
   if (!r.ok) throw new Error(`strategy-fields.json: HTTP ${r.status}`);
   SPEC = await r.json();
+  try { const m = await fetch("valuation-meta.json"); if (m.ok) VMETA = await m.json(); } catch { /* valuation panel stays hidden */ }
 }
 
 async function startPreview() {

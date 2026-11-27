@@ -1,0 +1,56 @@
+{
+ "methods": {
+  "m1": {
+   "name": "Comparativo direto (FipeZAP R$/m²)",
+   "mdape": 0.353,
+   "within_20pct": 0.287,
+   "n": 178
+  },
+  "m2": {
+   "name": "Capitalização da renda (aluguel FipeZAP ÷ rentabilidade)",
+   "mdape": 0.346,
+   "within_20pct": 0.287,
+   "n": 167
+  },
+  "m3": {
+   "name": "Regressão entre cidades (FipeZAP × PIB, população, IDH)",
+   "mdape": 0.38,
+   "within_20pct": 0.278,
+   "n": 363
+  },
+  "m4": {
+   "name": "Comparáveis de leilão (avaliações oficiais na cidade)",
+   "mdape": 0.316,
+   "within_20pct": 0.307,
+   "n": 163
+  },
+  "m5": {
+   "name": "Custo de reposição (SINAPI + terreno)",
+   "mdape": 0.415,
+   "within_20pct": 0.266,
+   "n": 368
+  }
+ },
+ "combined": {
+  "mdape": 0.359,
+  "within_20pct": 0.293,
+  "n": 368
+ },
+ "interval": {
+  "many": {
+   "q10": 0.441,
+   "q90": 2.035,
+   "n": 211
+  },
+  "few": {
+   "q10": 0.321,
+   "q90": 1.949,
+   "n": 157
+  }
+ },
+ "n_official": 370,
+ "sources": {
+  "fipezap": "2026-10",
+  "sinapi": "outubro 2026"
+ }
+}

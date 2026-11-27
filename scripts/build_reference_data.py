@@ -17,7 +17,10 @@ auction_tracker/data/municipios.json  one row per municipality (5 570):
 auction_tracker/data/fipezap.json  latest FipeZAP average asking price, R$/m²,
     per city (56 cities): residential overall and by bedrooms (1-4+), commercial.
 
-Refresh FipeZAP monthly; IBGE data changes yearly at most.
+auction_tracker/data/sinapi.json  construction cost per m² by state (SINAPI),
+    used by the cost (replacement) valuation method.
+
+Refresh FipeZAP and SINAPI monthly; the other IBGE data changes yearly at most.
 """
 
 from __future__ import annotations
@@ -162,8 +165,11 @@ def build_fipezap() -> dict:
             continue
         rows = list(wb[name].iter_rows(values_only=True))
         header = rows[2]  # metric names
-        sale_res = header.index("Preço médio (R$/m²)")                     # residential sale block
-        sale_com = [i for i, c in enumerate(header) if c == "Preço médio (R$/m²)"][2]  # commercial sale
+        price_cols = [i for i, c in enumerate(header) if c == "Preço médio (R$/m²)"]
+        # blocks, left to right: residential sale, residential rent, commercial sale, commercial rent
+        sale_res, rent_res, sale_com, rent_com = price_cols[:4]
+        yield_res, yield_com = [i for i, c in enumerate(header) if c == "(% - mensalizada)"][:2]  # rental yields
+        var12 = header.index("Var. em 12 meses (%)")                      # residential sale, 12 months
         latest = {}
         for r in rows[4:]:
             if r[1] is None or not hasattr(r[1], "year"):
@@ -171,8 +177,13 @@ def build_fipezap() -> dict:
             vals = {
                 "residential": r[sale_res], "residential_1d": r[sale_res + 1], "residential_2d": r[sale_res + 2],
                 "residential_3d": r[sale_res + 3], "residential_4d": r[sale_res + 4], "commercial": r[sale_com],
+                "rent_residential": r[rent_res], "rent_residential_1d": r[rent_res + 1], "rent_residential_2d": r[rent_res + 2],
+                "rent_residential_3d": r[rent_res + 3], "rent_residential_4d": r[rent_res + 4], "rent_commercial": r[rent_com],
             }
-            vals = {k: round(v) for k, v in vals.items() if isinstance(v, (int, float))}
+            extra = {"yield_monthly_pct": r[yield_res], "yield_commercial_monthly_pct": r[yield_com], "change_12m_pct": r[var12]}
+            vals = {k: round(v, 2) if k.startswith("rent") else round(v) for k, v in vals.items() if isinstance(v, (int, float))}
+            # yield and 12-month change are stored as fractions in the sheet (0.0045 = 0.45%)
+            vals.update({k: round(100 * v, 3) for k, v in extra.items() if isinstance(v, (int, float))})
             if vals.get("residential"):
                 latest = vals
                 month = max(month or r[1], r[1])
@@ -183,6 +194,19 @@ def build_fipezap() -> dict:
         "month": month.strftime("%Y-%m") if month else None,
         "built": date.today().isoformat(),
         "cities": cities,
+    }
+
+
+def build_sinapi() -> dict:
+    """Average construction cost per m² by state (IBGE SINAPI, table 2296)."""
+    rows = sidra("t/2296/n3/all/v/48/p/last")
+    month = rows[0]["D3N"]
+    uf_ids = {str(u["id"]): u["sigla"] for u in get(f"{IBGE}/localidades/estados").json()}
+    return {
+        "source": f"IBGE/CAIXA SINAPI — custo médio m² ({month})",
+        "month": month,
+        "built": date.today().isoformat(),
+        "cost_m2": {uf_ids[r["D1C"]]: float(r["V"]) for r in rows if r["V"].replace(".", "", 1).isdigit()},
     }
 
 
@@ -204,6 +228,9 @@ def main() -> int:
             "source": m["sources"]["gdp"],
         }
         spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    sn = build_sinapi()
+    (OUT / "sinapi.json").write_text(json.dumps(sn, ensure_ascii=False, indent=1))
+    print(f"sinapi.json: {len(sn['cost_m2'])} states, {sn['month']}")
     f = build_fipezap()
     (OUT / "fipezap.json").write_text(json.dumps(f, ensure_ascii=False, indent=1))
     print(f"fipezap.json: {len(f['cities'])} cities, month {f['month']}")

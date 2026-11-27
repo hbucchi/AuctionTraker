@@ -1,7 +1,7 @@
 {
  "source": "Índice FipeZAP — preço médio de anúncios de venda (R$/m²)",
  "month": "2026-10",
- "built": "2026-11-26",
+ "built": "2026-11-27",
  "cities": {
   "sao paulo|SP": {
    "city": "São Paulo",
@@ -11,12 +11,24 @@
    "residential_2d": 10807,
    "residential_3d": 11891,
    "residential_4d": 14609,
-   "commercial": 10685
+   "commercial": 10685,
+   "rent_residential": 66.16,
+   "rent_residential_1d": 86.14,
+   "rent_residential_2d": 61.39,
+   "rent_residential_3d": 56.74,
+   "rent_residential_4d": 58.6,
+   "rent_commercial": 63.47,
+   "yield_monthly_pct": 0.537,
+   "yield_commercial_monthly_pct": 0.624,
+   "change_12m_pct": 3.588
   },
   "barueri|SP": {
    "city": "Barueri",
    "uf": "SP",
-   "residential": 12259
+   "residential": 12259,
+   "rent_residential": 72.36,
+   "yield_monthly_pct": 0.591,
+   "change_12m_pct": 4.97
   },
   "campinas|SP": {
    "city": "Campinas",
@@ -26,12 +38,22 @@
    "residential_2d": 7648,
    "residential_3d": 8379,
    "residential_4d": 7877,
-   "commercial": 6886
+   "commercial": 6886,
+   "rent_residential": 56.68,
+   "rent_residential_1d": 68.68,
+   "rent_residential_2d": 53.49,
+   "rent_residential_3d": 50.19,
+   "rent_residential_4d": 33.66,
+   "rent_commercial": 51.56,
+   "yield_monthly_pct": 0.679,
+   "yield_commercial_monthly_pct": 0.75,
+   "change_12m_pct": 10.448
   },
   "diadema|SP": {
    "city": "Diadema",
    "uf": "SP",
-   "residential": 6974
+   "residential": 6974,
+   "change_12m_pct": 5.762
   },
   "guaruja|SP": {
    "city": "Guarujá",
@@ -40,17 +62,22 @@
    "residential_1d": 7268,
    "residential_2d": 5963,
    "residential_3d": 7480,
-   "residential_4d": 7434
+   "residential_4d": 7434,
+   "change_12m_pct": 4.593
   },
   "guarulhos|SP": {
    "city": "Guarulhos",
    "uf": "SP",
-   "residential": 7555
+   "residential": 7555,
+   "rent_residential": 42.82,
+   "yield_monthly_pct": 0.561,
+   "change_12m_pct": 7.002
   },
   "osasco|SP": {
    "city": "Osasco",
    "uf": "SP",
-   "residential": 8813
+   "residential": 8813,
+   "change_12m_pct": 7.522
   },
   "praia grande|SP": {
    "city": "Praia Grande",
@@ -59,7 +86,10 @@
    "residential_1d": 6616,
    "residential_2d": 6740,
    "residential_3d": 7740,
-   "residential_4d": 9059
+   "residential_4d": 9059,
+   "rent_residential": 47.57,
+   "yield_monthly_pct": 0.685,
+   "change_12m_pct": 3.92
   },
   "ribeirao preto|SP": {
    "city": "Ribeirão Preto",
@@ -68,12 +98,18 @@
    "residential_1d": 5841,
    "residential_2d": 5414,
    "residential_3d": 5084,
-   "residential_4d": 4149
+   "residential_4d": 4149,
+   "rent_residential": 35.57,
+   "yield_monthly_pct": 0.663,
+   "change_12m_pct": 5.548
   },
   "santo andre|SP": {
    "city": "Santo André",
    "uf": "SP",
-   "residential": 7988
+   "residential": 7988,
+   "rent_residential": 44.44,
+   "yield_monthly_pct": 0.539,
+   "change_12m_pct": 5.716
   },
   "santos|SP": {
    "city": "Santos",
@@ -82,7 +118,10 @@
    "residential_1d": 9722,
    "residential_2d": 8045,
    "residential_3d": 8339,
-   "residential_4d": 10620
+   "residential_4d": 10620,
+   "rent_residential": 60.69,
+   "yield_monthly_pct": 0.697,
+   "change_12m_pct": 9.561
   },
   "sao bernardo do campo|SP": {
    "city": "São Bernardo do Campo",
@@ -91,27 +130,38 @@
    "residential_1d": 7685,
    "residential_2d": 7376,
    "residential_3d": 7886,
-   "residential_4d": 7301
+   "residential_4d": 7301,
+   "rent_residential": 40.56,
+   "yield_monthly_pct": 0.526,
+   "change_12m_pct": 9.143
   },
   "sao caetano do sul|SP": {
    "city": "São Caetano do Sul",
    "uf": "SP",
-   "residential": 9652
+   "residential": 9652,
+   "change_12m_pct": 3.182
   },
   "sao jose do rio preto|SP": {
    "city": "São José do Rio Preto",
    "uf": "SP",
-   "residential": 6092
+   "residential": 6092,
+   "rent_residential": 30.0,
+   "yield_monthly_pct": 0.55,
+   "change_12m_pct": 7.506
   },
   "sao jose dos campos|SP": {
    "city": "São José dos Campos",
    "uf": "SP",
-   "residential": 9689
+   "residential": 9689,
+   "rent_residential": 49.37,
+   "yield_monthly_pct": 0.503,
+   "change_12m_pct": 9.022
   },
   "sao vicente|SP": {
    "city": "São Vicente",
    "uf": "SP",
-   "residential": 5175
+   "residential": 5175,
+   "change_12m_pct": 11.011
   },
   "rio de janeiro|RJ": {
    "city": "Rio de Janeiro",
@@ -121,7 +171,16 @@
    "residential_2d": 9626,
    "residential_3d": 10757,
    "residential_4d": 12902,
-   "commercial": 8546
+   "commercial": 8546,
+   "rent_residential": 61.91,
+   "rent_residential_1d": 79.11,
+   "rent_residential_2d": 53.49,
+   "rent_residential_3d": 56.97,
+   "rent_residential_4d": 62.97,
+   "rent_commercial": 58.87,
+   "yield_monthly_pct": 0.522,
+   "yield_commercial_monthly_pct": 0.695,
+   "change_12m_pct": 5.802
   },
   "niteroi|RJ": {
    "city": "Niterói",
@@ -131,7 +190,12 @@
    "residential_2d": 7138,
    "residential_3d": 7853,
    "residential_4d": 9539,
-   "commercial": 8175
+   "commercial": 8175,
+   "rent_residential": 42.93,
+   "rent_commercial": 51.27,
+   "yield_monthly_pct": 0.51,
+   "yield_commercial_monthly_pct": 0.623,
+   "change_12m_pct": 8.248
   },
   "belo horizonte|MG": {
    "city": "Belo Horizonte",
@@ -141,17 +205,28 @@
    "residential_2d": 10524,
    "residential_3d": 9330,
    "residential_4d": 10231,
-   "commercial": 6548
+   "commercial": 6548,
+   "rent_residential": 51.29,
+   "rent_residential_1d": 75.35,
+   "rent_residential_2d": 53.51,
+   "rent_residential_3d": 42.53,
+   "rent_residential_4d": 46.03,
+   "rent_commercial": 39.09,
+   "yield_monthly_pct": 0.454,
+   "yield_commercial_monthly_pct": 0.573,
+   "change_12m_pct": 0.892
   },
   "betim|MG": {
    "city": "Betim",
    "uf": "MG",
-   "residential": 5133
+   "residential": 5133,
+   "change_12m_pct": 8.038
   },
   "contagem|MG": {
    "city": "Contagem",
    "uf": "MG",
-   "residential": 6215
+   "residential": 6215,
+   "change_12m_pct": 6.33
   },
   "porto alegre|RS": {
    "city": "Porto Alegre",
@@ -161,37 +236,50 @@
    "residential_2d": 6573,
    "residential_3d": 8011,
    "residential_4d": 7976,
-   "commercial": 6269
+   "commercial": 6269,
+   "rent_residential": 47.11,
+   "rent_commercial": 34.5,
+   "yield_monthly_pct": 0.616,
+   "yield_commercial_monthly_pct": 0.554,
+   "change_12m_pct": 0.758
   },
   "canoas|RS": {
    "city": "Canoas",
    "uf": "RS",
-   "residential": 5961
+   "residential": 5961,
+   "change_12m_pct": 2.681
   },
   "caxias do sul|RS": {
    "city": "Caxias do Sul",
    "uf": "RS",
-   "residential": 6514
+   "residential": 6514,
+   "change_12m_pct": 6.095
   },
   "novo hamburgo|RS": {
    "city": "Novo Hamburgo",
    "uf": "RS",
-   "residential": 5446
+   "residential": 5446,
+   "change_12m_pct": 2.401
   },
   "pelotas|RS": {
    "city": "Pelotas",
    "uf": "RS",
-   "residential": 4739
+   "residential": 4739,
+   "rent_residential": 21.12,
+   "yield_monthly_pct": 0.444,
+   "change_12m_pct": 7.399
   },
   "santa maria|RS": {
    "city": "Santa Maria",
    "uf": "RS",
-   "residential": 5492
+   "residential": 5492,
+   "change_12m_pct": 4.806
   },
   "sao leopoldo|RS": {
    "city": "São Leopoldo",
    "uf": "RS",
-   "residential": 5140
+   "residential": 5140,
+   "change_12m_pct": -1.174
   },
   "curitiba|PR": {
    "city": "Curitiba",
@@ -201,17 +289,24 @@
    "residential_2d": 11262,
    "residential_3d": 11262,
    "residential_4d": 10271,
-   "commercial": 9581
+   "commercial": 9581,
+   "rent_residential": 50.01,
+   "rent_commercial": 46.6,
+   "yield_monthly_pct": 0.416,
+   "yield_commercial_monthly_pct": 0.505,
+   "change_12m_pct": 0.219
   },
   "londrina|PR": {
    "city": "Londrina",
    "uf": "PR",
-   "residential": 5938
+   "residential": 5938,
+   "change_12m_pct": 5.86
   },
   "sao jose dos pinhais|PR": {
    "city": "São José dos Pinhais",
    "uf": "PR",
-   "residential": 6457
+   "residential": 6457,
+   "change_12m_pct": 10.884
   },
   "florianopolis|SC": {
    "city": "Florianópolis",
@@ -221,47 +316,66 @@
    "residential_2d": 13099,
    "residential_3d": 12929,
    "residential_4d": 13428,
-   "commercial": 9334
+   "commercial": 9334,
+   "rent_residential": 62.19,
+   "rent_commercial": 51.99,
+   "yield_monthly_pct": 0.451,
+   "yield_commercial_monthly_pct": 0.544,
+   "change_12m_pct": 8.613
   },
   "balneario camboriu|SC": {
    "city": "Balneário Camboriú",
    "uf": "SC",
-   "residential": 15325
+   "residential": 15325,
+   "change_12m_pct": 3.141
   },
   "blumenau|SC": {
    "city": "Blumenau",
    "uf": "SC",
-   "residential": 8232
+   "residential": 8232,
+   "change_12m_pct": 8.649
   },
   "itajai|SC": {
    "city": "Itajaí",
    "uf": "SC",
-   "residential": 13511
+   "residential": 13511,
+   "change_12m_pct": 5.532
   },
   "itapema|SC": {
    "city": "Itapema",
    "uf": "SC",
-   "residential": 15232
+   "residential": 15232,
+   "change_12m_pct": 3.484
   },
   "joinville|SC": {
    "city": "Joinville",
    "uf": "SC",
-   "residential": 8458
+   "residential": 8458,
+   "rent_residential": 38.47,
+   "yield_monthly_pct": 0.447,
+   "change_12m_pct": 5.319
   },
   "sao jose|SC": {
    "city": "São José",
    "uf": "SC",
-   "residential": 9081
+   "residential": 9081,
+   "rent_residential": 45.01,
+   "yield_monthly_pct": 0.486,
+   "change_12m_pct": 4.728
   },
   "vitoria|ES": {
    "city": "Vitória",
    "uf": "ES",
-   "residential": 15938
+   "residential": 15938,
+   "rent_residential": 56.7,
+   "yield_monthly_pct": 0.348,
+   "change_12m_pct": 12.318
   },
   "vila velha|ES": {
    "city": "Vila Velha",
    "uf": "ES",
-   "residential": 11536
+   "residential": 11536,
+   "change_12m_pct": 13.273
   },
   "brasilia|DF": {
    "city": "Brasília",
@@ -271,7 +385,12 @@
    "residential_2d": 8772,
    "residential_3d": 10796,
    "residential_4d": 14400,
-   "commercial": 7085
+   "commercial": 7085,
+   "rent_residential": 53.91,
+   "rent_commercial": 49.79,
+   "yield_monthly_pct": 0.509,
+   "yield_commercial_monthly_pct": 0.71,
+   "change_12m_pct": 11.6
   },
   "goiania|GO": {
    "city": "Goiânia",
@@ -280,47 +399,74 @@
    "residential_1d": 10123,
    "residential_2d": 8352,
    "residential_3d": 8202,
-   "residential_4d": 7714
+   "residential_4d": 7714,
+   "rent_residential": 44.26,
+   "yield_monthly_pct": 0.506,
+   "change_12m_pct": 6.336
   },
   "campo grande|MS": {
    "city": "Campo Grande",
    "uf": "MS",
-   "residential": 6609
+   "residential": 6609,
+   "rent_residential": 33.15,
+   "yield_monthly_pct": 0.52,
+   "change_12m_pct": -0.602
   },
   "cuiaba|MT": {
    "city": "Cuiabá",
    "uf": "MT",
-   "residential": 7193
+   "residential": 7193,
+   "rent_residential": 48.71,
+   "yield_monthly_pct": 0.67,
+   "change_12m_pct": 6.046
   },
   "aracaju|SE": {
    "city": "Aracaju",
    "uf": "SE",
-   "residential": 5992
+   "residential": 5992,
+   "rent_residential": 36.4,
+   "yield_monthly_pct": 0.527,
+   "change_12m_pct": 11.565
   },
   "fortaleza|CE": {
    "city": "Fortaleza",
    "uf": "CE",
-   "residential": 9767
+   "residential": 9767,
+   "rent_residential": 42.85,
+   "yield_monthly_pct": 0.412,
+   "change_12m_pct": 10.447
   },
   "joao pessoa|PB": {
    "city": "João Pessoa",
    "uf": "PB",
-   "residential": 8460
+   "residential": 8460,
+   "rent_residential": 52.62,
+   "yield_monthly_pct": 0.566,
+   "change_12m_pct": 7.481
   },
   "maceio|AL": {
    "city": "Maceió",
    "uf": "AL",
-   "residential": 10069
+   "residential": 10069,
+   "rent_residential": 57.56,
+   "yield_monthly_pct": 0.56,
+   "change_12m_pct": 4.558
   },
   "natal|RN": {
    "city": "Natal",
    "uf": "RN",
-   "residential": 6467
+   "residential": 6467,
+   "rent_residential": 45.57,
+   "yield_monthly_pct": 0.669,
+   "change_12m_pct": 7.68
   },
   "recife|PE": {
    "city": "Recife",
    "uf": "PE",
-   "residential": 9179
+   "residential": 9179,
+   "rent_residential": 64.94,
+   "yield_monthly_pct": 0.687,
+   "change_12m_pct": 8.199
   },
   "salvador|BA": {
    "city": "Salvador",
@@ -330,32 +476,50 @@
    "residential_2d": 7644,
    "residential_3d": 7949,
    "residential_4d": 8967,
-   "commercial": 5760
+   "commercial": 5760,
+   "rent_residential": 55.47,
+   "rent_commercial": 57.41,
+   "yield_monthly_pct": 0.586,
+   "yield_commercial_monthly_pct": 0.985,
+   "change_12m_pct": 10.156
   },
   "sao luis|MA": {
    "city": "São Luís",
    "uf": "MA",
-   "residential": 9055
+   "residential": 9055,
+   "rent_residential": 58.62,
+   "yield_monthly_pct": 0.624,
+   "change_12m_pct": 8.06
   },
   "teresina|PI": {
    "city": "Teresina",
    "uf": "PI",
-   "residential": 6139
+   "residential": 6139,
+   "rent_residential": 32.27,
+   "yield_monthly_pct": 0.517,
+   "change_12m_pct": 7.697
   },
   "jaboatao dos guararapes|PE": {
    "city": "Jaboatão dos Guararapes",
    "uf": "PE",
-   "residential": 6512
+   "residential": 6512,
+   "change_12m_pct": 11.775
   },
   "belem|PA": {
    "city": "Belém",
    "uf": "PA",
-   "residential": 8779
+   "residential": 8779,
+   "rent_residential": 62.24,
+   "yield_monthly_pct": 0.683,
+   "change_12m_pct": 5.008
   },
   "manaus|AM": {
    "city": "Manaus",
    "uf": "AM",
-   "residential": 7862
+   "residential": 7862,
+   "rent_residential": 53.41,
+   "yield_monthly_pct": 0.667,
+   "change_12m_pct": 10.304
   }
  }
 }

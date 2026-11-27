@@ -76,6 +76,9 @@ class Listing:
     city_idhm: float | None = None
     city_agro_share: float | None = None
     city_capital: bool | None = None
+    # five-method valuation (auction_tracker/valuation.py)
+    valuation: dict | None = None          # {lo, mid, hi, n, conf, methods: {m1..m5}, comps}
+    price_to_valuation_pct: float | None = None  # current_price / valuation mid * 100
 
     # --- extras -------------------------------------------------------
     image_url: str | None = None

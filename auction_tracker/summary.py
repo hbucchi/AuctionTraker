@@ -60,17 +60,40 @@ def to_summary(x: Listing) -> dict[str, Any]:
         "idhm": x.city_idhm,
         "agro": x.city_agro_share,
         "cap": x.city_capital,
+        # five-method valuation: range, central value, confidence, per-method values
+        "val": {k: x.valuation[k] for k in ("lo", "mid", "hi", "n", "conf")} if x.valuation else None,
+        "vm": x.valuation["methods"] if x.valuation else None,
+        "ptmv": x.price_to_valuation_pct,
     }
     # keep False (e.g. debts=False means "seller pays"), drop only empty values
     return {k: v for k, v in d.items() if v is not None and v != [] and v != ""}
 
 
-def from_dict(d: dict[str, Any]) -> dict[str, Any]:
-    """Same as to_summary, from a Listing.to_dict() row (e.g. a JSONL line)."""
+def listing_from_dict(d: dict[str, Any]) -> Listing:
+    """Rebuild an enriched Listing from a Listing.to_dict() row (a JSONL line)."""
+    from .enrich import enrich
     from .models import AuctionRound
 
     rounds = [AuctionRound(**r) for r in d.get("rounds") or []]
     fields = {k: v for k, v in d.items() if k in Listing.__dataclass_fields__ and k != "rounds"}
-    from .enrich import enrich
+    return enrich(Listing(**fields, rounds=rounds))
 
-    return to_summary(enrich(Listing(**fields, rounds=rounds)))
+
+def load_run(run_dir) -> list[Listing]:
+    """All listings of a scrape run directory (data/<run-id>/*.jsonl), enriched and valued."""
+    import json
+    from pathlib import Path
+
+    from .valuation import valuate_all
+
+    out = []
+    for f in sorted(Path(run_dir).glob("*.jsonl")):
+        with f.open(encoding="utf-8") as fh:
+            out += [listing_from_dict(json.loads(line)) for line in fh if line.strip()]
+    valuate_all(out)
+    return out
+
+
+def from_dict(d: dict[str, Any]) -> dict[str, Any]:
+    """Same as to_summary, from a Listing.to_dict() row (e.g. a JSONL line)."""
+    return to_summary(listing_from_dict(d))

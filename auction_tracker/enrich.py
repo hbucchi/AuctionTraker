@@ -55,6 +55,10 @@ def fipezap() -> dict:
 
 def classify_kind(x: Listing) -> str:
     t = _norm(f"{x.property_type or ''} {x.title or ''}")
+    # titles that open with "Terreno"/"Lote" describe land, even "Terreno comercial"
+    if re.match(r"(\(.*?\)\s*)?(\w+\s*\(\w\w\)\s*[-–]\s*)?(terreno|lote|gleba|area)\b", _norm(x.title or "")) \
+            and not re.search(r"\b(casa|sobrado|galpao|predio)\b", t):
+        return "terreno"
     if re.search(r"\b(apartamento|apto|apart|flat|cobertura|kitnet|kitinete|studio|loft)\b", t):
         return "apartamento"
     if re.search(r"\b(casa|sobrado|residencia|bangalo)\b", t):
