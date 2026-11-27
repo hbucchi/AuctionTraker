@@ -104,8 +104,11 @@ capita above the national average.
   editable per strategy, and strategies can filter on ROE.
 - **Map:** Lista/Mapa switch on the Oportunidades tab, showing whatever the
   filters or strategy select. It uses Google Maps when `window.GOOGLE_MAPS_KEY`
-  is set in `web/firebase-config.js` (a browser key restricted to the site's
-  domains), otherwise a built-in schematic map. Pins are exact for Superbid
+  is set, otherwise a built-in schematic map. The key comes from the
+  `GOOGLE_MAPS_BROWSER_KEY` GitHub secret and is added at deploy time, so it
+  never sits in this public repository. Keep it restricted to the site's
+  domains and the Maps JavaScript API, with a daily map-load quota (≈300/day)
+  to stay in the free tier. Pins are exact for Superbid
   and for addresses geocoded with the optional `GOOGLE_GEOCODING_KEY` secret;
   the rest sit at their city's center.
 
