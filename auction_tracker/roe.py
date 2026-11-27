@@ -185,3 +185,55 @@ def chances(item: dict, quantiles: dict[str, list[float]] | None, custom: dict[s
         "target": _half_up(100 * chance_value_at_least(tgt, val["mid"], q)),
         "breakeven": _half_up(be),
     }
+
+
+def max_bid(value: float, target_roe: float, debts: bool | None, occupied: bool | None, a: dict[str, float],
+            judicial: bool = False, renovation_pct: float | None = None) -> float:
+    """Highest bid that still gives ``target_roe`` if the property sells for
+    ``value``: value_needed() solved for the price instead of the value.
+
+    value·(1 − b − c·(1+s)) = (price·k + F)·(1+s)
+    ⇒ price = (value·(1 − b − c·(1+s)) / (1+s) − F) / k        (0 when no bid works)
+    """
+    if renovation_pct is None:
+        renovation_pct = (a["renovation_min_pct"] + a["renovation_max_pct"]) / 2
+    occ, lawyer, months = _context(debts, occupied, judicial, a)
+    k = 1 + (a["commission_pct"] + a["itbi_pct"] + a["registry_pct"]) / 100
+    fixed = a["docs_fixed"] + (a["legal_fixed"] if lawyer else 0)
+    c = (renovation_pct + a["furniture_pct"] + (a["debts_pct"] if debts is True else 0)
+         + (a["eviction_pct"] if occ else 0) + a["carrying_pct_month"] * months) / 100
+    s = target_roe / (1 - a["tax_pct"] / 100) if target_roe > 0 else target_roe
+    price = (value * (1 - a["broker_pct"] / 100 - c * (1 + s)) / (1 + s) - fixed) / k
+    return max(price, 0.0)
+
+
+def value_at_chance(mid: float, quantiles: list[float], chance: float) -> float:
+    """The value the property beats with probability ``chance`` (e.g. 0.75),
+    from the measured errors: mid × the (1 − chance) quantile of truth/estimate."""
+    cdf = 1 - chance
+    qs = [(5 * (i + 1)) / 100 for i in range(len(quantiles))]
+    if cdf <= qs[0]:
+        return mid * quantiles[0]
+    if cdf >= qs[-1]:
+        return mid * quantiles[-1]
+    for (p0, x0), (p1, x1) in zip(zip(qs, quantiles), zip(qs[1:], quantiles[1:])):
+        if p0 <= cdf <= p1:
+            return mid * (x0 + (x1 - x0) * (cdf - p0) / (p1 - p0))
+    return mid
+
+
+def ceilings(item: dict, quantiles: dict[str, list[float]] | None, custom: dict[str, Any] | None = None,
+             target_roe_pct: float = 20, chance_pct: float = 75) -> dict[str, int] | None:
+    """Maximum bid for ``target_roe_pct``: at the central value, and at the
+    value the property beats with ``chance_pct``% probability."""
+    val, price = item.get("val"), item.get("price")
+    if not val or not price or price < 1_000 or val.get("flag"):
+        return None
+    a = assumptions(custom)
+    j = item.get("modn") == "judicial"
+    d, o, t = item.get("debts"), item.get("occ"), target_roe_pct / 100
+    out = {"central": _half_up(max_bid(val["mid"], t, d, o, a, j))}
+    q = (quantiles or {}).get("many" if (val.get("n") or 0) >= 3 else "few") or (quantiles or {}).get("many")
+    if q:
+        out["safe"] = _half_up(max_bid(value_at_chance(val["mid"], q, chance_pct / 100), t, d, o, a, j))
+    return out

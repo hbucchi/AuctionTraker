@@ -141,7 +141,9 @@ body::before {
 @media (max-width: 640px) { .stat .v { font-size: 25px; } .stat { padding: 14px; } }
 
 .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.toolbar .result-count { font-weight: 600; }
+.toolbar .result-count { font-size: 15px; color: var(--muted); }
+.toolbar .result-count b { font: 600 30px/1 var(--font-display); color: var(--ink); font-variant-numeric: lining-nums; margin-right: 2px; }
+.toolbar .result-count span { font-size: 13px; }
 .toolbar select { width: auto; }
 .banner {
   display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--radius);
@@ -433,6 +435,48 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
 .check > span { display: inline; }
 .field > label.check { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; color: var(--ink); align-items: flex-start; }
 .field > label.check input { margin-top: 3px; }
+
+/* ---- maximum bid, risk, history ---- */
+.bar-cap.ceil b { color: var(--ink); }
+.bar-cap.ceil.good { color: var(--good); } .bar-cap.ceil.warn { color: var(--warn); } .bar-cap.ceil.bad { color: var(--bad); }
+.ceil-box, .risk-box { display: grid; gap: 10px; }
+.ceil-box .sim-ctl .input { margin-top: 6px; }
+.risk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.risk-list li { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: baseline; }
+.rk-pts { font: 600 13px var(--font-body); color: var(--warn); text-align: right; font-variant-numeric: tabular-nums; }
+.down { color: var(--good); font-size: 12px; } .up { color: var(--bad); font-size: 12px; }
+
+/* ---- documents (contract preview, templates) ---- */
+.deal-grid { display: grid; gap: 10px 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.deal-grid .wide { grid-column: 1 / -1; }
+.agree { display: flex; flex-wrap: wrap; gap: 6px; }
+details.qual summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+details.qual[open] { display: grid; gap: 10px; }
+.doc-wrap { max-height: 70vh; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.doc { max-width: 72ch; margin: 0 auto; padding: 28px 24px; font: 14px/1.6 Georgia, "Iowan Old Style", serif; color: var(--ink); }
+.doc h3 { font: 700 16px/1.35 var(--font-body); text-align: center; margin: 8px 0 4px; letter-spacing: .02em; }
+.doc h4 { font: 700 13px var(--font-body); margin: 18px 0 6px; letter-spacing: .03em; }
+.doc p { margin: 0 0 10px; text-align: justify; }
+.doc .doc-draft { font: italic 12px var(--font-body); color: var(--warn); text-align: left; border-left: 2px solid var(--gold); padding-left: 10px; }
+.doc .doc-sub { text-align: center; color: var(--muted); }
+.doc table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font: 13px var(--font-body); }
+.doc th, .doc td { border-bottom: 1px solid var(--line); padding: 5px 8px; text-align: left; }
+.doc td:not(:first-child), .doc th:not(:first-child) { text-align: right; }
+.doc-sign { display: grid; gap: 26px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); margin-top: 28px; }
+.doc-sign div { display: grid; gap: 2px; font: 13px var(--font-body); }
+.doc-sign .ln { border-top: 1px solid var(--ink); margin-bottom: 4px; }
+.doc-sign small { color: var(--muted); }
+
+/* ---- templates and services ---- */
+.tpl-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.tpl { display: grid; gap: 8px; align-content: start; }
+.tpl h3 { font: 600 20px/1.2 var(--font-display); margin: 0; }
+.tpl.open { grid-column: 1 / -1; }
+.pro-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.pro-filters .input { width: auto; flex: 1 1 200px; }
+.pro-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.pro { display: grid; gap: 6px; align-content: start; }
+.pa-sec .note { margin: 0; font-size: 13px; color: var(--muted); border-left: 2px solid var(--gold); padding-left: 10px; }
 </style>
 <!-- preview:strip-below -->
 </head>
@@ -448,6 +492,7 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
       <button class="tab" role="tab" id="tab-strategies" aria-selected="false" type="button">Estratégias <span class="count-badge" id="newBadge" hidden></span></button>
       <button class="tab" role="tab" id="tab-portfolio" aria-selected="false" type="button">Meu portfólio</button>
       <button class="tab" role="tab" id="tab-partners" aria-selected="false" type="button">Parceiros <span class="count-badge" id="partnersBadge" hidden></span></button>
+      <button class="tab" role="tab" id="tab-services" aria-selected="false" type="button">Modelos e serviços</button>
     </nav>
     <span class="freshness" id="freshness"></span>
     <span class="spacer"></span>
@@ -515,7 +560,6 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
 
   <main class="main" id="main">
     <div class="banner" id="stBanner" hidden></div>
-    <section class="stats" id="stats" aria-label="Resumo"></section>
     <p class="estimate-note">Valor, ROE e chance de lucro são <b>estimativas</b> de um modelo com dados públicos, não laudos nem recomendação de investimento. Abra a ficha (▾) para ver custos e premissas.</p>
     <div class="toolbar">
       <span class="result-count" id="resultCount"></span>
@@ -526,14 +570,13 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
       </div>
       <label for="sort" class="notice">Ordenar</label>
       <select class="input" id="sort">
-        <option value="ending">Encerra primeiro</option>
-        <option value="ptm">Menor % do mercado</option>
-        <option value="ptmv">Menor % da avaliação do modelo</option>
-        <option value="roe">Maior ROE estimado</option>
-        <option value="chance">Maior chance de lucro</option>
-        <option value="discount">Maior desconto</option>
+        <option value="roe" selected>Maior ROE estimado</option>
         <option value="priceAsc">Menor preço</option>
         <option value="priceDesc">Maior preço</option>
+        <option value="areaDesc">Maior área (m²)</option>
+        <option value="areaAsc">Menor área (m²)</option>
+        <option value="ppm2">Menor preço por m²</option>
+        <option value="risk">Menos pontos de atenção</option>
       </select>
     </div>
     <div class="list" id="list"></div>
@@ -608,12 +651,15 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
 <div class="single" id="strategiesView" hidden></div>
 <div class="single" id="portfolioView" hidden></div>
 <div class="single" id="partnersView" hidden></div>
+<div class="single" id="servicesView" hidden></div>
 
 <script src="firebase-config.js"></script>
 <script type="module">
 import { matchesStrategy, nextDeadline } from "./strategy.js";
 import { handle, similarity, cardFromStrategies, pairId, quotaOk, GOALS, sharedListings, rankByShared, sharedSummary, combinedTicket } from "./partners.js";
-import { roeRange, roeAssumptions, flip, chances, valueNeeded } from "./roe.js";
+import { roeRange, roeAssumptions, flip, chances, valueNeeded, maxBid, valueAtChance, ceilings } from "./roe.js";
+import { risk } from "./risk.js";
+import { dealContract, TEMPLATES, docHTML, docPDF, fileName } from "./docs.js";
 
 const FIREBASE_SDK = "13.4.0";
 const PAGE = 40;
@@ -669,7 +715,7 @@ function enrich(x) {
 }
 
 /* ---------- quick filters (sidebar) ---------- */
-const state = { q: "", src: new Set(), cat: new Set(["imovel"]), uf: "", ptype: "", pmin: null, pmax: null, dmin: null, hideEnded: true, onlyReview: false, sort: "ending" };
+const state = { q: "", src: new Set(), cat: new Set(["imovel"]), uf: "", ptype: "", pmin: null, pmax: null, dmin: null, hideEnded: true, onlyReview: false, sort: "roe" };
 
 function readControls() {
   state.q = fold($("q").value.trim());
@@ -680,7 +726,7 @@ function readControls() {
   state.dmin = $("dmin").value ? Number($("dmin").value) : null;
   state.hideEnded = $("hideEnded").checked;
   state.onlyReview = $("onlyReview").checked;
-  state.sort = $("sort").value;
+  state.sort = SORTS[$("sort").value] ? $("sort").value : "roe";
   state.src = new Set([...document.querySelectorAll("#srcChips input:checked")].map((i) => i.value));
   state.cat = new Set([...document.querySelectorAll("#catChips input:checked")].map((i) => i.value));
 }
@@ -699,15 +745,20 @@ function quickMatch(x) {
   return true;
 }
 
+// Lots without the sorted figure (no valuation, no area) go last, soonest deadline first.
+const last = (v, dir) => (v == null || isNaN(v) ? Infinity : dir * v);
+// areas under 10 m² are parsing errors (e.g. hectares read as m²): treat as unknown when sorting
+const areaOf = (x) => (x.area >= 10 ? x.area : null);
+const ppm2 = (x) => (x.price && areaOf(x) ? x.price / areaOf(x) : null);
 const SORTS = {
   ending: (a, b) => (isNaN(a.nextT) ? 1 : 0) - (isNaN(b.nextT) ? 1 : 0) || (a.nextT < NOW) - (b.nextT < NOW) || a.nextT - b.nextT,
-  ptm: (a, b) => (a.ptm ?? Infinity) - (b.ptm ?? Infinity),
-  ptmv: (a, b) => (a.ptmv ?? Infinity) - (b.ptmv ?? Infinity),
-  roe: (a, b) => (roeFor(b)?.mid ?? -Infinity) - (roeFor(a)?.mid ?? -Infinity),
-  chance: (a, b) => (chanceFor(b)?.profit ?? -1) - (chanceFor(a)?.profit ?? -1),
-  discount: (a, b) => (b.disc ?? -1) - (a.disc ?? -1),
-  priceAsc: (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
-  priceDesc: (a, b) => (b.price ?? -1) - (a.price ?? -1),
+  roe: (a, b) => last(roeFor(a)?.mid, -1) - last(roeFor(b)?.mid, -1) || SORTS.ending(a, b),
+  priceAsc: (a, b) => last(a.price, 1) - last(b.price, 1),
+  priceDesc: (a, b) => last(a.price, -1) - last(b.price, -1),
+  areaDesc: (a, b) => last(areaOf(a), -1) - last(areaOf(b), -1) || SORTS.roe(a, b),
+  areaAsc: (a, b) => last(areaOf(a), 1) - last(areaOf(b), 1) || SORTS.roe(a, b),
+  ppm2: (a, b) => last(ppm2(a), 1) - last(ppm2(b), 1) || SORTS.roe(a, b),
+  risk: (a, b) => riskFor(a).points - riskFor(b).points || SORTS.roe(a, b),
 };
 
 /* ---------- map ---------- */
@@ -920,7 +971,8 @@ function lotHTML(x, isNew) {
         <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
         ${x.val && !x.val.flag ? `<div class="bar-cap">Valor est. ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}<button class="hint" type="button" data-legend aria-label="Como ler a barra de valor">?</button></div>${rangeBar(x)}` : ""}
         ${r ? `<div class="bar-cap">ROE est. ${pct(r.lo)} a ${pct(r.hi)}<button class="hint" type="button" data-legend aria-label="Como ler a barra de ROE">?</button></div>${roeBar(r)}` : ""}
-        <div class="tags" style="justify-content:flex-end">${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">conferir dados</span>` : ""}${deadline(x)}</div>
+        ${ceilLine(x)}
+        <div class="tags" style="justify-content:flex-end">${riskPill(x)}${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">conferir dados</span>` : ""}${deadline(x)}</div>
       </div>
       <button class="expand" type="button" data-ficha="${esc(x.id)}" aria-expanded="${open}" aria-label="${open ? "Fechar ficha" : "Abrir ficha completa"}" title="${open ? "Fechar ficha" : "Ficha completa: custos, ROE, cidade e checklist"}">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -959,6 +1011,97 @@ $("welcome").addEventListener("close", () => { try { localStorage.setItem("at.we
 $("welcomeOk").addEventListener("click", () => $("welcome").close());
 $("welcome").addEventListener("click", (e) => { if (e.target === $("welcome")) $("welcome").close(); });  // click outside
 
+/* ---------- maximum bid and risk factors ---------- */
+// Target ROE: the applied strategy's minimum ROE, else 20%.
+const targetRoe = () => activeStrategy?.ranges?.roe?.min ?? 20;
+const ceilCache = new Map();
+let ceilKey = "";
+function ceilFor(x) {
+  const key = JSON.stringify([activeStrategy?.roe_assumptions || {}, targetRoe()]);
+  if (key !== ceilKey) { ceilCache.clear(); ceilKey = key; }
+  if (!ceilCache.has(x.id)) ceilCache.set(x.id, ceilings(x, VMETA?.residual_quantiles, activeStrategy?.roe_assumptions, targetRoe(), 75));
+  return ceilCache.get(x.id);
+}
+const riskFor = (x) => risk(x, USER.checklists[ckKey(x.id)]);
+const RISK_LABEL = { low: "Poucos pontos de atenção", mid: "Pontos de atenção", high: "Muitos pontos de atenção" };
+const RISK_CLASS = { low: "good", mid: "warn", high: "bad" };
+function riskPill(x) {
+  const r = riskFor(x);
+  return `<span class="pill ${RISK_CLASS[r.level]}" title="${esc(r.factors.map((f) => `${f.text} (+${f.pts})`).join("\n") || "Nenhum fator identificado")}">${r.points} ponto${r.points === 1 ? "" : "s"} de atenção</span>`;
+}
+function ceilLine(x) {
+  const c = ceilFor(x);
+  if (!c || !c.central) return "";
+  const cls = c.safe && x.price <= c.safe ? "good" : x.price <= c.central ? "warn" : "bad";
+  const msg = cls === "good" ? "abaixo do teto com folga" : cls === "warn" ? "abaixo do teto central" : "acima do teto";
+  return `<div class="bar-cap ceil ${cls}" title="Maior lance que ainda dá ROE de ${targetRoe()}% se vender pelo valor central${c.safe ? `; ${brl.format(c.safe)} com 75% de chance` : ""}">Lance máx. p/ ROE ${targetRoe()}%: <b>${brlShort.format(c.central)}</b> · ${msg}</div>`;
+}
+
+const ceilState = new Map();   // per lot: target ROE, chance and the user's own resale value
+function ceilHTML(x) {
+  const st = ceilState.get(x.id) || { roe: targetRoe(), chance: 75, value: "" };
+  const a = roeAssumptions(activeStrategy?.roe_assumptions), j = x.modn === "judicial", t = st.roe / 100;
+  const v = x.val && !x.val.flag ? x.val : null, off = officialOf(x);
+  const q = v && VMETA?.residual_quantiles && (VMETA.residual_quantiles[(v.n || 0) >= 3 ? "many" : "few"] || VMETA.residual_quantiles.many);
+  const rows = [];
+  const row = (label, value, note) => { const b = Math.round(maxBid(value, t, x.debts, x.occ, a, j));
+    rows.push(`<tr><td class="name">${label}<div class="why">${note}</div></td><td class="num"><b>${b > 0 ? brl.format(b) : "nenhum"}</b></td><td class="num">${b > 0 ? `${Math.round((100 * x.price) / b)}%` : "—"}</td></tr>`); };
+  if (v) row("Se vender pelo valor central", v.mid, `valor central estimado ${brl.format(v.mid)}`);
+  if (q) { const vc = valueAtChance(v.mid, q, st.chance / 100); row(`Com ${st.chance}% de chance`, vc, `o imóvel vale ao menos ${brl.format(Math.round(vc))} em ${st.chance}% dos casos, pelos erros medidos do modelo`); }
+  if (!v && off) row("Pela avaliação oficial", off, `avaliação do edital ${brl.format(off)}`);
+  const own = num(st.value);
+  if (own) row("Pelo seu valor de revenda", own, "o valor que você informou");
+  return `<div class="ceil-box">
+    <div class="sim-ctl">
+      <label>ROE desejado: <b>${st.roe}%</b><input type="range" data-ceil="roe" data-ceil-id="${esc(x.id)}" min="0" max="60" step="1" value="${st.roe}"></label>
+      ${q ? `<label>Chance mínima: <b>${st.chance}%</b><input type="range" data-ceil="chance" data-ceil-id="${esc(x.id)}" min="50" max="95" step="5" value="${st.chance}"></label>` : ""}
+      <label>Seu valor de revenda (opcional)<input class="input" type="number" min="0" step="any" data-ceil="value" data-ceil-id="${esc(x.id)}" value="${esc(st.value)}" placeholder="${v ? brl.format(v.mid) : "R$"}"></label>
+    </div>
+    ${rows.length ? `<div class="table-wrap"><table class="vt"><thead><tr><th>Cenário</th><th class="num">Lance máximo</th><th class="num">Lance atual = % do teto</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
+      <p class="help">O maior lance que ainda dá ${st.roe}% de ROE depois de comissão, ITBI, registro, reforma, dívidas, desocupação, corretagem e imposto (premissas da estratégia). Lance atual: ${brl.format(x.price)}. É um cálculo, não uma recomendação de lance.</p>`
+      : `<p class="why-none">Sem estimativa de valor para este lote. Informe o seu valor de revenda para calcular o lance máximo.</p>`}
+  </div>`;
+}
+
+function riskHTML(x) {
+  const r = riskFor(x);
+  return `<div class="risk-box"><div><span class="pill ${RISK_CLASS[r.level]}">${RISK_LABEL[r.level]}: ${r.points}</span></div>
+    ${r.factors.length ? `<ul class="risk-list">${r.factors.map((f) => `<li><span class="rk-pts">+${f.pts}</span>${esc(f.text)}</li>`).join("")}</ul>` : `<p class="help">Nenhum fator de risco identificado nos dados do anúncio. Confira o edital mesmo assim.</p>`}
+    <p class="help">Fatos do anúncio, somados: ocupado 3, dívidas com o arrematante 2, fração do imóvel 2, judicial 1… Informação ausente também conta. Ao marcar no checklist que verificou ocupação ou dívidas, esses pontos saem. 0–2 poucos, 3–5 atenção, 6+ muitos. Nunca significa “seguro”.</p></div>`;
+}
+
+/* ---------- lot history (snapshots kept by the daily job) ---------- */
+const histCache = new Map();
+function histHTML(h) {
+  if (h === undefined) return `<p class="help">Carregando histórico…</p>`;
+  if (h === null) return `<p class="help">${store?.mode === "live" ? "Ainda sem histórico: o registro diário deste lote começou agora." : "O histórico diário (preço, lances e situação) é registrado no app publicado."}</p>`;
+  const days = Object.keys(h.snap || {}).sort();
+  const rows = [];
+  let prev = null;
+  for (const d of days) {
+    const s = h.snap[d];
+    if (!prev || s.p !== prev.p || s.b !== prev.b || s.s !== prev.s) rows.push([d, s, prev]);
+    prev = s;
+  }
+  const fmtDay = (d) => `${d.slice(6, 8)}/${d.slice(4, 6)}/${d.slice(0, 4)}`;
+  const first = h.first_seen_at ? new Date(h.first_seen_at) : null;
+  return `<p class="help">${first ? `Acompanhado desde ${dShort.format(first)}` : ""}${days.length ? ` · ${days.length} dia${days.length > 1 ? "s" : ""} registrado${days.length > 1 ? "s" : ""}` : ""}${h.ended_at ? ` · saiu do site em ${dShort.format(new Date(h.ended_at))} (${h.outcome === "sold" ? "arrematado" : "situação final não informada pelo site"})` : ""}</p>
+    ${rows.length ? `<div class="table-wrap"><table class="vt"><thead><tr><th>Dia</th><th class="num">Lance mínimo</th><th class="num">Lances</th><th>Situação</th></tr></thead><tbody>
+      ${rows.map(([d, s, p]) => `<tr><td>${fmtDay(d)}</td><td class="num">${s.p != null ? brl.format(s.p) : "—"}${p && p.p && s.p && s.p !== p.p ? ` <span class="${s.p < p.p ? "down" : "up"}">${s.p < p.p ? "▼" : "▲"} ${Math.abs(Math.round((100 * (s.p - p.p)) / p.p))}%</span>` : ""}</td><td class="num">${s.b ?? "—"}</td><td>${esc(s.s || "—")}</td></tr>`).join("")}
+    </tbody></table></div><p class="help">Só os dias em que algo mudou.</p>` : ""}`;
+}
+async function loadHistory(id) {
+  const box = document.getElementById(`hist-${ckKey(id)}`);
+  if (!box) return;
+  if (histCache.has(id)) { box.innerHTML = histHTML(histCache.get(id)); return; }
+  box.innerHTML = histHTML(undefined);
+  let h = null;
+  try { h = store?.history ? await store.history(id) : null; } catch { h = null; }
+  histCache.set(id, h);
+  const b2 = document.getElementById(`hist-${ckKey(id)}`);
+  if (b2) b2.innerHTML = histHTML(h);
+}
+
 /* ---------- ficha (detail sheet) ---------- */
 const simState = new Map();   // per lot: resale value and cost sliders in the simulator
 
@@ -986,8 +1129,11 @@ function fichaHTML(x) {
         <button class="btn btn-sm" type="button" data-won="${esc(x.id)}">Arrematei: adicionar ao portfólio</button>
         <button class="btn btn-sm" type="button" data-group="${esc(x.id)}">Formar grupo para este imóvel</button></div></section>
     ${city.length ? `<section class="fsec"><h3>${esc(x.city || "Cidade")}${x.uf ? `/${esc(x.uf)}` : ""}</h3>${dl(city)}<p class="help">IBGE (Censo 2022, PIB dos Municípios) e PNUD (IDH-M 2010).</p></section>` : ""}
+    <section class="fsec"><h3>Pontos de atenção</h3>${riskHTML(x)}</section>
     <section class="fsec"><h3>Valor estimado</h3>${x.val && VMETA && !x.val.flag ? valHTML(x) : noValHTML(x)}</section>
+    ${x.price ? `<section class="fsec"><h3>Lance máximo</h3><div id="ceil-${ckKey(x.id)}">${ceilHTML(x)}</div></section>` : ""}
     ${x.price ? `<section class="fsec"><h3>Retorno estimado (ROE) e custos</h3><div id="sim-${ckKey(x.id)}">${simHTML(x)}</div></section>` : ""}
+    <section class="fsec"><h3>Histórico do lote</h3><div id="hist-${ckKey(x.id)}">${histHTML(histCache.has(x.id) ? histCache.get(x.id) : undefined)}</div></section>
     <section class="fsec"><h3>Checklist de due diligence</h3>${ddHTML(x)}</section>
   </div>`;
 }
@@ -1207,11 +1353,6 @@ async function saveCheck(id, field, value) {
 }
 
 /* ---------- list view ---------- */
-function median(nums) {
-  if (!nums.length) return null;
-  const s = [...nums].sort((a, b) => a - b), m = s.length >> 1;
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-}
 
 function render() {
   readControls();
@@ -1220,16 +1361,7 @@ function render() {
   if (sharedView) rows = rows.filter((x) => sharedView.ids.has(x.id));
   rows = rows.filter(quickMatch).sort(SORTS[state.sort]);
   const fresh = newIds();
-  const week = rows.filter((x) => x.nextT >= NOW && x.nextT - NOW < 7 * DAY).length;
-  const ptms = rows.map((x) => x.ptm).filter((d) => d != null);
-  const under50 = ptms.filter((p) => p <= 50).length;
-  const prices = rows.map((x) => x.price).filter((p) => p > 0);
-  $("stats").innerHTML = [
-    ["Oportunidades", rows.length.toLocaleString("pt-BR"), `de ${ALL.length.toLocaleString("pt-BR")} coletadas`],
-    ["Encerram em 7 dias", week.toLocaleString("pt-BR"), "próxima praça ou prazo"],
-    ["Lance ≤ 50% do mercado", under50.toLocaleString("pt-BR"), `${ptms.length.toLocaleString("pt-BR")} com valor de mercado`],
-    ["Preço mediano", prices.length ? brlShort.format(median(prices)) : "—", "lance mínimo / preço atual"],
-  ].map(([k, v, s]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+
 
   $("stBanner").hidden = !activeStrategy && !sharedView;
   if (sharedView && !activeStrategy) {
@@ -1245,7 +1377,7 @@ function render() {
     $("editActive").onclick = () => openEditor(USER.strategies.find((s) => s.id === activeStrategy.id) || activeStrategy);
   }
 
-  $("resultCount").textContent = `${rows.length.toLocaleString("pt-BR")} resultado${rows.length === 1 ? "" : "s"}`;
+  $("resultCount").innerHTML = `<b>${rows.length.toLocaleString("pt-BR")}</b> oportunidade${rows.length === 1 ? "" : "s"}${rows.length !== ALL.length ? ` <span>de ${ALL.length.toLocaleString("pt-BR")}</span>` : ""}`;
   const onMap = document.querySelector('input[name="view"]:checked')?.value === "map";
   $("list").hidden = onMap; $("mapWrap").hidden = !onMap;
   $("legend").hidden = onMap;
@@ -1254,6 +1386,7 @@ function render() {
   $("list").innerHTML = page.length
     ? page.map((x) => lotHTML(x, fresh.has(x.id))).join("")
     : `<div class="empty"><strong>Nenhum lote com esses filtros.</strong><span>Tente ampliar o preço, remover o estado ou desmarcar “Ocultar encerrados”.</span></div>`;
+  for (const id of openFicha) loadHistory(id);
   $("more").hidden = rows.length <= shown;
   $("more").textContent = `Mostrar mais (${(rows.length - shown).toLocaleString("pt-BR")} restantes)`;
   setActiveCount();
@@ -1279,7 +1412,7 @@ function restoreFilters(f) {
   if (!f) return;
   $("q").value = f.q || ""; $("uf").value = f.uf || ""; $("ptype").value = f.ptype || "";
   $("pmin").value = f.pmin ?? ""; $("pmax").value = f.pmax ?? ""; $("dmin").value = f.dmin ?? "";
-  $("hideEnded").checked = f.hideEnded !== false; if (f.sort) $("sort").value = f.sort;
+  $("hideEnded").checked = f.hideEnded !== false; if (f.sort && $("sort").querySelector(`option[value="${f.sort}"]`)) $("sort").value = f.sort;
   document.querySelectorAll("#srcChips input").forEach((i) => (i.checked = (f.src || []).includes(i.value)));
   if (f.cat) document.querySelectorAll("#catChips input").forEach((i) => (i.checked = f.cat.includes(i.value)));
 }
@@ -1337,6 +1470,19 @@ function buildControls() {
     const id = b.dataset.ficha;
     openFicha.has(id) ? openFicha.delete(id) : openFicha.add(id);
     render();
+  });
+  // maximum-bid controls: recompute only that box
+  $("list").addEventListener("input", (e) => {
+    const el = e.target.closest("[data-ceil]");
+    if (!el) return;
+    const id = el.dataset.ceilId, x = ALL.find((l) => l.id === id);
+    const st = ceilState.get(id) || { roe: targetRoe(), chance: 75, value: "" };
+    st[el.dataset.ceil] = el.dataset.ceil === "value" ? el.value : Number(el.value);
+    ceilState.set(id, st);
+    const box = document.getElementById(`ceil-${ckKey(id)}`);
+    box.innerHTML = ceilHTML(x);
+    const again = box.querySelector(`[data-ceil="${el.dataset.ceil}"]`);
+    if (again) { again.focus(); if (again.type === "number") { const n = again.value.length; try { again.setSelectionRange(n, n); } catch { /* number inputs */ } } }
   });
   // ROE simulator: recompute only that lot's simulator while dragging
   $("list").addEventListener("input", (e) => {
@@ -1692,7 +1838,7 @@ function renderPortfolio() {
 // only shows what the database lets each user read.
 let partners = null;            // partner store: Firestore (live) or a local demo (preview)
 let PS = null;                  // loaded partner state
-const pUI = { editCard: false, creating: null, applying: null, accepting: null, inviting: null, open: new Set(), editGroup: null, msg: "", busy: false, showAll: false, expanded: new Set() };
+const pUI = { dealEdit: null, dealPreview: null, editCard: false, creating: null, applying: null, accepting: null, inviting: null, open: new Set(), editGroup: null, msg: "", busy: false, showAll: false, expanded: new Set() };
 
 // Listings still open for bids (or taking proposals): what partners could buy together.
 const openListings = () => ALL.filter((x) => isNaN(x.nextT) || x.nextT >= NOW || x.proposals);
@@ -1774,6 +1920,7 @@ function firestorePartners(fs, db, user) {
     },
     leave(gid, wasApproved, count) { return this.removeMember(gid, uid, wasApproved, count); },
     setQuota(gid, quota) { return fs.updateDoc(memberRef(gid, uid), { quota, updated_at: now() }); },
+    setAgreed(gid, version) { return fs.updateDoc(memberRef(gid, uid), { agreed_version: version, updated_at: now() }); },
   };
 }
 
@@ -1849,11 +1996,87 @@ function demoPartners() {
     async removeMember(gid, who, wasApproved) { delete S.members[gid][who]; if (wasApproved) S.groups[gid].member_count--; save(); },
     async leave(gid, wasApproved) { return this.removeMember(gid, uid, wasApproved); },
     async setQuota(gid, quota) { S.members[gid][uid].quota = quota; save(); },
+    async setAgreed(gid, version) {
+      S.members[gid][uid].agreed_version = version; save();
+      // sample partners agree a moment later, so the whole flow can be tried
+      later(() => { for (const m of Object.values(S.members[gid] || {})) if (m.uid !== uid && m.status === "approved") m.agreed_version = version; });
+    },
   };
 }
 
 const editingSomething = () => !!(pUI.editCard || pUI.creating || pUI.applying || pUI.accepting || pUI.inviting
   || document.activeElement?.closest?.("#partnersView form"));
+
+/* ---------- group contract (5a) ---------- */
+const DEAL_FIELDS = [
+  ["property_title", "Imóvel-alvo", "text"], ["property_url", "Link do leilão", "url"],
+  ["max_bid", "Lance máximo autorizado (R$)", "money"],
+  ["purpose", "Destinação", "select", [["revenda", "Revenda"], ["aluguel", "Aluguel"], ["decidir", "A decidir pelos sócios"]]],
+  ["deposit_days", "Aportes até quantos dias antes do leilão", "number"], ["refund_days", "Devolução em até quantos dias se não arrematar", "number"],
+  ["call_days", "Prazo para novos aportes (dias)", "number"], ["sale_majority_pct", "Maioria para decisões (% das participações)", "number"],
+  ["min_sale_price", "Preço mínimo de venda (R$, opcional)", "money"], ["term_months", "Prazo previsto (meses, opcional)", "number"],
+  ["forum_city", "Foro (cidade)", "text"], ["place", "Local da assinatura", "text"], ["notes", "Disposições adicionais (opcional)", "textarea"],
+];
+const QUAL_FIELDS = [["cpf", "CPF"], ["nationality", "Nacionalidade"], ["marital", "Estado civil"], ["profession", "Profissão"], ["address", "Endereço"]];
+function qualOf(gid) { try { return JSON.parse(localStorage.getItem(`at.qual.${gid}`)) || {}; } catch { return {}; } }
+function saveQual(gid, q) { try { localStorage.setItem(`at.qual.${gid}`, JSON.stringify(q)); } catch { /* storage blocked */ } }
+
+function dealDoc(x, approved) {
+  const q = qualOf(x.g.id);
+  const members = approved.map((m) => ({ name: m.name, quota: m.quota, role: m.role, qual: q[m.uid] }));
+  return dealContract({ group: x.g, members, terms: x.g.deal || {} });
+}
+
+function dealSection(x, approved) {
+  const { g, me, asLeader } = x, gid = g.id, d = g.deal;
+  const editing = pUI.dealEdit === gid;
+  if (editing) {
+    const t = d || { property_title: g.target_title || "", property_url: g.target_url || "", max_bid: g.target_price || "", purpose: "revenda", deposit_days: 3, refund_days: 5, call_days: 10, sale_majority_pct: 51 };
+    return `<div class="pa-sub"><h4>Termos do contrato</h4><form class="pa-form" data-form="deal" data-gid="${esc(gid)}">
+      <div class="deal-grid">${DEAL_FIELDS.map(([k, label, type, opts]) => `<div class="field${type === "textarea" ? " wide" : ""}"><label for="dl-${k}">${label}</label>${
+        type === "select" ? `<select class="input" id="dl-${k}">${opts.map(([v, l]) => `<option value="${v}" ${t[k] === v ? "selected" : ""}>${l}</option>`).join("")}</select>`
+        : type === "textarea" ? `<textarea class="input" id="dl-${k}" rows="2" maxlength="1000">${esc(t[k] || "")}</textarea>`
+        : `<input class="input" id="dl-${k}" type="${type === "money" || type === "number" ? "number" : type}" ${type === "money" || type === "number" ? 'min="0" step="any"' : ""} value="${esc(t[k] ?? "")}">`}</div>`).join("")}</div>
+      <p class="help">As participações vêm das cotas aprovadas no grupo. Ao salvar, os sócios precisam concordar de novo com a nova versão.</p>
+      <div class="st-actions"><button class="btn btn-primary btn-sm" type="submit">Salvar termos</button><button class="btn btn-sm" type="button" data-pa="deal-cancel">Cancelar</button></div></form></div>`;
+  }
+  if (!d) return asLeader
+    ? `<div class="pa-sub"><h4>Contrato do grupo</h4><p class="help">Defina os termos (lance máximo, prazos, regras de venda) e o AuctionTraker gera a minuta do contrato com as participações de cada sócio.</p>
+        <div class="st-actions"><button class="btn btn-sm" type="button" data-pa="deal-edit" data-gid="${esc(gid)}">Definir termos do contrato</button></div></div>`
+    : `<div class="pa-sub"><h4>Contrato do grupo</h4><p class="help">O líder ainda não definiu os termos do contrato.</p></div>`;
+  const v = d.version || 1;
+  const agreed = approved.filter((m) => m.agreed_version === v);
+  const all = agreed.length === approved.length;
+  const preview = pUI.dealPreview === gid;
+  const q = qualOf(gid);
+  return `<div class="pa-sub"><h4>Contrato do grupo · versão ${v}</h4>
+    <dl class="facts">${[["Imóvel", d.property_title || g.target_title], ["Lance máximo", d.max_bid ? brl.format(d.max_bid) : null], ["Decisões por", d.sale_majority_pct ? `${d.sale_majority_pct}% das participações` : null],
+      ["Aportes", d.deposit_days != null && d.deposit_days !== "" ? `até ${d.deposit_days} dias antes do leilão` : null], ["Preço mínimo de venda", d.min_sale_price ? brl.format(d.min_sale_price) : null], ["Foro", d.forum_city]]
+      .filter(([, val]) => val).map(([k2, val]) => `<dt>${k2}</dt><dd>${esc(val)}</dd>`).join("")}</dl>
+    <div class="agree">${approved.map((m) => `<span class="pill ${m.agreed_version === v ? "good" : "mute"}">${m.agreed_version === v ? "✓" : "…"} ${esc(m.name)}</span>`).join("")}</div>
+    <p class="help">${all ? "Todos os sócios concordaram com esta versão: a minuta pode ser impressa e assinada." : `${agreed.length} de ${approved.length} sócios concordaram com esta versão.`}</p>
+    <div class="st-actions">
+      ${me.agreed_version !== v ? `<button class="btn btn-primary btn-sm" type="button" data-pa="deal-agree" data-gid="${esc(gid)}" data-v="${v}">Concordo com estes termos</button>` : ""}
+      <button class="btn btn-sm" type="button" data-pa="deal-preview" data-gid="${esc(gid)}">${preview ? "Ocultar minuta" : "Ver minuta"}</button>
+      <button class="btn btn-sm" type="button" data-pa="deal-pdf" data-gid="${esc(gid)}">Baixar PDF</button>
+      ${asLeader ? `<button class="btn btn-sm" type="button" data-pa="deal-edit" data-gid="${esc(gid)}">Editar termos</button>` : ""}
+    </div>
+    ${preview ? `<details class="qual"><summary>Qualificação das partes (opcional, fica só neste aparelho)</summary>
+        <form class="pa-form" data-form="qual" data-gid="${esc(gid)}">${approved.map((m) => `<fieldset class="pa-private"><legend>${esc(m.name)}</legend><div class="deal-grid">${QUAL_FIELDS.map(([k, l]) =>
+          `<div class="field"><label for="q-${esc(m.uid)}-${k}">${l}</label><input class="input" id="q-${esc(m.uid)}-${k}" data-uid="${esc(m.uid)}" data-k="${k}" value="${esc(q[m.uid]?.[k] || "")}" maxlength="160"></div>`).join("")}</div></fieldset>`).join("")}
+        <p class="help">CPF e endereço não são enviados ao AuctionTraker: ficam neste navegador e entram só na minuta gerada aqui. Em branco, a minuta traz linhas para preencher à mão.</p>
+        <div class="st-actions"><button class="btn btn-sm" type="submit">Aplicar à minuta</button></div></form></details>
+      <div class="doc-wrap">${docHTML(dealDoc(x, approved))}</div>` : ""}
+  </div>`;
+}
+
+// PDF: jsPDF loads only when someone downloads a document
+let jsPdfReady = null;
+async function downloadPdf(doc) {
+  jsPdfReady = jsPdfReady || loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+  await jsPdfReady;
+  docPDF(doc, window.jspdf.jsPDF).save(fileName(doc.title));
+}
 
 async function loadPartners() {
   const me = partners.uid;
@@ -2061,6 +2284,7 @@ function groupCard(x) {
     ${open ? `<div class="pa-sub"><h4>Sócios</h4>${approved.map((m) => `<div class="pa-row"><span><b>${esc(m.name)}</b>${m.role === "leader" ? " (líder)" : ""} · cota ${brl.format(m.quota)} · ${esc(m.contact)}</span>
         ${asLeader && m.uid !== PS.me ? `<button class="btn btn-sm" type="button" data-pa="remove" data-gid="${esc(gid)}" data-uid="${esc(m.uid)}">Remover</button>` : ""}</div>`).join("")}
       ${invited.length ? `<div class="help">Convites pendentes: ${invited.map((m) => esc(handle(m.uid))).join(", ")}</div>` : ""}
+      ${me.status === "approved" ? dealSection(x, approved) : ""}
       ${me.status === "approved" && !asLeader ? `<form class="pa-inline" data-form="quota" data-gid="${esc(gid)}"><label for="q-${esc(gid)}">Minha cota (R$)</label><input class="input" id="q-${esc(gid)}" type="number" min="${g.quota_min}" max="${g.quota_max}" step="any" value="${me.quota}"><button class="btn btn-sm" type="submit">Atualizar</button></form>` : ""}
       ${asLeader ? `<div class="pa-sub"><h4>Convidar</h4>${room <= 0 ? `<p class="help">Grupo cheio.</p>` : canInvite.length ? `<div class="pa-inline"><select class="input" id="inv-${esc(gid)}">${canInvite.map((u) => `<option value="${esc(u)}">${esc(PS.contacts[u]?.name || handle(u))}${PS.cards.find((c) => c.uid === u) ? ` · ${similarity(PS.card, PS.cards.find((c) => c.uid === u)).score}% compatível` : ""}</option>`).join("")}</select><button class="btn btn-sm" type="button" data-pa="group-invite" data-gid="${esc(gid)}">Convidar</button></div><p class="help">Quem você convidar vê o grupo e decide se entra, com uma cota na sua faixa.</p>` : `<p class="help">Conecte-se a investidores (acima) para convidá-los.</p>`}</div>
         <div class="pa-sub"><h4>Regras do grupo</h4><form class="pa-inline" data-form="rules" data-gid="${esc(gid)}">
@@ -2179,6 +2403,15 @@ function wirePartners() {
       case "remove": return paRun(() => partners.removeMember(gid, u, true, G.g.member_count), "Sócio removido.");
       case "group-invite": return paRun(() => partners.inviteToGroup(gid, $(`inv-${gid}`).value), "Convite enviado. A pessoa decide se entra.");
       case "leave": return paRun(() => partners.leave(gid, G.me.status === "approved", G.g.member_count), "Você saiu do grupo.");
+      case "deal-edit": return ui(() => { pUI.dealEdit = gid; });
+      case "deal-cancel": return ui(() => { pUI.dealEdit = null; });
+      case "deal-preview": return ui(() => { pUI.dealPreview = pUI.dealPreview === gid ? null : gid; });
+      case "deal-agree": return paRun(() => partners.setAgreed(gid, Number(b.dataset.v)), "Você concordou com os termos desta versão.");
+      case "deal-pdf": {
+        const approved = G.members.filter((m) => m.status === "approved");
+        downloadPdf(dealDoc(G, approved)).catch((err) => { pUI.msg = `Não foi possível gerar o PDF: ${err.message}`; renderPartners(); });
+        return;
+      }
       case "close-group": return paRun(() => partners.closeGroup(gid, G.members.map((m) => m.uid)), "Grupo encerrado.");
     }
   });
@@ -2217,6 +2450,23 @@ function wirePartners() {
       if (!quotaOk(q, G.g)) { pUI.msg = `A cota precisa ficar entre ${brl.format(G.g.quota_min)} e ${brl.format(G.g.quota_max)}.`; return renderPartners(); }
       return paRun(() => partners.setQuota(gid, q), "Cota atualizada.");
     }
+    if (f.dataset.form === "deal") {
+      const deal = {};
+      for (const [k, , type] of DEAL_FIELDS) {
+        const raw = $(`dl-${k}`).value.trim();
+        deal[k] = type === "money" || type === "number" ? num(raw) : raw;
+      }
+      if (deal.sale_majority_pct != null && (deal.sale_majority_pct < 50 || deal.sale_majority_pct > 100)) { pUI.msg = "A maioria para decisões deve ficar entre 50% e 100%."; return renderPartners(); }
+      deal.version = (G.g.deal?.version || 0) + 1;
+      return paRun(async () => { await partners.updateGroup(gid, { deal }); pUI.dealEdit = null; pUI.dealPreview = gid; }, `Termos salvos (versão ${deal.version}). Os sócios precisam concordar com esta versão.`);
+    }
+    if (f.dataset.form === "qual") {
+      const q = qualOf(gid);
+      f.querySelectorAll("[data-uid]").forEach((el) => { (q[el.dataset.uid] = q[el.dataset.uid] || {})[el.dataset.k] = el.value.trim(); });
+      saveQual(gid, q);
+      pUI.msg = "Qualificação aplicada à minuta (salva só neste aparelho).";
+      return renderPartners();
+    }
     if (f.dataset.form === "rules") {
       const qmin = num(f.qmin.value), qmax = num(f.qmax.value), max = Math.round(num(f.max.value) || 0);
       if (!qmin || !qmax || qmin > qmax || max < Math.max(2, G.g.member_count) || max > 50) { pUI.msg = "Confira: cota mínima ≤ máxima, e o máximo de sócios entre o número atual e 50."; return renderPartners(); }
@@ -2231,14 +2481,199 @@ async function openPartners() {
   renderPartners();
 }
 
+/* ---------- templates and services (5b) ---------- */
+// Professionals listed only after review: a listing is created "pending" by its
+// owner and shown to others once an administrator (admins/{uid}) approves it.
+let services = null;
+const svc = { openTpl: null, values: {}, preview: null, cat: "", uf: "", q: "", editPro: false, msg: "", pros: [], mine: null, admin: false, pending: [], loaded: false };
+const PRO_CATS = [["advogado", "Advogado(a) imobiliário"], ["despachante", "Despachante"], ["engenheiro", "Engenheiro(a) e vistoria"], ["reforma", "Reforma e obras"],
+  ["contador", "Contador(a) e tributário"], ["corretor", "Corretor(a) de imóveis"], ["avaliador", "Avaliador(a)"], ["outro", "Outro serviço"]];
+const proCat = (c) => (PRO_CATS.find((x) => x[0] === c) || [, c])[1];
+// UFS (the 27 states) is declared with the portfolio form
+
+function firestoreServices(fs, db, user) {
+  const uid = user.uid, now = () => fs.serverTimestamp();
+  const rows = async (q) => { const s = await fs.getDocs(q); const out = []; s.forEach((x) => out.push({ id: x.id, ...x.data() })); return out; };
+  return {
+    uid, mode: "live",
+    async isAdmin() { try { return (await fs.getDoc(fs.doc(db, "admins", uid))).exists(); } catch { return false; } },
+    listPros() { return rows(fs.query(fs.collection(db, "pros"), fs.where("status", "==", "approved"), fs.limit(500))); },
+    async myPro() { const s = await fs.getDoc(fs.doc(db, "pros", uid)); return s.exists() ? { id: uid, ...s.data() } : null; },
+    savePro(p) { return fs.setDoc(fs.doc(db, "pros", uid), { ...p, status: "pending", updated_at: now(), ...(p.created_at ? {} : { created_at: now() }) }); },
+    deletePro() { return fs.deleteDoc(fs.doc(db, "pros", uid)); },
+    pending() { return rows(fs.query(fs.collection(db, "pros"), fs.where("status", "==", "pending"), fs.limit(200))); },
+    review(id, status) { return fs.updateDoc(fs.doc(db, "pros", id), { status, reviewed_at: now() }); },
+  };
+}
+
+function demoServices() {
+  const KEY = "at.servicesDemo";
+  const sample = [
+    ["d1", "Dra. Paula Andrade (exemplo)", "advogado", "SP", "São Paulo, Campinas", "Leilões judiciais e extrajudiciais, análise de edital e matrícula, imissão na posse.", "OAB/SP 000000"],
+    ["d2", "Marcos Ribeiro Despachante (exemplo)", "despachante", "SP", "São Paulo e Grande SP", "Certidões, matrícula atualizada, ITBI e registro do auto de arrematação.", ""],
+    ["d3", "Eng. Carla Nunes (exemplo)", "engenheiro", "PR", "Curitiba", "Vistoria externa, laudo de conservação e orçamento de reforma.", "CREA-PR 000000"],
+    ["d4", "Obra Certa Reformas (exemplo)", "reforma", "MG", "Belo Horizonte", "Reformas completas com prazo e preço fechados para imóveis de leilão.", ""],
+    ["d5", "Contábil Leme (exemplo)", "contador", "RJ", "Rio de Janeiro", "Ganho de capital, compra por pessoa jurídica e holding patrimonial.", "CRC-RJ 000000"],
+    ["d6", "Imóveis Sul Corretora (exemplo)", "corretor", "RS", "Porto Alegre", "Revenda de imóveis arrematados e avaliação de preço de venda.", "CRECI 000000"],
+  ].map(([id, name, category, uf, cities, description, registration]) => ({ id, name, category, uf, cities, description, registration, status: "approved", phone: "(11) 90000-0000", email: `${id}@exemplo.com`, site: "" }));
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || { mine: null }; } catch { S = { mine: null }; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* storage blocked */ } };
+  return {
+    uid: "voce", mode: "preview",
+    async isAdmin() { return true; },
+    async listPros() { return [...sample, ...(S.mine && S.mine.status === "approved" ? [S.mine] : [])]; },
+    async myPro() { return S.mine; },
+    async savePro(p) { S.mine = { ...p, id: "voce", status: "pending" }; save(); },
+    async deletePro() { S.mine = null; save(); },
+    async pending() { return S.mine && S.mine.status === "pending" ? [S.mine] : []; },
+    async review(id, status) { if (S.mine) { S.mine.status = status; save(); } },
+  };
+}
+
+async function loadServices() {
+  const [pros, mine, admin] = await Promise.all([services.listPros(), services.myPro(), services.isAdmin()]);
+  svc.pros = pros; svc.mine = mine; svc.admin = admin;
+  svc.pending = admin ? await services.pending() : [];
+  svc.loaded = true;
+}
+
+function tplForm(t) {
+  const v = svc.values[t.id] || Object.fromEntries(t.fields.map(([k, , , d]) => [k, d]));
+  return `<form class="pa-form" data-tpl="${t.id}"><div class="deal-grid">${t.fields.map(([k, label, type]) => `<div class="field${type === "textarea" ? " wide" : ""}"><label for="tf-${t.id}-${k}">${esc(label)}</label>${
+    type === "textarea" ? `<textarea class="input" id="tf-${t.id}-${k}" data-k="${k}" rows="3">${esc(v[k] || "")}</textarea>`
+    : `<input class="input" id="tf-${t.id}-${k}" data-k="${k}" type="${type === "money" || type === "number" ? "number" : type === "date" ? "date" : "text"}" ${type === "money" || type === "number" ? 'min="0" step="any"' : ""} value="${esc(v[k] ?? "")}">`}</div>`).join("")}</div>
+    <p class="help">Campos em branco viram linhas para preencher à mão. Nada deste formulário é enviado ao AuctionTraker.</p>
+    <div class="st-actions"><button class="btn btn-primary btn-sm" type="submit">Ver minuta</button><button class="btn btn-sm" type="button" data-sv="tpl-pdf" data-id="${t.id}">Baixar PDF</button><button class="btn btn-sm" type="button" data-sv="tpl-close">Fechar</button></div></form>
+    ${svc.preview === t.id ? `<div class="doc-wrap">${docHTML(t.build(v))}</div>` : ""}`;
+}
+const readTpl = (id) => { const f = document.querySelector(`form[data-tpl="${id}"]`); const v = {}; f.querySelectorAll("[data-k]").forEach((el) => (v[el.dataset.k] = el.value)); svc.values[id] = v; return v; };
+
+function proCard(p, adminView) {
+  const st = { pending: ["warn", "Em análise"], approved: ["good", "Publicado"], rejected: ["bad", "Não aprovado"] }[p.status] || ["mute", p.status];
+  return `<article class="st-card pro">
+    <div class="pa-name"><b>${esc(p.name)}</b><span class="pill mute">${esc(proCat(p.category))}</span>${adminView || p.id === services.uid ? `<span class="pill ${st[0]}">${st[1]}</span>` : ""}</div>
+    <div class="pa-facts"><span>${esc([p.cities, p.uf].filter(Boolean).join(" · "))}</span>${p.registration ? `<span>${esc(p.registration)}</span>` : ""}</div>
+    ${p.description ? `<p class="pa-desc">${esc(p.description)}</p>` : ""}
+    <div class="pa-facts">${p.email ? `<a href="mailto:${esc(p.email)}">${esc(p.email)}</a>` : ""}${p.phone ? `<span>${esc(p.phone)}</span>` : ""}${p.site ? `<a href="${esc(safeUrl(p.site))}" target="_blank" rel="noopener noreferrer">site ↗</a>` : ""}</div>
+    ${adminView ? `<div class="st-actions"><button class="btn btn-primary btn-sm" type="button" data-sv="approve" data-id="${esc(p.id)}">Aprovar</button><button class="btn btn-sm" type="button" data-sv="reject" data-id="${esc(p.id)}">Recusar</button></div>` : ""}
+  </article>`;
+}
+
+function proForm() {
+  const p = svc.mine || { name: "", category: "advogado", uf: "", cities: "", description: "", phone: "", email: USER.email || "", site: "", registration: "" };
+  return `<form class="pa-form st-card" id="proForm"><h3>${svc.mine ? "Editar minha listagem" : "Quero ser listado"}</h3>
+    <div class="deal-grid">
+      <div class="field"><label for="prName">Nome ou empresa</label><input class="input" id="prName" required minlength="3" maxlength="80" value="${esc(p.name)}"></div>
+      <div class="field"><label for="prCat">Serviço</label><select class="input" id="prCat">${PRO_CATS.map(([v, l]) => `<option value="${v}" ${p.category === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label for="prUf">Estado</label><select class="input" id="prUf"><option value="">Todo o Brasil</option>${UFS.map((u) => `<option ${p.uf === u ? "selected" : ""}>${u}</option>`).join("")}</select></div>
+      <div class="field"><label for="prCities">Cidades atendidas</label><input class="input" id="prCities" maxlength="160" value="${esc(p.cities)}"></div>
+      <div class="field"><label for="prReg">Registro profissional (OAB, CRECI, CREA…)</label><input class="input" id="prReg" maxlength="60" value="${esc(p.registration)}"></div>
+      <div class="field"><label for="prPhone">Telefone / WhatsApp</label><input class="input" id="prPhone" maxlength="40" value="${esc(p.phone)}"></div>
+      <div class="field"><label for="prEmail">E-mail</label><input class="input" id="prEmail" type="email" maxlength="120" value="${esc(p.email)}"></div>
+      <div class="field"><label for="prSite">Site</label><input class="input" id="prSite" type="url" maxlength="200" value="${esc(p.site)}"></div>
+      <div class="field wide"><label for="prDesc">O que você faz para investidores em leilão</label><textarea class="input" id="prDesc" rows="3" maxlength="800">${esc(p.description)}</textarea></div>
+    </div>
+    <p class="help">Sua listagem fica visível para usuários com login depois de revisada pela equipe. Ao salvar alterações, ela volta para revisão.</p>
+    <div class="st-actions"><button class="btn btn-primary btn-sm" type="submit">Enviar para revisão</button><button class="btn btn-sm" type="button" data-sv="pro-cancel">Cancelar</button>
+      ${svc.mine ? `<button class="btn btn-sm btn-danger" type="button" data-sv="pro-delete">Remover minha listagem</button>` : ""}</div>
+  </form>`;
+}
+
+function renderServices() {
+  const v = $("servicesView");
+  if (!svc.loaded) { v.innerHTML = `<div class="empty">Carregando…</div>`; return; }
+  const q = svc.q.trim().toLowerCase();
+  const pros = svc.pros.filter((p) => (!svc.cat || p.category === svc.cat) && (!svc.uf || !p.uf || p.uf === svc.uf)
+    && (!q || `${p.name} ${p.cities} ${p.description}`.toLowerCase().includes(q)));
+  v.innerHTML = `<div class="st-head"><h1>Modelos e serviços</h1></div>
+    <p class="pa-lead">Modelos de documentos para cada etapa da compra em leilão, e profissionais que atendem investidores. ${services.mode === "preview" ? '<span class="pill warn">Prévia: profissionais de exemplo</span>' : ""}</p>
+    ${svc.msg ? `<p class="pa-msg" role="status">${esc(svc.msg)}</p>` : ""}
+    <section class="pa-sec"><h2>Modelos de documentos</h2>
+      <p class="note">Minutas simplificadas para adiantar o trabalho. Não substituem um advogado: revise antes de assinar.</p>
+      <div class="tpl-grid">${TEMPLATES.map((t) => svc.openTpl === t.id
+        ? `<article class="st-card tpl open"><h3>${esc(t.title)}</h3><p class="pa-desc">${esc(t.desc)}</p>${tplForm(t)}</article>`
+        : `<article class="st-card tpl"><h3>${esc(t.title)}</h3><p class="pa-desc">${esc(t.desc)}</p><div class="st-actions"><button class="btn btn-sm" type="button" data-sv="tpl-open" data-id="${t.id}">Preencher</button></div></article>`).join("")}</div>
+    </section>
+    <section class="pa-sec"><div class="pa-shead"><h2>Profissionais</h2>${!svc.editPro ? `<button class="btn btn-sm" type="button" data-sv="pro-edit">${svc.mine ? "Minha listagem" : "Quero ser listado"}</button>` : ""}</div>
+      <p class="help">Profissionais listados após revisão da equipe AuctionTraker. O AuctionTraker não intermedeia, não recebe comissão e não garante os serviços: combine escopo e preço diretamente.</p>
+      ${svc.editPro ? proForm() : svc.mine && svc.mine.status !== "approved" ? `<div class="pa-list">${proCard(svc.mine)}</div>` : ""}
+      <div class="pro-filters">
+        <select class="input" id="svCat" aria-label="Serviço"><option value="">Todos os serviços</option>${PRO_CATS.map(([val, l]) => `<option value="${val}" ${svc.cat === val ? "selected" : ""}>${l}</option>`).join("")}</select>
+        <select class="input" id="svUf" aria-label="Estado"><option value="">Todos os estados</option>${UFS.map((u) => `<option ${svc.uf === u ? "selected" : ""}>${u}</option>`).join("")}</select>
+        <input class="input" id="svQ" type="search" placeholder="Buscar por nome, cidade ou serviço" value="${esc(svc.q)}">
+      </div>
+      ${pros.length ? `<div class="pro-grid">${pros.map((p) => proCard(p)).join("")}</div>` : `<div class="empty"><span>Nenhum profissional ${svc.pros.length ? "com esses filtros" : "listado ainda"}.</span></div>`}
+    </section>
+    ${svc.admin ? `<section class="pa-sec"><h2>Revisão de listagens</h2><p class="help">Você é administrador. Aprove só profissionais que você verificou (registro profissional, contato real).${services.mode === "preview" ? " Na prévia, este painel mostra a sua própria listagem." : ""}</p>
+      ${svc.pending.length ? `<div class="pro-grid">${svc.pending.map((p) => proCard(p, true)).join("")}</div>` : `<div class="empty"><span>Nenhuma listagem aguardando revisão.</span></div>`}</section>` : ""}`;
+}
+
+async function svRun(fn, msg) {
+  try { await fn(); svc.msg = msg || ""; await loadServices(); } catch (e) { svc.msg = `Não foi possível concluir: ${e.message}`; }
+  renderServices();
+}
+
+function wireServices() {
+  const v = $("servicesView");
+  v.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sv]");
+    if (!b) return;
+    const a = b.dataset.sv, id = b.dataset.id;
+    const ui = (fn) => { fn(); svc.msg = ""; renderServices(); };
+    switch (a) {
+      case "tpl-open": return ui(() => { svc.openTpl = id; svc.preview = null; });
+      case "tpl-close": return ui(() => { svc.openTpl = null; svc.preview = null; });
+      case "tpl-pdf": {
+        const t = TEMPLATES.find((x) => x.id === id), doc = t.build(readTpl(id));
+        downloadPdf(doc).catch((err) => { svc.msg = `Não foi possível gerar o PDF: ${err.message}`; renderServices(); });
+        return;
+      }
+      case "pro-edit": return ui(() => { svc.editPro = true; });
+      case "pro-cancel": return ui(() => { svc.editPro = false; });
+      case "pro-delete": return svRun(async () => { await services.deletePro(); svc.editPro = false; }, "Sua listagem foi removida.");
+      case "approve": return svRun(() => services.review(id, "approved"), "Listagem aprovada e publicada.");
+      case "reject": return svRun(() => services.review(id, "rejected"), "Listagem recusada.");
+    }
+  });
+  v.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = e.target;
+    if (f.dataset.tpl) { readTpl(f.dataset.tpl); svc.preview = f.dataset.tpl; return renderServices(); }
+    if (f.id === "proForm") {
+      const p = { name: $("prName").value.trim(), category: $("prCat").value, uf: $("prUf").value, cities: $("prCities").value.trim(), registration: $("prReg").value.trim(),
+        phone: $("prPhone").value.trim(), email: $("prEmail").value.trim(), site: $("prSite").value.trim(), description: $("prDesc").value.trim() };
+      if (p.name.length < 3) { svc.msg = "Informe o nome (mínimo 3 letras)."; return renderServices(); }
+      if (!p.phone && !p.email) { svc.msg = "Informe ao menos um contato: telefone ou e-mail."; return renderServices(); }
+      return svRun(async () => { await services.savePro(svc.mine?.created_at ? { ...p, created_at: svc.mine.created_at } : p); svc.editPro = false; }, "Listagem enviada para revisão. Ela aparece para os outros usuários depois de aprovada.");
+    }
+  });
+  v.addEventListener("change", (e) => {
+    if (e.target.id === "svCat") { svc.cat = e.target.value; renderServices(); }
+    if (e.target.id === "svUf") { svc.uf = e.target.value; renderServices(); }
+  });
+  let t;
+  v.addEventListener("input", (e) => {
+    if (e.target.id !== "svQ") return;
+    clearTimeout(t);
+    t = setTimeout(() => { svc.q = e.target.value; renderServices(); const q = $("svQ"); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 200);
+  });
+}
+
+async function openServices() {
+  renderServices();
+  try { await loadServices(); } catch (e) { svc.msg = `Não foi possível carregar: ${e.message}`; svc.loaded = true; }
+  renderServices();
+}
+
 /* ---------- tabs ---------- */
 function showTab(name) {
-  for (const t of ["lots", "strategies", "portfolio", "partners"]) {
+  for (const t of ["lots", "strategies", "portfolio", "partners", "services"]) {
     $(`tab-${t}`).setAttribute("aria-selected", String(name === t));
     $(`${t}View`).hidden = name !== t;
   }
   if (name !== "lots") $("legend").hidden = true;
-  if (name === "lots") render(); else if (name === "strategies") renderStrategies(); else if (name === "partners") openPartners(); else renderPortfolio();
+  if (name === "lots") render(); else if (name === "strategies") renderStrategies(); else if (name === "partners") openPartners(); else if (name === "services") openServices(); else renderPortfolio();
   window.scrollTo(0, 0);
 }
 
@@ -2259,7 +2694,8 @@ function start(items, updatedAt, note) {
   $("tab-strategies").onclick = () => { editing = null; showTab("strategies"); };
   $("tab-portfolio").onclick = () => { editingProp = null; showTab("portfolio"); };
   $("tab-partners").onclick = () => showTab("partners");
-  if (!partnersWired) { wirePartners(); partnersWired = true; }
+  $("tab-services").onclick = () => showTab("services");
+  if (!partnersWired) { wirePartners(); wireServices(); partnersWired = true; }
   loadPartners().catch(() => { /* the badge is optional */ });
   buildControls();
   restoreFilters(USER.lastFilters);
@@ -2271,7 +2707,7 @@ function start(items, updatedAt, note) {
 function showGate(html) {
   $("gateView").innerHTML = `<div class="gate">${html}</div>`;
   $("gateView").hidden = false;
-  $("lotsView").hidden = true; $("strategiesView").hidden = true; $("portfolioView").hidden = true; $("partnersView").hidden = true; $("tabs").hidden = true;
+  $("lotsView").hidden = true; $("strategiesView").hidden = true; $("portfolioView").hidden = true; $("partnersView").hidden = true; $("servicesView").hidden = true; $("tabs").hidden = true;
 }
 
 /* ---------- persistence ---------- */
@@ -2329,6 +2765,12 @@ function firestoreStore(fs, db, user) {
       return { ...prop, id: ref.id };
     },
     async deleteProperty(id) { await fs.deleteDoc(fs.doc(portRef, id)); },
+    async history(id) {
+      const d = await fs.getDoc(fs.doc(db, "listings", id));
+      if (!d.exists()) return null;
+      const { snap, first_seen_at, ended_at, outcome } = d.data();
+      return snap ? { snap, first_seen_at, ended_at, outcome } : null;
+    },
   };
 }
 
@@ -2349,6 +2791,7 @@ async function startPreview() {
     const d = await r.json();
     store = browserStore();
     partners = demoPartners();
+    services = demoServices();
     Object.assign(USER, await store.load());
     const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(d.run_id || "");
     const when = m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : null;
@@ -2414,12 +2857,17 @@ async function startLive(config) {
     try {
       store = firestoreStore(fs, db, user);
       partners = firestorePartners(fs, db, user);
+      services = firestoreServices(fs, db, user);
       USER.email = user.email;
       const [{ snap, fromCache }, mine] = await Promise.all([loadSummaries(fs, db), store.load()]);
       Object.assign(USER, mine);
+      // a site whose collection has been failing for days keeps its old data in
+      // Firestore; past 3 days those lots are likely gone, so don't show them
       let items = [], updated = null;
+      const stale = new Set();
       snap.forEach((doc) => {
         const d = doc.data();
+        if (d.updated_at && Date.now() - Date.parse(d.updated_at) > 3 * DAY) { stale.add(SITES[d.source] || d.source); return; }
         items = items.concat(d.items || []);
         if (!updated || d.updated_at > updated) updated = d.updated_at;
       });
@@ -2428,7 +2876,8 @@ async function startLive(config) {
         return;
       }
       loaded = true;
-      start(items, updated, fromCache ? "Dados do dia já salvos neste aparelho: nada foi baixado de novo." : `Dados atualizados (${snap.size} documentos).`);
+      start(items, updated, (fromCache ? "Dados do dia já salvos neste aparelho: nada foi baixado de novo." : `Dados atualizados (${snap.size} documentos).`)
+        + (stale.size ? ` Sem coleta recente, não exibidos: ${[...stale].join(", ")}.` : ""));
     } catch (e) {
       showGate(`<h1>Sem acesso aos dados</h1><p class="error">${esc(e.message)}</p><p>Confira as regras do Firestore (firestore.rules).</p>`);
     } finally {

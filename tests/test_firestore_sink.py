@@ -4,6 +4,13 @@ from auction_tracker.models import Listing
 from auction_tracker.storage.firestore import FirestoreSink, chunk_by_size
 
 
+def deep_merge(old, new):
+    out = dict(old)
+    for k, v in new.items():
+        out[k] = deep_merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
 class FakeDoc:
     def __init__(self, store, col, doc_id):
         self.store, self.col, self.id = store, col, doc_id
@@ -21,7 +28,7 @@ class FakeDoc:
 
     def set(self, data, merge=False):
         col = self.store.setdefault(self.col, {})
-        col[self.id] = {**col.get(self.id, {}), **data} if merge else dict(data)
+        col[self.id] = deep_merge(col.get(self.id, {}), data) if merge else dict(data)
 
     def delete(self):
         self.store.get(self.col, {}).pop(self.id, None)
@@ -146,3 +153,37 @@ def test_meta_marks_the_data_version():
     FirestoreSink(client=fc).write_meta("20260101T000000Z")
     m = fc.store["meta"]["latest"]
     assert m["run_id"] == "20260101T000000Z" and m["updated_at"]
+
+
+def test_daily_snapshots_accumulate():
+    fc = FakeClient()
+    sink = FirestoreSink(client=fc)
+    sink.write("zuk", mk(1))
+    d = fc.store["listings"]["zuk:0"]
+    (day,) = d["snap"]
+    # a second day: add its key next to the first one
+    d["snap"] = {"20200101": {"p": 1, "b": 0, "s": "x"}, **d["snap"]}
+    sink.write("zuk", mk(1))
+    assert set(fc.store["listings"]["zuk:0"]["snap"]) == {"20200101", day}
+    assert fc.store["listings"]["zuk:0"]["snap"][day]["p"] == 100_000.0
+
+
+def test_lots_that_leave_the_site_get_an_outcome():
+    fc = FakeClient()
+    sink = FirestoreSink(client=fc)
+    xs = mk(3)
+    xs[1].status = "Arrematado"
+    sink.write("zuk", xs, complete=True)
+    sink.write("zuk", [xs[0]], complete=True)  # lots 1 and 2 are gone
+    L = fc.store["listings"]
+    assert L["zuk:1"]["outcome"] == "sold" and L["zuk:1"]["final_price"] == 100_001.0
+    assert L["zuk:2"]["outcome"] == "gone" and L["zuk:2"]["ended_at"]
+    assert L["zuk:0"]["ended_at"] is None
+
+
+def test_an_incomplete_run_never_ends_lots():
+    fc = FakeClient()
+    sink = FirestoreSink(client=fc)
+    sink.write("zuk", mk(3), complete=True)
+    sink.write("zuk", mk(1), complete=False)  # e.g. a page cap or a WARN run
+    assert all(fc.store["listings"][f"zuk:{i}"]["ended_at"] is None for i in range(3))

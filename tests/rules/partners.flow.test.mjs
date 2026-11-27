@@ -47,6 +47,12 @@ await step("private group + invite + accept", async () => {
   await bia.acceptGroupInvite(pg, { quota: 1e5, name: "Bia", contact: "bia@x.com" }, g.member_count);
   expect((await ana.group(pg)).member_count === 2, "count not incremented");
 });
+await step("contract terms and agreement", async () => {
+  await ana.updateGroup(pg, { deal: { max_bid: 380000, forum_city: "São Paulo", version: 1 } });
+  await bia.setAgreed(pg, 1); await ana.setAgreed(pg, 1);
+  const ms = await ana.members(pg, true);
+  expect(ms.every((m) => m.agreed_version === 1), "agreements not recorded");
+});
 await step("leader closes both groups", async () => {
   for (const id of [gid, pg]) { const m = await ana.members(id, true); await ana.closeGroup(id, m.map((x) => x.uid)); }
   expect((await bia.memberships()).length === 0, "memberships left behind");

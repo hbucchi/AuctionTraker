@@ -1645,6 +1645,157 @@
     }
    },
    "expect": false
+  },
+  {
+   "name": "risk max passes (0 points)",
+   "strategy": {
+    "ranges": {
+     "risk": {
+      "min": null,
+      "max": 2,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "x",
+    "src": "zuk",
+    "title": "Apartamento",
+    "price": 200000,
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial",
+    "val": {
+     "lo": 180000,
+     "mid": 400000,
+     "hi": 800000,
+     "lo50": 280000,
+     "hi50": 520000,
+     "n": 4,
+     "conf": "alta"
+    }
+   },
+   "expect": true
+  },
+  {
+   "name": "risk max fails (occupied+debts+judicial = 6)",
+   "strategy": {
+    "ranges": {
+     "risk": {
+      "min": null,
+      "max": 5,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "x",
+    "src": "zuk",
+    "title": "Apartamento",
+    "price": 200000,
+    "occ": true,
+    "debts": true,
+    "modn": "judicial",
+    "val": {
+     "lo": 180000,
+     "mid": 400000,
+     "hi": 800000,
+     "lo50": 280000,
+     "hi50": 520000,
+     "n": 4,
+     "conf": "alta"
+    }
+   },
+   "expect": false
+  },
+  {
+   "name": "bid under ceiling passes",
+   "strategy": {
+    "ranges": {
+     "ceilpct": {
+      "min": null,
+      "max": 100,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "x",
+    "src": "zuk",
+    "title": "Apartamento",
+    "price": 200000,
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial",
+    "val": {
+     "lo": 180000,
+     "mid": 400000,
+     "hi": 800000,
+     "lo50": 280000,
+     "hi50": 520000,
+     "n": 4,
+     "conf": "alta"
+    }
+   },
+   "expect": true
+  },
+  {
+   "name": "bid over ceiling for a 60% ROE fails",
+   "strategy": {
+    "ranges": {
+     "ceilpct": {
+      "min": null,
+      "max": 100,
+      "unknown": false
+     },
+     "roe": {
+      "min": 60,
+      "max": null,
+      "unknown": false
+     }
+    }
+   },
+   "item": {
+    "id": "x",
+    "src": "zuk",
+    "title": "Apartamento",
+    "price": 200000,
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial",
+    "val": {
+     "lo": 180000,
+     "mid": 400000,
+     "hi": 800000,
+     "lo50": 280000,
+     "hi50": 520000,
+     "n": 4,
+     "conf": "alta"
+    }
+   },
+   "expect": false
+  },
+  {
+   "name": "ceiling unknown without valuation",
+   "strategy": {
+    "ranges": {
+     "ceilpct": {
+      "min": null,
+      "max": 100,
+      "unknown": true
+     }
+    }
+   },
+   "item": {
+    "id": "x",
+    "src": "zuk",
+    "title": "Apartamento",
+    "price": 200000,
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial"
+   },
+   "expect": true
   }
  ]
 }

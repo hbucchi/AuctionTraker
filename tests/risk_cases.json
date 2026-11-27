@@ -1,0 +1,264 @@
+{
+ "cases": [
+  {
+   "name": "all known, low",
+   "item": {
+    "title": "Apartamento 2 quartos",
+    "price": 200000,
+    "val": {
+     "mid": 300000,
+     "conf": "alta",
+     "n": 4
+    },
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial"
+   },
+   "checklist": null,
+   "expect": {
+    "points": 0,
+    "level": "low",
+    "factors": []
+   }
+  },
+  {
+   "name": "unknowns add up",
+   "item": {
+    "title": "Casa",
+    "price": 100000
+   },
+   "checklist": null,
+   "expect": {
+    "points": 5,
+    "level": "mid",
+    "factors": [
+     {
+      "key": "occ_unknown",
+      "pts": 2,
+      "text": "Ocupação não informada: confira no edital e visite"
+     },
+     {
+      "key": "debts_unknown",
+      "pts": 1,
+      "text": "Não informado quem paga condomínio/IPTU atrasados"
+     },
+     {
+      "key": "modality_unknown",
+      "pts": 1,
+      "text": "Tipo de leilão não identificado"
+     },
+     {
+      "key": "no_value",
+      "pts": 1,
+      "text": "Sem estimativa de valor para comparar"
+     }
+    ]
+   }
+  },
+  {
+   "name": "occupied judicial with debts",
+   "item": {
+    "title": "Apartamento 2 quartos",
+    "price": 200000,
+    "val": {
+     "mid": 300000,
+     "conf": "alta",
+     "n": 4
+    },
+    "occ": true,
+    "debts": true,
+    "modn": "judicial"
+   },
+   "checklist": null,
+   "expect": {
+    "points": 6,
+    "level": "high",
+    "factors": [
+     {
+      "key": "occ",
+      "pts": 3,
+      "text": "Imóvel ocupado: desocupação leva meses e tem custo"
+     },
+     {
+      "key": "debts",
+      "pts": 2,
+      "text": "Dívidas de condomínio/IPTU ficam com o arrematante"
+     },
+     {
+      "key": "judicial",
+      "pts": 1,
+      "text": "Leilão judicial: prazos do processo e risco de recurso"
+     }
+    ]
+   }
+  },
+  {
+   "name": "share in title",
+   "item": {
+    "title": "(25%) Casa em Campinas",
+    "price": 200000,
+    "val": {
+     "mid": 300000,
+     "conf": "alta",
+     "n": 4
+    },
+    "occ": false,
+    "debts": false,
+    "modn": "judicial"
+   },
+   "checklist": null,
+   "expect": {
+    "points": 3,
+    "level": "mid",
+    "factors": [
+     {
+      "key": "judicial",
+      "pts": 1,
+      "text": "Leilão judicial: prazos do processo e risco de recurso"
+     },
+     {
+      "key": "share",
+      "pts": 2,
+      "text": "Venda de fração do imóvel (parte ideal), não do imóvel inteiro"
+     }
+    ]
+   }
+  },
+  {
+   "name": "parte ideal words",
+   "item": {
+    "title": "Parte ideal de 50% de apartamento",
+    "price": 200000,
+    "val": {
+     "mid": 300000,
+     "conf": "alta",
+     "n": 4
+    },
+    "occ": false,
+    "debts": false,
+    "modn": "judicial"
+   },
+   "checklist": null,
+   "expect": {
+    "points": 3,
+    "level": "mid",
+    "factors": [
+     {
+      "key": "judicial",
+      "pts": 1,
+      "text": "Leilão judicial: prazos do processo e risco de recurso"
+     },
+     {
+      "key": "share",
+      "pts": 2,
+      "text": "Venda de fração do imóvel (parte ideal), não do imóvel inteiro"
+     }
+    ]
+   }
+  },
+  {
+   "name": "atypical bid",
+   "item": {
+    "title": "Apartamento 2 quartos",
+    "price": 200000,
+    "val": {
+     "mid": 900000,
+     "flag": "lance_atipico"
+    },
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial"
+   },
+   "checklist": null,
+   "expect": {
+    "points": 2,
+    "level": "low",
+    "factors": [
+     {
+      "key": "atypical",
+      "pts": 2,
+      "text": "Lance muito abaixo do valor estimado: confira área e fração"
+     }
+    ]
+   }
+  },
+  {
+   "name": "low confidence",
+   "item": {
+    "title": "Apartamento 2 quartos",
+    "price": 200000,
+    "val": {
+     "mid": 300000,
+     "conf": "baixa"
+    },
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial"
+   },
+   "checklist": null,
+   "expect": {
+    "points": 1,
+    "level": "low",
+    "factors": [
+     {
+      "key": "low_conf",
+      "pts": 1,
+      "text": "Estimativa de valor com confiança baixa"
+     }
+    ]
+   }
+  },
+  {
+   "name": "checklist clears unknowns",
+   "item": {
+    "title": "Casa",
+    "price": 100000,
+    "modn": "extrajudicial"
+   },
+   "checklist": {
+    "occupancy": true,
+    "debts": true
+   },
+   "expect": {
+    "points": 1,
+    "level": "low",
+    "factors": [
+     {
+      "key": "no_value",
+      "pts": 1,
+      "text": "Sem estimativa de valor para comparar"
+     }
+    ]
+   }
+  },
+  {
+   "name": "checklist lawsuit found",
+   "item": {
+    "title": "Apartamento 2 quartos",
+    "price": 200000,
+    "val": {
+     "mid": 300000,
+     "conf": "alta",
+     "n": 4
+    },
+    "occ": false,
+    "debts": false,
+    "modn": "extrajudicial"
+   },
+   "checklist": {
+    "lawsuits_result": "found"
+   },
+   "expect": {
+    "points": 3,
+    "level": "mid",
+    "factors": [
+     {
+      "key": "lawsuit",
+      "pts": 3,
+      "text": "Você encontrou ação judicial ligada ao imóvel"
+     }
+    ]
+   }
+  }
+ ]
+}

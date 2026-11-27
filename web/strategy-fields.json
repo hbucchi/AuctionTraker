@@ -335,6 +335,24 @@
       "unit": "%",
       "step": 5,
       "help": "Probabilidade de o imóvel valer o suficiente para cobrir lance e todos os custos, medida pelos erros reais do modelo em avaliações que ele não tinha visto."
+    },
+    {
+      "key": "ceilpct",
+      "attr": "ceilpct",
+      "group": "retorno",
+      "label": "Lance em % do lance máximo",
+      "unit": "%",
+      "step": 5,
+      "help": "100% = o lance já está no teto para o ROE mínimo desta estratégia (20% se não houver). Abaixo de 100% sobra margem."
+    },
+    {
+      "key": "risk",
+      "attr": "risk",
+      "group": "edital",
+      "label": "Pontos de atenção",
+      "unit": "pontos",
+      "step": 1,
+      "help": "Soma de fatores de risco: ocupado (3), dívidas com o arrematante (2), fração do imóvel (2), judicial (1)… Informação ausente também conta. 0–2 poucos, 3–5 atenção, 6+ muitos."
     }
   ],
   "toggles": [

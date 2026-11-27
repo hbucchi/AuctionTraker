@@ -31,7 +31,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .roe import chances, roe_range
+from .risk import risk
+from .roe import _half_up, ceilings, chances, roe_range
 
 SPEC_PATH = Path(__file__).resolve().parents[1] / "web" / "strategy-fields.json"
 DAY = 86400.0
@@ -75,6 +76,14 @@ def attr_value(item: dict, attr: str, now: float, strategy: dict | None = None) 
     if attr == "chance":
         c = chances(item, spec().get("reference", {}).get("residual_quantiles"), (strategy or {}).get("roe_assumptions"))
         return None if c is None else c["profit"]
+    if attr == "risk":
+        return risk(item)["points"]
+    if attr == "ceilpct":
+        # bid as % of the maximum bid for the strategy's minimum ROE (20% if none)
+        rr = ((strategy or {}).get("ranges") or {}).get("roe") or {}
+        t = rr.get("min") if rr.get("min") is not None else 20
+        c = ceilings(item, None, (strategy or {}).get("roe_assumptions"), t)
+        return None if not c or not c["central"] else _half_up(1000 * item["price"] / c["central"]) / 10
     if attr in ("roe", "roelo"):
         # computed with the strategy's own cost assumptions (roe.py)
         r = roe_range(item, (strategy or {}).get("roe_assumptions"))
