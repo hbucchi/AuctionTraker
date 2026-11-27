@@ -24,6 +24,8 @@ service cloud.firestore {
     match /summaries/{doc} { allow read: if signedIn(); allow write: if false; }
     match /listings/{doc}  { allow read: if signedIn(); allow write: if false; }
     match /runs/{doc}      { allow read: if signedIn(); allow write: if false; }
+    // data version stamp: lets browsers reuse their cached copy of summaries
+    match /meta/{doc}      { allow read: if signedIn(); allow write: if false; }
 
     // each user's own strategies and checklists: only they can read/write
     match /users/{uid} {

@@ -138,6 +138,7 @@ body::before {
 .stat .k { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .stat .v { font: 600 32px/1.1 var(--font-display); margin-top: 6px; font-variant-numeric: lining-nums tabular-nums; }
 .stat .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+@media (max-width: 640px) { .stat .v { font-size: 25px; } .stat { padding: 14px; } }
 
 .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .toolbar .result-count { font-weight: 600; }
@@ -203,6 +204,12 @@ body::before {
 .map-pop .go { justify-self: start; text-decoration: none; }
 .gm-pop { display: grid; gap: 6px; font: 13px/1.4 var(--font-body); color: #1d1b18; max-width: 280px; }
 .gm-pop a { color: #86662b; }
+.map-wrap { position: relative; }
+.map-key { position: absolute; z-index: 4; top: 12px; left: 12px; max-width: min(300px, calc(100% - 24px)); display: grid; gap: 5px; font-size: 12px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; box-shadow: var(--shadow); }
+.map-key b { font: 600 15px/1.2 var(--font-display); }
+.map-key i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; border: 1.5px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.map-key i.grp { width: 20px; height: 20px; background: var(--ink); color: var(--surface); font: 600 9px/17px var(--font-body); font-style: normal; text-align: center; border: 1.5px solid var(--gold); box-shadow: none; vertical-align: middle; }
+@media (max-width: 640px) { .map-key { font-size: 11px; padding: 8px 10px; } .map-key span:last-child { display: none; } }
 .map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); align-items: center; }
 .map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
 
@@ -334,7 +341,7 @@ details.how[open] { display: grid; gap: 8px; }
 .lf-head h2 { font: 600 24px/1.1 var(--font-display); margin: 0; }
 .lf-x { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
 .lf-x:hover { color: var(--ink); }
-.lf section { display: grid; gap: 10px; }
+.lf section, .wl section { display: grid; gap: 10px; }
 .lf section + section { border-top: 1px solid var(--line); padding-top: 16px; }
 .lf h3 { font: 600 18px/1.2 var(--font-display); margin: 0; }
 .lf-demo { position: relative; padding-top: 22px; }
@@ -357,6 +364,20 @@ details.how[open] { display: grid; gap: 8px; }
 .hint { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 4px; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--muted); font: 600 10px/1 var(--font-body); cursor: pointer; vertical-align: 1px; padding: 0; }
 .hint:hover { color: var(--ink); border-color: var(--gold); }
 @media (max-width: 640px) { .lf-btn .lbl { display: none; } .lf-btn { padding: 10px 12px; } }
+
+/* ---- welcome (first visit) ---- */
+dialog.welcome { width: min(560px, calc(100vw - 32px)); max-height: min(88vh, 860px); padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--ink); box-shadow: 0 30px 80px -20px rgb(40 30 10 / .45); }
+dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blur(2px); }
+.wl { display: grid; gap: 18px; padding: 26px 26px 22px; }
+.wl-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.wl h2 { font: 600 32px/1.1 var(--font-display); margin: 4px 0 0; }
+.wl > p { margin: 0; color: var(--muted); }
+.wl section { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+.wl h3 { font: 600 19px/1.2 var(--font-display); margin: 0; }
+.wl .map-dots { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+.wl .map-dots i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.wl-foot { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 16px; }
+.wl-foot small { color: var(--muted); }
 </style>
 <!-- preview:strip-below -->
 </head>
@@ -462,7 +483,15 @@ details.how[open] { display: grid; gap: 8px; }
     <div class="list" id="list"></div>
     <div class="map-wrap" id="mapWrap" hidden>
       <div class="map" id="map"></div>
-      <div class="map-legend"><span><i style="background:var(--good)"></i>ROE ≥ 20%</span><span><i style="background:var(--warn)"></i>0–20%</span><span><i style="background:var(--bad)"></i>prejuízo</span><span><i style="background:var(--muted)"></i>sem avaliação</span><span id="mapNote"></span></div>
+      <div class="map-key" aria-label="Legenda do mapa">
+        <b>Cor do ponto = retorno estimado (ROE)</b>
+        <span><i style="background:var(--good)"></i>Verde: ROE de 20% ou mais</span>
+        <span><i style="background:var(--warn)"></i>Âmbar: ROE entre 0% e 20%</span>
+        <span><i style="background:var(--bad)"></i>Vermelho: prejuízo estimado</span>
+        <span><i style="background:var(--muted)"></i>Cinza: sem estimativa de valor</span>
+        <span><i class="grp">12</i>Número: grupo de imóveis próximos. Clique ou aproxime para separar.</span>
+      </div>
+      <div class="map-legend"><span id="mapNote"></span></div>
     </div>
     <button class="btn more" id="more" type="button" hidden>Mostrar mais</button>
     <p class="notice" id="footnote"></p>
@@ -506,6 +535,20 @@ details.how[open] { display: grid; gap: 8px; }
   </div>
   <button class="lf-btn" id="legendBtn" type="button" aria-expanded="false" aria-controls="legendPanel"><span class="q">?</span><span class="lbl">Como ler as barras</span></button>
 </aside>
+
+<dialog class="welcome" id="welcome" aria-labelledby="wlTitle">
+  <div class="wl">
+    <div><div class="wl-eyebrow">Bem-vindo</div><h2 id="wlTitle">Como ler cada oportunidade</h2></div>
+    <p>Todo imóvel traz duas barras: quanto ele deve valer e quanto você pode ganhar. São <b>estimativas</b> de um modelo com dados públicos (FipeZAP, IBGE, avaliações de leilão), não laudos.</p>
+    <div id="wlBars"></div>
+    <section>
+      <h3>No mapa</h3>
+      <div class="map-dots"><span><i style="background:var(--good)"></i>ROE ≥ 20%</span><span><i style="background:var(--warn)"></i>0 a 20%</span><span><i style="background:var(--bad)"></i>prejuízo</span><span><i style="background:var(--muted)"></i>sem estimativa</span></div>
+      <p class="help" style="margin:0">Círculos escuros com número são grupos de imóveis próximos: clique para aproximar.</p>
+    </section>
+    <div class="wl-foot"><small>Reveja quando quiser no botão “? Como ler as barras”.</small><button class="btn btn-primary" id="welcomeOk" type="button">Entendi</button></div>
+  </div>
+</dialog>
 <div class="single" id="strategiesView" hidden></div>
 <div class="single" id="portfolioView" hidden></div>
 
@@ -667,7 +710,16 @@ async function googleMap(pts) {
       loadScript("https://unpkg.com/@googlemaps/markerclusterer@2.5.3/dist/index.min.js"),
     ]);
     const map = new google.maps.Map($("map"), { center: { lat: -14.5, lng: -51 }, zoom: 4, mapTypeControl: false, streetViewControl: false, gestureHandling: "greedy" });
-    gm = { map, info: new google.maps.InfoWindow(), markers: [], cluster: new markerClusterer.MarkerClusterer({ map }) };
+    // Groups of nearby pins: a neutral dark circle with the count. The library's
+    // default blue/red group colours would read as good/bad deals; they're not.
+    const renderer = {
+      render: ({ count, position }) => new google.maps.Marker({
+        position, zIndex: 1000 + count, title: `${count} imóveis próximos: clique para aproximar`,
+        label: { text: String(count), color: "#fffdf8", fontSize: "12px", fontWeight: "600" },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: Math.min(24, 12 + 4 * Math.log10(count)), fillColor: "#1d1b18", fillOpacity: 0.85, strokeColor: "#b8964f", strokeWeight: 2 },
+      }),
+    };
+    gm = { map, info: new google.maps.InfoWindow(), markers: [], cluster: new markerClusterer.MarkerClusterer({ map, renderer }) };
   }
   gm.cluster.clearMarkers();
   gm.markers.forEach((m) => m.setMap(null));
@@ -831,6 +883,21 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("lege
 document.addEventListener("click", (e) => {
   if (!$("legendPanel").hidden && !e.target.closest("#legend") && !e.target.closest("[data-legend]")) openLegend(false);
 });
+
+/* ---------- welcome popup (first visit on this device) ---------- */
+function showWelcome() {
+  let seen = false;
+  try { seen = localStorage.getItem("at.welcomeSeen") === "1"; } catch { /* storage blocked */ }
+  const dlg = $("welcome");
+  if (seen || !dlg.showModal) return;
+  // same explanations as the floating legend, so they never drift apart
+  $("wlBars").innerHTML = [...$("legendPanel").querySelectorAll("section")].map((sec) => sec.outerHTML).join("");
+  dlg.showModal();
+  dlg.scrollTop = 0;  // the browser scrolls to the focused button; start at the title
+}
+$("welcome").addEventListener("close", () => { try { localStorage.setItem("at.welcomeSeen", "1"); } catch { /* storage blocked */ } });
+$("welcomeOk").addEventListener("click", () => $("welcome").close());
+$("welcome").addEventListener("click", (e) => { if (e.target === $("welcome")) $("welcome").close(); });  // click outside
 
 /* ---------- ficha (detail sheet) ---------- */
 const simState = new Map();   // per lot: resale value and cost sliders in the simulator
@@ -1581,6 +1648,7 @@ function start(items, updatedAt, note) {
   restoreFilters(USER.lastFilters);
   updateNewBadge();
   showTab("lots");
+  showWelcome();
 }
 
 function showGate(html) {
@@ -1672,6 +1740,25 @@ async function startPreview() {
   }
 }
 
+/* The listings change once a day. meta/latest says when; if this browser
+   already holds that version, read it from the local cache (0 downloads,
+   1 billed read for the stamp) instead of ~8 documents from the server. */
+async function loadSummaries(fs, db) {
+  const col = fs.collection(db, "summaries");
+  let version = null, held = null;
+  try { const m = await fs.getDoc(fs.doc(db, "meta", "latest")); if (m.exists()) version = m.data().updated_at || null; } catch { /* no stamp yet */ }
+  try { held = localStorage.getItem("at.dataVersion"); } catch { /* storage blocked */ }
+  if (version && held === version) {
+    try {
+      const snap = await fs.getDocsFromCache(col);
+      if (!snap.empty) return { snap, fromCache: true };
+    } catch { /* cache unavailable: fall through to the server */ }
+  }
+  const snap = await fs.getDocs(col);
+  if (version) { try { localStorage.setItem("at.dataVersion", version); } catch { /* storage blocked */ } }
+  return { snap, fromCache: false };
+}
+
 async function startLive(config) {
   showImages = true;
   await loadSpec();
@@ -1681,7 +1768,11 @@ async function startLive(config) {
   ]);
   const app = initializeApp(config);
   const a = auth.getAuth(app);
-  const db = fs.getFirestore(app);
+  // Keep a copy of the data in the browser (IndexedDB), so a repeat visit on
+  // the same day doesn't download the listings again (see loadSummaries).
+  let db;
+  try { db = fs.initializeFirestore(app, { localCache: fs.persistentLocalCache() }); }
+  catch { db = fs.getFirestore(app); }
   let loaded = false, loadingFor = null;
 
   auth.onAuthStateChanged(a, async (user) => {
@@ -1705,7 +1796,7 @@ async function startLive(config) {
     try {
       store = firestoreStore(fs, db, user);
       USER.email = user.email;
-      const [snap, mine] = await Promise.all([fs.getDocs(fs.collection(db, "summaries")), store.load()]);
+      const [{ snap, fromCache }, mine] = await Promise.all([loadSummaries(fs, db), store.load()]);
       Object.assign(USER, mine);
       let items = [], updated = null;
       snap.forEach((doc) => {
@@ -1718,7 +1809,7 @@ async function startLive(config) {
         return;
       }
       loaded = true;
-      start(items, updated, `${snap.size} documentos lidos do Firestore.`);
+      start(items, updated, fromCache ? "Dados do dia já salvos neste aparelho: nada foi baixado de novo." : `Dados atualizados (${snap.size} documentos).`);
     } catch (e) {
       showGate(`<h1>Sem acesso aos dados</h1><p class="error">${esc(e.message)}</p><p>Confira as regras do Firestore (firestore.rules).</p>`);
     } finally {

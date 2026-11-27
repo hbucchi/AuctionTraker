@@ -111,6 +111,7 @@ def cmd_scrape(args: argparse.Namespace) -> int:
     (data_dir / "latest_report.json").write_text(text)
     if fs is not None:
         fs.write_report(run_id, summary)
+        fs.write_meta(run_id)  # tells browsers their cached copy is out of date
     print(f"\nwrote {data_dir / run_id}")
     return 1 if any(r.status == "FAIL" for r in reports) else 0
 
