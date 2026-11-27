@@ -10,6 +10,11 @@ Layout:
                        with first_seen_at / last_seen_at, for detail views and
                        history later.
   runs/{run_id}        the health report of each run.
+  meta/latest          {run_id, updated_at}: one tiny document the web app reads
+                       first. If its updated_at matches the copy the browser
+                       already holds, the summaries come from the browser's
+                       cache instead of being downloaded again (1 read
+                       instead of ~8 per visit; data changes once a day).
 
 Security rules (firestore.rules) let signed-in users read and nobody write
 from the browser. This sink uses a service account, which bypasses the rules.
@@ -92,6 +97,11 @@ class FirestoreSink:
 
     def write_report(self, run_id: str, report: dict[str, Any]) -> None:
         self.db.collection("runs").document(run_id).set(report)
+
+    def write_meta(self, run_id: str) -> None:
+        """Mark a new data version, after all summaries of the run are written."""
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        self.db.collection("meta").document("latest").set({"run_id": run_id, "updated_at": now})
 
 
 def chunk_by_size(items: list[dict[str, Any]], max_bytes: int) -> list[list[dict[str, Any]]]:

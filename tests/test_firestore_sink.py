@@ -139,3 +139,10 @@ def test_chunk_by_size():
     items = [{"x": "a" * 100}] * 10
     parts = chunk_by_size(items, 350)
     assert sum(len(p) for p in parts) == 10 and all(len(p) <= 3 for p in parts)
+
+
+def test_meta_marks_the_data_version():
+    fc = FakeClient()
+    FirestoreSink(client=fc).write_meta("20260101T000000Z")
+    m = fc.store["meta"]["latest"]
+    assert m["run_id"] == "20260101T000000Z" and m["updated_at"]
