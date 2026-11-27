@@ -129,6 +129,21 @@ def cmd_alerts(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_portfolio(args: argparse.Namespace) -> int:
+    """Value users' own properties and count interested users (daily job)."""
+    from . import portfolio
+    from .storage.firestore import FirestoreSink
+    from .summary import load_run
+
+    db = FirestoreSink(project_id=args.project).db
+    runs = sorted(p for p in Path(args.data).glob("2*") if p.is_dir())
+    comps = load_run(runs[-1]) if runs else []  # today's lots give the auction comparables
+    stats = portfolio.run(db, comps)
+    print(f"portfolio: {stats['properties']} properties of {stats['users']} users, "
+          f"{stats['valued']} valued, {stats['offered']} offered for matching")
+    return 0
+
+
 def cmd_export_web(args: argparse.Namespace) -> int:
     """Concatenate a run's JSONL files into the compact JSON the web app reads."""
     from .summary import load_run, to_summary
@@ -160,6 +175,9 @@ def main(argv: list[str] | None = None) -> int:
     sp.add_argument("--project", default="auctiontraker", help="Firebase project id")
     ap_al = sub.add_parser("alerts", help="email users about listings that newly match their strategies")
     ap_al.add_argument("--project", default="auctiontraker", help="Firebase project id")
+    pp = sub.add_parser("portfolio", help="value users' own properties and count interested users")
+    pp.add_argument("--project", default="auctiontraker", help="Firebase project id")
+    pp.add_argument("--data", default="data", help="directory with scrape runs (comparables)")
     ep = sub.add_parser("export-web", help="build the web app's data file from a run")
     ep.add_argument("run_dir")
     ep.add_argument("out", nargs="?", default="web/listings.json")
@@ -177,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_export_web(args)
     if args.cmd == "alerts":
         return cmd_alerts(args)
+    if args.cmd == "portfolio":
+        return cmd_portfolio(args)
     return cmd_scrape(args)
 
 

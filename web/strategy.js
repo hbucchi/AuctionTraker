@@ -1,7 +1,7 @@
 // Strategy matching — the JavaScript twin of auction_tracker/strategy.py.
 // Both are tested against tests/strategy_cases.json; change them together.
 
-import { roeRange } from "./roe.js";
+import { roeRange, chances } from "./roe.js";
 
 const DAY_S = 86400; // seconds
 
@@ -19,8 +19,12 @@ export function isEnded(item, now) {
   return end != null && end < now && !proposals;
 }
 
-function attrValue(item, attr, now, st) {
+function attrValue(spec, item, attr, now, st) {
   if (attr === "days") { const t = nextDeadline(item, now); return t == null ? null : (t - now) / DAY_S; }
+  if (attr === "chance") {
+    const c = chances(item, spec.reference?.residual_quantiles, (st || {}).roe_assumptions);
+    return c == null ? null : c.profit;
+  }
   if (attr === "roe" || attr === "roelo") {
     // computed with the strategy's own cost assumptions (roe.js)
     const r = roeRange(item, (st || {}).roe_assumptions);
@@ -52,7 +56,7 @@ export function matchesStrategy(spec, st, item, now = Date.now() / 1000) {
   for (const r of spec.ranges) {
     const cfg = (st.ranges || {})[r.key];
     if (!rangeActive(cfg)) continue;
-    const ok = rangeOk(attrValue(item, r.attr, now, st), cfg);
+    const ok = rangeOk(attrValue(spec, item, r.attr, now, st), cfg);
     if (r.city) city.push(ok); else if (!ok) return false;
   }
   for (const t of spec.toggles) {

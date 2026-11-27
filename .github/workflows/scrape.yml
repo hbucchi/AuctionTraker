@@ -61,6 +61,10 @@ jobs:
           ALERT_FROM: ${{ vars.ALERT_FROM }}
         run: python -m auction_tracker alerts --project auctiontraker
 
+      - name: Value users' portfolios
+        if: always() && steps.creds.outcome == 'success'
+        run: python -m auction_tracker portfolio --project auctiontraker
+
       - name: Keep the run report
         if: always()
         uses: actions/upload-artifact@v4

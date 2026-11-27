@@ -112,6 +112,32 @@ capita above the national average.
   and for addresses geocoded with the optional `GOOGLE_GEOCODING_KEY` secret;
   the rest sit at their city's center.
 
+## Users and portfolios (Firestore)
+
+```
+users/{uid}                 email, name, created_at, last_login_at
+                            strategies[]        saved searches (see strategy-fields.json)
+                            last_filters        the quick filters last used
+                            checklists{}        due-diligence progress per lot
+                            interest{}          what the user looks for, derived daily from
+                                                active strategies: ufs, cities, kinds,
+                                                modalities, price_min/max, roe_min
+                            interest_ufs[], interest_kinds[], interest_cities[]
+                                                flat copies for queries, e.g.
+                                                users where interest_ufs array-contains "SP"
+users/{uid}/portfolio/{id}  a property the user owns: kind, address, city, uf, area,
+                            bedrooms, purchase_price/costs, renovation_spent, status,
+                            monthly_rent, asking_price, for_sale, allow_matching
+                            + valuation, gain_pct, interested_count (daily job)
+alert_state/{uid}           alert job state (read-only for the user)
+```
+
+Only the owner can read or write their user document and portfolio. Matching
+is opt-in: when a property is marked for sale **and** "permitir match", the
+daily job (`python -m auction_tracker portfolio`) counts other users whose
+active strategies fit it. The owner sees only that count; no one sees anyone
+else's identity, filters or properties.
+
 ## The data model
 
 Every site maps into `auction_tracker.models.Listing`. Its main fields:
