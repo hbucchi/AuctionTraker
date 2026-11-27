@@ -42,6 +42,158 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ------------------------------------------------------------ partners
+    // Nobody sees who anybody is until both agree. Three layers:
+    //  partner_cards/{uid}  anonymous preferences, opt-in; only investors who
+    //                       opted in themselves can browse them (reciprocity).
+    //                       Fixed field list, so no name or contact can be put here.
+    //  connections/{a_b}    an invite from one to the other; only the invitee
+    //                       can accept. A declined invite stays, so it can't be resent.
+    //  contacts/{uid}       name and how to reach you: readable only by you and by
+    //                       people with an ACCEPTED connection to you.
+    // Groups ("guilds"): groups/{gid} + groups/{gid}/members/{uid}. The leader sets
+    // the quota range and the member limit and approves applications; invitees
+    // accept invites themselves. Members see each other only once approved.
+
+    function pair(a, b) { return a < b ? a + '_' + b : b + '_' + a; }
+    function hasCard(uid) { return exists(/databases/$(database)/documents/partner_cards/$(uid)); }
+    function connected(a, b) {
+      return exists(/databases/$(database)/documents/connections/$(pair(a, b)))
+        && get(/databases/$(database)/documents/connections/$(pair(a, b))).data.status == 'accepted';
+    }
+
+    match /partner_cards/{uid} {
+      allow read: if signedIn() && hasCard(request.auth.uid);
+      allow delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['ufs', 'kinds', 'modalities', 'price_min', 'price_max', 'ticket_min', 'ticket_max', 'goal', 'updated_at'])
+        && request.resource.data.ufs is list && request.resource.data.ufs.size() <= 27
+        && request.resource.data.kinds is list && request.resource.data.kinds.size() <= 10
+        && request.resource.data.modalities is list && request.resource.data.modalities.size() <= 5;
+    }
+
+    match /contacts/{uid} {
+      allow read: if isOwner(uid) || (signedIn() && connected(uid, request.auth.uid));
+      allow write: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'note', 'updated_at']);
+    }
+
+    match /connections/{cid} {
+      allow read: if signedIn() && request.auth.uid in resource.data.users;
+      // invite: both sides must have opted in; one connection per pair
+      allow create: if signedIn()
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to != request.auth.uid
+        && cid == pair(request.resource.data.from, request.resource.data.to)
+        && request.resource.data.users.hasAll([request.resource.data.from, request.resource.data.to])
+        && request.resource.data.users.size() == 2
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(['users', 'from', 'to', 'status', 'note', 'created_at', 'updated_at'])
+        && (!('note' in request.resource.data) || request.resource.data.note.size() <= 280)
+        && hasCard(request.auth.uid) && hasCard(request.resource.data.to);
+      // only the invitee answers
+      allow update: if signedIn() && resource.data.to == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['accepted', 'declined']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updated_at']);
+      // cancel a pending invite (sender), refuse/clear it (invitee), or disconnect (either)
+      allow delete: if signedIn() && (
+        (resource.data.status == 'accepted' && request.auth.uid in resource.data.users)
+        || (resource.data.status == 'pending' && request.auth.uid in resource.data.users)
+        || (resource.data.status == 'declined' && resource.data.to == request.auth.uid));
+    }
+
+    function groupPath(gid) { return /databases/$(database)/documents/groups/$(gid); }
+    function memberPath(gid, uid) { return /databases/$(database)/documents/groups/$(gid)/members/$(uid); }
+    function isLeader(gid) { return signedIn() && get(groupPath(gid)).data.leader == request.auth.uid; }
+    function isMember(gid) {
+      return signedIn() && exists(memberPath(gid, request.auth.uid))
+        && get(memberPath(gid, request.auth.uid)).data.status == 'approved';
+    }
+    function quotaOk(q, g) { return q is number && q >= g.quota_min && q <= g.quota_max; }
+    function validGroup(g) {
+      return g.keys().hasOnly(['name', 'description', 'visibility', 'leader', 'quota_min', 'quota_max', 'max_members', 'member_count', 'target_title', 'target_url', 'target_price', 'created_at', 'updated_at'])
+        && g.name is string && g.name.size() >= 3 && g.name.size() <= 80
+        && g.visibility in ['public', 'private']
+        && g.quota_min is number && g.quota_max is number && g.quota_min > 0 && g.quota_min <= g.quota_max
+        && g.max_members is int && g.max_members >= 2 && g.max_members <= 50
+        && g.member_count is int && g.member_count >= 1 && g.member_count <= g.max_members;
+    }
+
+    match /groups/{gid} {
+      allow read: if signedIn() && (resource.data.visibility == 'public'
+        || resource.data.leader == request.auth.uid
+        || exists(memberPath(gid, request.auth.uid)));
+      allow create: if signedIn() && request.resource.data.leader == request.auth.uid
+        && request.resource.data.member_count == 1 && validGroup(request.resource.data)
+        && getAfter(memberPath(gid, request.auth.uid)).data.role == 'leader';
+      allow update: if signedIn() && validGroup(request.resource.data)
+        && request.resource.data.leader == resource.data.leader && (
+          // the leader edits the group (and keeps member_count in step when approving/removing)
+          resource.data.leader == request.auth.uid
+          // an invitee joins: +1, only if there is room, and only with their own acceptance
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count', 'updated_at'])
+              && request.resource.data.member_count == resource.data.member_count + 1
+              && get(memberPath(gid, request.auth.uid)).data.status == 'invited'
+              && getAfter(memberPath(gid, request.auth.uid)).data.status == 'approved')
+          // an approved member leaves: -1, together with deleting their membership
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count', 'updated_at'])
+              && request.resource.data.member_count == resource.data.member_count - 1
+              && get(memberPath(gid, request.auth.uid)).data.status == 'approved'
+              && !existsAfter(memberPath(gid, request.auth.uid))));
+      allow delete: if isLeader(gid);
+
+      match /members/{uid} {
+        // yourself; the leader (sees applicants, who chose to apply); approved
+        // members see only other approved members
+        allow read: if isOwner(uid) || isLeader(gid)
+          || (isMember(gid) && resource.data.status == 'approved');
+        allow create: if signedIn() && request.resource.data.uid == uid
+          && request.resource.data.keys().hasOnly(['uid', 'status', 'role', 'quota', 'name', 'contact', 'created_at', 'updated_at']) && (
+          // the leader's own seat, written together with the group
+          (isOwner(uid) && request.resource.data.role == 'leader' && request.resource.data.status == 'approved'
+            && getAfter(groupPath(gid)).data.leader == uid
+            && quotaOk(request.resource.data.quota, getAfter(groupPath(gid)).data))
+          // apply to a public group with a quota inside the leader's range
+          || (isOwner(uid) && request.resource.data.role == 'member' && request.resource.data.status == 'applied'
+            && get(groupPath(gid)).data.visibility == 'public'
+            && hasCard(uid)
+            && quotaOk(request.resource.data.quota, get(groupPath(gid)).data))
+          // the leader invites someone who opted in or is already connected to them
+          || (isLeader(gid) && !isOwner(uid) && request.resource.data.role == 'member'
+            && request.resource.data.status == 'invited'
+            && request.resource.data.quota == null && request.resource.data.name == null && request.resource.data.contact == null
+            && (hasCard(uid) || connected(uid, request.auth.uid))));
+        allow update: if signedIn() && request.resource.data.uid == resource.data.uid
+          && request.resource.data.role == resource.data.role && (
+          // the leader approves an application, if there is room (member_count +1 in the same write)
+          (isLeader(gid) && resource.data.status == 'applied' && request.resource.data.status == 'approved'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updated_at'])
+            && getAfter(groupPath(gid)).data.member_count == get(groupPath(gid)).data.member_count + 1
+            && getAfter(groupPath(gid)).data.member_count <= get(groupPath(gid)).data.max_members)
+          // an invitee accepts with their quota and contact
+          || (isOwner(uid) && resource.data.status == 'invited' && request.resource.data.status == 'approved'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'quota', 'name', 'contact', 'updated_at'])
+            && quotaOk(request.resource.data.quota, get(groupPath(gid)).data)
+            && getAfter(groupPath(gid)).data.member_count == get(groupPath(gid)).data.member_count + 1)
+          // a member updates their own quota or contact
+          || (isOwner(uid) && request.resource.data.status == resource.data.status
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quota', 'name', 'contact', 'updated_at'])
+            && quotaOk(request.resource.data.quota, get(groupPath(gid)).data)));
+        // leave / withdraw / decline (not the leader: they close the group instead);
+        // the leader removes anyone
+        allow delete: if (isOwner(uid) && resource.data.role != 'leader')
+          || (isLeader(gid) && !isOwner(uid))
+          // closing the group: the leader deletes it and every membership in one write
+          || (isLeader(gid) && !existsAfter(groupPath(gid)));
+      }
+    }
+
+    // "my groups and invites": a collection-group query on members by uid
+    match /{path=**}/members/{uid} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
     // everything else: closed
     match /{document=**} {
       allow read, write: if false;

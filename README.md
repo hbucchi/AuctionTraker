@@ -138,6 +138,30 @@ daily job (`python -m auction_tracker portfolio`) counts other users whose
 active strategies fit it. The owner sees only that count; no one sees anyone
 else's identity, filters or properties.
 
+## Partners and investment groups
+
+The **Parceiros** tab matches investors with similar preferences and lets them
+form groups to bid on a property together. Nobody sees who anybody is until
+both sides agree; `firestore.rules` enforces this, not just the screen.
+
+| Collection | Who can read | Notes |
+|---|---|---|
+| `partner_cards/{uid}` | investors who opted in themselves | anonymous: states, types, price range, ticket, goal. A fixed field list, so no name/contact can be stored. Shown under a pseudonym (`handle()` in `web/partners.js`) |
+| `connections/{a_b}` | the two people | invite → only the invitee accepts or declines; a declined invite can't be resent |
+| `contacts/{uid}` | you + accepted connections | name, e-mail, WhatsApp |
+| `groups/{gid}` | public: anyone signed in; private: leader and invitees/members | leader sets quota min/max and the member limit |
+| `groups/{gid}/members/{uid}` | yourself; the leader (sees applicants); approved members see approved members | quotas must sit in the leader's range; approvals and accepted invites can't exceed the member limit |
+
+Compatibility (`similarity()` in `web/partners.js`) is a 0–100 score from
+shared states and property types (Jaccard index), overlap of price and ticket
+ranges, and auction type; criteria either side left open are skipped.
+
+Tests: `node tests/partners.test.mjs` (matching) and, with Java installed,
+`cd tests/rules && npm install && npm test`: 57 rule checks plus the app's own
+partner code run end to end on the Firestore emulator. The deploy workflow
+runs them before every deploy. In the preview, the tab runs on sample
+investors (labelled "exemplo") kept in the browser.
+
 ## The data model
 
 Every site maps into `auction_tracker.models.Listing`. Its main fields:
