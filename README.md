@@ -156,6 +156,14 @@ Compatibility (`similarity()` in `web/partners.js`) is a 0–100 score from
 shared states and property types (Jaccard index), overlap of price and ticket
 ranges, and auction type; criteria either side left open are skipped.
 
+**Opportunities in common.** For each pair (you and a potential partner) the
+app counts the open lots that fit both anonymous profiles (`fitsCard`: state,
+property type, auction type, price range) and how many fit the two budgets
+together (bid ≤ sum of both maximum tickets). Partners are ranked by that
+count (top 10), and each group shows the lots that fit every member's profile
+and how many fit the amount committed. It runs in the browser on the listings
+already loaded: no extra reads, nothing more shared.
+
 Tests: `node tests/partners.test.mjs` (matching) and, with Java installed,
 `cd tests/rules && npm install && npm test`: 57 rule checks plus the app's own
 partner code run end to end on the Firestore emulator. The deploy workflow

@@ -416,6 +416,20 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
 .pa-sub { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
 .pa-sub h4 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .pa-row { display: flex; gap: 8px 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.pa-summary { margin: 0; font-size: 16px; }
+.pa-summary b { font: 600 19px var(--font-display); }
+.pa-shared { font-size: 13px; display: flex; gap: 4px 8px; flex-wrap: wrap; align-items: baseline; }
+.pa-shared b { color: var(--good); }
+.pa-opps { list-style: none; margin: 4px 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.pa-opps li { display: grid; gap: 1px; border-left: 2px solid var(--line); padding-left: 10px; }
+.pa-opps a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.pa-opps a:hover { color: var(--accent); text-decoration: underline; }
+.pa-opps span { color: var(--muted); }
+.pa-avatar { position: relative; }
+.pa-card { align-items: start; }
+.pa-act { align-self: center; }
+.pa-body > .btn { justify-self: start; }
+.pa-rank { position: absolute; top: -6px; left: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 600 11px/20px var(--font-body); text-align: center; border: 1.5px solid var(--gold); }
 .check > span { display: inline; }
 .field > label.check { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; color: var(--ink); align-items: flex-start; }
 .field > label.check input { margin-top: 3px; }
@@ -598,7 +612,7 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
 <script src="firebase-config.js"></script>
 <script type="module">
 import { matchesStrategy, nextDeadline } from "./strategy.js";
-import { handle, similarity, cardFromStrategies, pairId, quotaOk, GOALS } from "./partners.js";
+import { handle, similarity, cardFromStrategies, pairId, quotaOk, GOALS, sharedListings, rankByShared, sharedSummary, combinedTicket } from "./partners.js";
 import { roeRange, roeAssumptions, flip, chances, valueNeeded } from "./roe.js";
 
 const FIREBASE_SDK = "13.4.0";
@@ -627,6 +641,7 @@ let shown = PAGE;
 let showImages = false;
 let store = null;               // persistence: Firestore (live) or this browser (preview)
 let partnersWired = false;
+let sharedView = null;          // {label, ids}: the list narrowed to opportunities shared with a partner or group
 let USER = { strategies: [], checklists: {}, alertState: {}, email: null, lastFilters: null, portfolio: [] };
 let activeStrategy = null;      // strategy applied to the list
 let editing = null;             // strategy being edited (a copy)
@@ -1202,6 +1217,7 @@ function render() {
   readControls();
   let rows = ALL;
   if (activeStrategy) rows = rows.filter((x) => matchesStrategy(SPEC, activeStrategy, x, NOW_S));
+  if (sharedView) rows = rows.filter((x) => sharedView.ids.has(x.id));
   rows = rows.filter(quickMatch).sort(SORTS[state.sort]);
   const fresh = newIds();
   const week = rows.filter((x) => x.nextT >= NOW && x.nextT - NOW < 7 * DAY).length;
@@ -1215,7 +1231,13 @@ function render() {
     ["Preço mediano", prices.length ? brlShort.format(median(prices)) : "—", "lance mínimo / preço atual"],
   ].map(([k, v, s]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
 
-  $("stBanner").hidden = !activeStrategy;
+  $("stBanner").hidden = !activeStrategy && !sharedView;
+  if (sharedView && !activeStrategy) {
+    $("stBanner").innerHTML = `<span>${esc(sharedView.label)}</span><span class="spacer"></span>
+      <button class="btn btn-sm" type="button" id="sharedBack">Voltar a Parceiros</button><button class="btn btn-sm" type="button" id="sharedClear">Mostrar tudo</button>`;
+    $("sharedClear").onclick = () => { sharedView = null; shown = PAGE; render(); };
+    $("sharedBack").onclick = () => { sharedView = null; showTab("partners"); };
+  }
   if (activeStrategy) {
     $("stBanner").innerHTML = `<span>Estratégia aplicada: <b>${esc(activeStrategy.name)}</b></span><span class="spacer"></span>
       <button class="btn btn-sm" type="button" id="editActive">Editar</button><button class="btn btn-sm" type="button" id="clearActive">Remover</button>`;
@@ -1670,7 +1692,20 @@ function renderPortfolio() {
 // only shows what the database lets each user read.
 let partners = null;            // partner store: Firestore (live) or a local demo (preview)
 let PS = null;                  // loaded partner state
-const pUI = { editCard: false, creating: null, applying: null, accepting: null, inviting: null, open: new Set(), editGroup: null, msg: "", busy: false };
+const pUI = { editCard: false, creating: null, applying: null, accepting: null, inviting: null, open: new Set(), editGroup: null, msg: "", busy: false, showAll: false, expanded: new Set() };
+
+// Listings still open for bids (or taking proposals): what partners could buy together.
+const openListings = () => ALL.filter((x) => isNaN(x.nextT) || x.nextT >= NOW || x.proposals);
+const myCard = () => (PS?.card ? { ...PS.card, uid: PS.me } : null);
+function cardOf(uid) { return uid === PS.me ? myCard() : PS.cards.find((c) => c.uid === uid) || null; }
+
+// A few of the shared listings, each linking to the auctioneer, plus "see all in the list".
+function sharedPreview(list, label) {
+  const top = [...list].sort((a, b) => (a.nextT || Infinity) - (b.nextT || Infinity)).slice(0, 6);
+  return `<ul class="pa-opps">${top.map((x) => `<li><a href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
+      <span>${esc([x.city, x.uf].filter(Boolean).join("/"))} · <b>${brl.format(x.price)}</b></span></li>`).join("")}</ul>
+    <button class="btn btn-sm" type="button" data-pa="see-list" data-ids="${esc(list.map((x) => x.id).join(","))}" data-label="${esc(label)}">Ver ${list.length === 1 ? "na lista" : `as ${list.length} na lista`}</button>`;
+}
 
 function firestorePartners(fs, db, user) {
   const uid = user.uid, now = () => fs.serverTimestamp();
@@ -1932,8 +1967,13 @@ function connState(other) {
   return PS.connections.find((c) => c.users.includes(other));
 }
 
-function matchCard(c) {
+function matchCard(c, r, rank) {
   const s = similarity(PS.card, c), h = handle(c.uid), conn = connState(c.uid), me = PS.me;
+  const open = pUI.expanded.has(c.uid);
+  const shared = r && r.count ? `<div class="pa-shared"><b>${r.count} oportunidade${r.count > 1 ? "s" : ""} em comum</b>${r.affordable != null ? ` · ${r.affordable} cabe${r.affordable === 1 ? "" : "m"} no aporte de vocês dois` : ""}
+      <button class="link-btn" type="button" data-pa="expand" data-uid="${esc(c.uid)}" aria-expanded="${open}">${open ? "ocultar" : "ver quais"}</button></div>
+      ${open ? sharedPreview(openListings().filter((x) => r.ids.includes(x.id)), `Oportunidades em comum com ${h}`) : ""}`
+    : `<div class="help">Nenhuma oportunidade aberta em comum hoje.</div>`;
   let action;
   if (!conn) action = pUI.inviting === c.uid
     ? `<div class="pa-inline"><input class="input" id="paNote" maxlength="280" placeholder="Mensagem (opcional): o que você procura"><button class="btn btn-primary btn-sm" type="button" data-pa="invite-send" data-uid="${esc(c.uid)}">Enviar convite</button><button class="btn btn-sm" type="button" data-pa="invite-cancel">Cancelar</button></div>`
@@ -1941,11 +1981,11 @@ function matchCard(c) {
   else if (conn.status === "accepted") action = `<span class="pill good">Conectado</span>`;
   else if (conn.status === "pending") action = conn.from === me ? `<span class="pill mute">Convite enviado</span>` : `<span class="pill warn">Convidou você: veja em Conexões</span>`;
   else action = `<span class="pill mute">${conn.from === me ? "Convite recusado" : "Você recusou"}</span>`;
-  return `<article class="pa-card">
-    <div class="pa-avatar" aria-hidden="true">${esc(initialsOf(h))}</div>
+  return `<article class="pa-card${rank ? " pa-ranked" : ""}">
+    <div class="pa-avatar" aria-hidden="true">${rank ? `<span class="pa-rank">${rank}</span>` : ""}${esc(initialsOf(h))}</div>
     <div class="pa-body"><div class="pa-name"><b>${esc(h)}</b><span class="pill ${s.score >= 70 ? "good" : s.score >= 40 ? "warn" : "mute"}">${s.score}% compatível</span></div>
       <div class="pa-facts">${cardSummary(c)}</div>
-      ${s.shared.ufs.length || s.shared.kinds.length ? `<div class="help">Em comum: ${esc([...s.shared.ufs, ...s.shared.kinds.map((k) => optLabel("kind", k))].join(", "))}</div>` : ""}
+      ${shared}
     </div>
     <div class="pa-act">${action}</div>
   </article>`;
@@ -1956,7 +1996,9 @@ function connectionRow(c) {
   if (c.status === "accepted") return `<article class="pa-card">
       <div class="pa-avatar" aria-hidden="true">${esc(initialsOf(h))}</div>
       <div class="pa-body"><div class="pa-name"><b>${esc(k?.name || h)}</b><span class="pill good">Conectado</span></div>
-        <div class="pa-facts">${k?.email ? `<a href="mailto:${esc(k.email)}">${esc(k.email)}</a>` : ""}${k?.phone ? `<span>${esc(k.phone)}</span>` : ""}${!k ? `<span>${esc(h)} ainda não preencheu o contato.</span>` : ""}</div></div>
+        <div class="pa-facts">${k?.email ? `<a href="mailto:${esc(k.email)}">${esc(k.email)}</a>` : ""}${k?.phone ? `<span>${esc(k.phone)}</span>` : ""}${!k ? `<span>${esc(h)} ainda não preencheu o contato.</span>` : ""}</div>
+        ${(() => { const oc = cardOf(other), mc = myCard(); if (!oc || !mc) return ""; const sh = sharedListings([mc, oc], openListings());
+          return sh.length ? `<div class="pa-shared"><b>${sh.length} oportunidade${sh.length > 1 ? "s" : ""} em comum</b> <button class="link-btn" type="button" data-pa="see-list" data-ids="${esc(sh.map((x) => x.id).join(","))}" data-label="${esc(`Oportunidades em comum com ${k?.name || h}`)}">ver na lista</button></div>` : ""; })()}</div>
       <div class="pa-act"><button class="btn btn-sm" type="button" data-pa="conn-remove" data-id="${esc(c.id)}">Desfazer conexão</button></div></article>`;
   if (c.status === "pending" && c.to === me) return `<article class="pa-card pa-hl">
       <div class="pa-avatar" aria-hidden="true">${esc(initialsOf(h))}</div>
@@ -2002,7 +2044,14 @@ function groupCard(x) {
     ...PS.connections.filter((c) => c.status === "accepted").map((c) => c.users.find((u) => u !== PS.me)),
     ...PS.cards.map((c) => c.uid),
   ].filter((u, i, a) => a.indexOf(u) === i && !inGroup.has(u)) : [];
+  const withCard = approved.map((m) => cardOf(m.uid)).filter(Boolean);
+  const gShared = withCard.length ? sharedListings(withCard, openListings()) : [];
+  const gFits = gShared.filter((x) => x.price <= committed);
+  const groupOpps = withCard.length ? `<div class="pa-shared"><b>${gShared.length} oportunidade${gShared.length === 1 ? "" : "s"} combina${gShared.length === 1 ? "" : "m"} com o perfil de ${withCard.length === approved.length ? "todos os sócios" : `${withCard.length} de ${approved.length} sócios (os outros não têm perfil ativo)`}</b>
+      · ${gFits.length} cabe${gFits.length === 1 ? "" : "m"} nos ${brl.format(committed)} comprometidos
+      ${gShared.length ? `<button class="link-btn" type="button" data-pa="see-list" data-ids="${esc((gFits.length ? gFits : gShared).map((x) => x.id).join(","))}" data-label="${esc(`${g.name}: ${gFits.length ? "oportunidades que cabem no valor comprometido" : "oportunidades que combinam com o grupo"}`)}">ver na lista</button>` : ""}</div>` : "";
   return `<article class="st-card pa-group${apps.length ? " pa-hl" : ""}">${head}
+    ${groupOpps}
     <div class="pa-commit"><div><b>${brl.format(committed)}</b> comprometidos${g.target_price ? ` de ${brl.format(g.target_price)} (${pct}%)` : ""}</div>
       ${g.target_price ? `<div class="pa-bar" role="img" aria-label="${pct}% do lance coberto"><i style="width:${pct}%"></i></div>` : ""}</div>
     ${apps.length ? `<div class="pa-sub"><h4>Candidaturas (${apps.length})</h4>${apps.map((m) => `<div class="pa-row"><span><b>${esc(m.name)}</b> · cota ${brl.format(m.quota)} · ${esc(m.contact)}</span>
@@ -2048,7 +2097,9 @@ function renderPartners() {
   const incoming = PS.connections.filter((c) => c.status === "pending" && c.to === me);
   const others = PS.connections.filter((c) => !(c.status === "pending" && c.to === me) && c.status !== "declined");
   const mine = Object.values(PS.groups).sort((a, b) => (a.me.status === "invited" ? -1 : 0) - (b.me.status === "invited" ? -1 : 0));
-  const matches = PS.card ? [...PS.cards].map((c) => ({ c, s: similarity(PS.card, c).score })).sort((a, b) => b.s - a.s).slice(0, 30) : [];
+  const ranked = PS.card ? rankByShared(myCard(), PS.cards, openListings()) : [];
+  const sum = sharedSummary(ranked);
+  const shownRanked = pUI.showAll ? ranked : ranked.slice(0, 10);
   v.innerHTML = `<div class="st-head"><h1>Parceiros</h1></div>
     <p class="pa-lead">Encontre investidores com o mesmo perfil e formem grupos para arrematar juntos. <b>Ninguém vê seu nome ou contato até vocês dois concordarem.</b>${partners.mode === "preview" ? " <span class=\"pill warn\">Prévia: investidores e grupos de exemplo</span>" : ""}</p>
     ${pUI.msg ? `<p class="pa-msg" role="status">${esc(pUI.msg)}</p>` : ""}
@@ -2072,8 +2123,14 @@ function renderPartners() {
 
     ${PS.card ? `<section class="pa-sec"><h2>Grupos abertos</h2>
       ${PS.publicGroups.length ? `<div class="pa-list">${PS.publicGroups.map(publicGroupCard).join("")}</div>` : `<div class="empty"><span>Nenhum grupo público no momento. Crie o primeiro.</span></div>`}</section>
-    <section class="pa-sec"><h2>Investidores compatíveis</h2>
-      ${matches.length ? `<div class="pa-list">${matches.map(({ c }) => matchCard(c)).join("")}</div>` : `<div class="empty"><span>Ainda não há outros investidores com perfil ativo.</span></div>`}</section>` : ""}`;
+    <section class="pa-sec"><h2>Top 10: oportunidades em comum</h2>
+      ${ranked.length ? `<p class="pa-summary">${sum.partners
+          ? `Você tem <b>${sum.opportunities} oportunidade${sum.opportunities > 1 ? "s" : ""}</b> que pode${sum.opportunities > 1 ? "m" : ""} ser compartilhada${sum.opportunities > 1 ? "s" : ""} com <b>${sum.partners} potencia${sum.partners > 1 ? "is" : "l"} sócio${sum.partners > 1 ? "s" : ""}</b>.`
+          : "Hoje nenhum lote aberto combina ao mesmo tempo com o seu perfil e o de outro investidor. Amplie estados, tipos ou faixa de preço no seu perfil."}</p>
+        <p class="help">Lotes abertos que se encaixam no seu perfil e no do outro investidor (estado, tipo, modalidade e faixa de preço). “Cabe no aporte” = lance até a soma do aporte máximo de vocês dois.</p>
+        <div class="pa-list">${shownRanked.map((r, i) => matchCard(r.card, r, i + 1)).join("")}</div>
+        ${ranked.length > 10 ? `<button class="link-btn" type="button" data-pa="show-all">${pUI.showAll ? "Mostrar só o top 10" : `Mostrar todos os ${ranked.length} perfis`}</button>` : ""}`
+        : `<div class="empty"><span>Ainda não há outros investidores com perfil ativo.</span></div>`}</section>` : ""}`;
 }
 
 async function paRun(fn, okMsg) {
@@ -2096,6 +2153,14 @@ function wirePartners() {
       case "card-cancel": return ui(() => { pUI.editCard = false; });
       case "card-off": return paRun(() => partners.deleteCard(), "Seu perfil está invisível. Conexões e grupos continuam.");
       case "invite": return ui(() => { pUI.inviting = u; });
+      case "expand": return ui(() => { pUI.expanded.has(u) ? pUI.expanded.delete(u) : pUI.expanded.add(u); });
+      case "show-all": return ui(() => { pUI.showAll = !pUI.showAll; });
+      case "see-list": {
+        sharedView = { label: b.dataset.label, ids: new Set(b.dataset.ids.split(",").filter(Boolean)) };
+        activeStrategy = null; shown = PAGE;
+        const v = document.querySelector('input[name="view"][value="list"]'); if (v) v.checked = true;
+        return showTab("lots");
+      }
       case "invite-cancel": return ui(() => { pUI.inviting = null; });
       case "invite-send": return paRun(async () => { await partners.invite(u, $("paNote")?.value || ""); pUI.inviting = null; }, "Convite enviado. Vocês só verão o contato um do outro se ele aceitar.");
       case "conn-accept": return paRun(() => partners.respond(id, true), "Conexão aceita: agora vocês veem o contato um do outro.");

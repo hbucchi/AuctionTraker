@@ -85,3 +85,58 @@ export const pairId = (u1, u2) => (u1 < u2 ? `${u1}_${u2}` : `${u2}_${u1}`);
 
 // Quota check mirrored by firestore.rules.
 export const quotaOk = (q, group) => typeof q === "number" && isFinite(q) && q >= group.quota_min && q <= group.quota_max;
+
+// ---------------------------------------------------------------- shared opportunities
+// Which open listings fit a card: state, property type, auction type and price.
+// A list left empty means "any". Listings use the compact keys of summary.py.
+export function fitsCard(card, x) {
+  if (!card) return false;
+  if (card.ufs?.length && !card.ufs.includes(x.uf)) return false;
+  if (card.kinds?.length && !card.kinds.includes(x.kind)) return false;
+  if (card.modalities?.length && !card.modalities.includes(x.modn)) return false;
+  if (card.price_min != null && !(x.price >= card.price_min)) return false;
+  if (card.price_max != null && !(x.price <= card.price_max)) return false;
+  return true;
+}
+
+// Listings that fit every card (two partners, or all members of a group).
+export function sharedListings(cards, listings) {
+  const cs = cards.filter(Boolean);
+  return cs.length ? listings.filter((x) => cs.every((c) => fitsCard(c, x))) : [];
+}
+
+// How much a set of investors can put in together: the sum of each one's
+// maximum ticket (their minimum when no maximum was given). null when any of
+// them left it blank, since then nobody knows.
+export function combinedTicket(cards) {
+  let sum = 0;
+  for (const c of cards) {
+    const t = c?.ticket_max ?? c?.ticket_min;
+    if (t == null) return null;
+    sum += t;
+  }
+  return sum;
+}
+
+// Partners ranked by how many open listings fit both them and me; ties broken
+// by profile compatibility. Each entry: {uid, card, ids, count, affordable, score}.
+export function rankByShared(myCard, cards, listings) {
+  const mine = listings.filter((x) => fitsCard(myCard, x));
+  return cards.map((c) => {
+    const both = mine.filter((x) => fitsCard(c, x));
+    const budget = combinedTicket([myCard, c]);
+    return {
+      uid: c.uid, card: c, ids: both.map((x) => x.id), count: both.length,
+      affordable: budget == null ? null : both.filter((x) => x.price <= budget).length,
+      score: similarity(myCard, c).score,
+    };
+  }).sort((a, b) => b.count - a.count || b.score - a.score);
+}
+
+// "You have N opportunities that can be shared with M potential partners."
+export function sharedSummary(ranked) {
+  const ids = new Set();
+  let partners = 0;
+  for (const r of ranked) if (r.count) { partners++; r.ids.forEach((i) => ids.add(i)); }
+  return { opportunities: ids.size, partners };
+}
