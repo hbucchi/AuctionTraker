@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from ..models import Listing
-from ..summary import MAX_DOC_BYTES, to_summary
+from ..summary import MAX_DOC_BYTES, has_price, to_summary
 
 
 def _eq(field: str, value):
@@ -62,6 +62,8 @@ class FirestoreSink:
 
         items = []
         for x in listings:
+            if not has_price(x):
+                continue  # kept in listings/{id}, but never shown or alerted on
             s = to_summary(x)
             s["first_seen"] = first_seen.get(x.id, now)
             items.append(s)

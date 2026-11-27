@@ -1427,7 +1427,8 @@ function updateNewBadge() {
 }
 
 function start(items, updatedAt, note) {
-  ALL = items.map(enrich);
+  // only lots with a real price (no "R$ 0", no placeholders); same rule as summary.py
+  ALL = items.filter((x) => x.price >= 1000).map(enrich);
   $("freshness").textContent = updatedAt ? `Atualizado ${dLong.format(new Date(updatedAt))}` : "";
   $("footnote").textContent = note || "";
   $("gateView").hidden = true;

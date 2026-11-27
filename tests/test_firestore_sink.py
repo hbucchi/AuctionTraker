@@ -88,7 +88,7 @@ class FakeClient:
 
 def mk(n, source="zuk"):
     return [
-        Listing(source=source, source_id=str(i), url=f"https://x/{i}", title=f"Casa {i}", current_price=100.0 + i)
+        Listing(source=source, source_id=str(i), url=f"https://x/{i}", title=f"Casa {i}", current_price=100_000.0 + i)
         for i in range(n)
     ]
 
@@ -99,6 +99,15 @@ def test_writes_summary_and_listings():
     s = fc.store["summaries"]["zuk-1"]
     assert s["source"] == "zuk" and s["parts"] == 1 and len(s["items"]) == 3
     assert set(fc.store["listings"]) == {"zuk:0", "zuk:1", "zuk:2"}
+
+
+def test_listings_without_a_real_price_are_not_published():
+    fc = FakeClient()
+    xs = mk(3)
+    xs[1].current_price = None          # "recebendo propostas"
+    xs[2].current_price = 0.01          # placeholder ("lote sustado")
+    FirestoreSink(client=fc).write("zuk", xs)
+    assert [i["id"] for i in fc.store["summaries"]["zuk-1"]["items"]] == ["zuk:0"]
 
 
 def test_first_seen_survives_reruns():

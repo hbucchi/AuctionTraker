@@ -146,10 +146,10 @@ def cmd_portfolio(args: argparse.Namespace) -> int:
 
 def cmd_export_web(args: argparse.Namespace) -> int:
     """Concatenate a run's JSONL files into the compact JSON the web app reads."""
-    from .summary import load_run, to_summary
+    from .summary import has_price, load_run, to_summary
 
     run_dir = Path(args.run_dir)
-    items = [to_summary(x) for x in load_run(run_dir)]
+    items = [to_summary(x) for x in load_run(run_dir) if has_price(x)]
     run_id = run_dir.name
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
