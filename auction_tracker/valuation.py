@@ -17,6 +17,12 @@ same with public data:
   m5 custo         replacement cost: SINAPI construction cost per m² in the
                    state × area, depreciated, plus a land share
 
+Tested and left out: for cities FipeZAP doesn't cover, borrowing the
+nearest FipeZAP city's price/rent (≤150 km, scaled by the m3 regression)
+as extra methods. On 369 held-out appraisals the combined error did not
+improve (36.5% vs 36.0%) and the range widened: m3 already predicts a
+city's price from its traits, which is what the neighbour adds.
+
 Each raw estimate is multiplied by a calibration factor learned from the
 official appraisals we scrape (see calibrate()), and every method gets an
 out-of-sample error score: the median absolute percentage error (MdAPE)
@@ -135,10 +141,7 @@ def _size_adj(area: float, g: str, alpha: float) -> float:
 
 # ------------------------------------------------------------- raw methods
 
-def raw_m1(x: Listing, cal: dict) -> float | None:
-    c, a, g = _city(x), usable_area(x), group(x.kind)
-    if not (c and a and g):
-        return None
+def _m1(c: dict, x: Listing, a: float, g: str, cal: dict) -> float | None:
     if g == "res":
         pm2 = c.get(f"residential_{min(x.bedrooms, 4)}d") if x.bedrooms else None
         pm2 = pm2 or c.get("residential")
@@ -147,10 +150,7 @@ def raw_m1(x: Listing, cal: dict) -> float | None:
     return pm2 * a * _size_adj(a, g, cal["alpha"]) if pm2 else None
 
 
-def raw_m2(x: Listing, cal: dict) -> float | None:
-    c, a, g = _city(x), usable_area(x), group(x.kind)
-    if not (c and a and g):
-        return None
+def _m2(c: dict, x: Listing, a: float, g: str, cal: dict) -> float | None:
     if g == "res":
         rent = (c.get(f"rent_residential_{min(x.bedrooms, 4)}d") if x.bedrooms else None) or c.get("rent_residential")
         y = c.get("yield_monthly_pct")
@@ -160,6 +160,16 @@ def raw_m2(x: Listing, cal: dict) -> float | None:
         return None
     # value = monthly rent / monthly yield  (both per m²)
     return rent / (y / 100) * a * _size_adj(a, g, cal["alpha"])
+
+
+def raw_m1(x: Listing, cal: dict) -> float | None:
+    c, a, g = _city(x), usable_area(x), group(x.kind)
+    return _m1(c, x, a, g, cal) if (c and a and g) else None
+
+
+def raw_m2(x: Listing, cal: dict) -> float | None:
+    c, a, g = _city(x), usable_area(x), group(x.kind)
+    return _m2(c, x, a, g, cal) if (c and a and g) else None
 
 
 def city_features(m: dict) -> list[float] | None:
@@ -319,8 +329,13 @@ def calibrate(listings: list[Listing], folds: int = 5, seed: int = 7) -> dict:
     def score(cv, m):
         return _mdape([(e[m], official_value(x)) for x, e in cv if m in e])
 
-    # size elasticity: pick the one that makes the comparative method most accurate
-    cal["alpha"] = min((0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35), key=lambda a: score(cv_estimates(a), "m1") or 9)
+    def combined_score(alpha: float) -> float:
+        cv = cv_estimates(alpha)
+        c = {**cal, "scores": {m: {"mdape": score(cv, m)} for m in METHODS}}
+        return _mdape([(_combine(e, c), official_value(x)) for x, e in cv if e]) or 9
+
+    # size elasticity: the one that makes the final (combined) estimate most accurate
+    cal["alpha"] = min((0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35), key=combined_score)
     cv = cv_estimates(cal["alpha"])
     cal["factors"] = fit_factors(train, cal)
     cal["scores"] = {}
