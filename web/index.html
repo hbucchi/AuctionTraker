@@ -214,6 +214,34 @@ body::before {
 .st-nums b.pos { color: var(--good); }
 .st-nums b.neg { color: var(--bad); }
 
+/* ---- card expand + ficha ---- */
+.lot-row { grid-template-columns: 96px minmax(0, 1fr) auto 36px; }
+@media (max-width: 640px) { .lot-row { grid-template-columns: 64px minmax(0, 1fr) 36px; } .lot-row .price-col { grid-column: 1 / -1; grid-row: 2; } .lot-row .expand { grid-column: 3; grid-row: 1; } }
+.expand { align-self: stretch; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; cursor: pointer; color: var(--muted); display: grid; place-items: center; min-height: 44px; }
+.expand:hover { color: var(--accent); border-color: var(--accent); }
+.expand svg { transition: transform .15s; }
+.lot.open .expand svg { transform: rotate(180deg); }
+.bar-cap { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.ficha { border-top: 1px solid var(--line); padding: 12px 12px 16px; display: grid; gap: 16px; }
+.fsec { display: grid; gap: 8px; }
+.fsec h3 { font: 600 15px var(--font-display); margin: 0; }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; font-size: 13px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.estimate-note { margin: 0; font-size: 12px; color: var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 8px 10px; }
+.sim { display: grid; gap: 10px; }
+.sim-ctl { display: grid; gap: 10px 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.sim-ctl label { display: grid; gap: 4px; font-size: 13px; }
+.sim-ctl input[type=range] { width: 100%; accent-color: var(--accent); }
+.vt td.why { white-space: normal; color: var(--muted); font-size: 12px; min-width: 160px; }
+.vt tr.sum td { border-top: 2px solid var(--line); }
+.rb-tgt { position: absolute; top: 0; height: 16px; border-left: 2px dashed var(--good); margin-left: -1px; }
+.rbar.big .rb-tgt { height: 26px; }
+.rbar.roe .rb-50 { background: color-mix(in srgb, var(--warn) 40%, transparent); }
+.rbar.roe.good .rb-50 { background: color-mix(in srgb, var(--good) 40%, transparent); }
+.rbar.roe.bad .rb-50 { background: color-mix(in srgb, var(--bad) 40%, transparent); }
+.rbar.roe .rb-mid { background: var(--ink); }
+
 /* ---- range bar ---- */
 .rbar { position: relative; width: 190px; max-width: 100%; height: 16px; margin-top: 2px; }
 .rbar.big { width: 100%; height: 44px; margin: 6px 0 2px; }
@@ -376,6 +404,7 @@ details.how[open] { display: grid; gap: 8px; }
   <main class="main" id="main">
     <div class="banner" id="stBanner" hidden></div>
     <section class="stats" id="stats" aria-label="Resumo"></section>
+    <p class="estimate-note">Valor, ROE e chance de lucro são <b>estimativas</b> de um modelo com dados públicos, não laudos nem recomendação de investimento. Abra a ficha (▾) para ver custos e premissas.</p>
     <div class="toolbar">
       <span class="result-count" id="resultCount"></span>
       <span class="spacer"></span>
@@ -433,7 +462,7 @@ const fold = (s) => String(s ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLo
 
 let SPEC = null;
 let VMETA = null;               // valuation methods, measured accuracy (web/valuation-meta.json)
-const openVal = new Set();      // lots with the valuation panel open
+const openFicha = new Set();    // lots with the detail sheet open
 let ALL = [];
 let shown = PAGE;
 let showImages = false;
@@ -441,7 +470,7 @@ let store = null;               // persistence: Firestore (live) or this browser
 let USER = { strategies: [], checklists: {}, alertState: {}, email: null, lastFilters: null, portfolio: [] };
 let activeStrategy = null;      // strategy applied to the list
 let editing = null;             // strategy being edited (a copy)
-const openDD = new Set();       // lots with the due-diligence panel open
+
 const NOW = Date.now();
 const NOW_S = NOW / 1000;
 const DAY = 86400000;
@@ -515,7 +544,7 @@ function popupHTML(x) {
   const where = [x.hood, x.city && x.uf ? `${x.city}/${x.uf}` : ""].filter(Boolean).join(", ");
   return `<a class="title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
     <span class="notice">${esc(where)} · ${esc(SITES[x.src] || x.src)}${x.geo === "cidade" ? " · posição aproximada (centro da cidade)" : ""}</span>
-    <span><b>${x.price != null ? brl.format(x.price) : "—"}</b>${x.val ? ` · avaliação ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}` : ""}</span>
+    <span><b>${x.price != null ? brl.format(x.price) : "—"}</b>${x.val ? ` · valor est. ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}` : ""}</span>
     ${r ? `<span>ROE estimado <b>${pct(r.lo)} a ${pct(r.hi)}</b> (${pct(r.annual)} a.a. no central)</span>` : ""}
     ${isNaN(x.nextT) ? "" : `<span>Próxima data: ${dLong.format(x.nextT)}</span>`}
     <a class="btn btn-primary btn-sm go" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">Abrir no site do leiloeiro ↗</a>`;
@@ -629,14 +658,14 @@ function chanceFor(x) {
 const chanceClass = (p) => (p >= 70 ? "good" : p >= 50 ? "warn" : "bad");
 function chancePill(x) {
   const c = chanceFor(x);
-  return c ? `<span class="pill ${chanceClass(c.profit)}" title="Probabilidade de o imóvel valer mais que ${brl.format(c.breakeven)} (lance + custos), medida pelos erros reais do modelo">Chance de lucro ${c.profit}%</span>` : "";
+  return c ? `<span class="pill ${chanceClass(c.profit)}" title="Probabilidade de o imóvel valer mais que ${brl.format(c.breakeven)} (lance + custos), medida pelos erros reais do modelo">Chance de lucro est. ${c.profit}%</span>` : "";
 }
 const roeClass = (r) => (r == null ? "mute" : r.mid >= 20 ? "good" : r.mid >= 0 ? "warn" : "bad");
 const pct = (n) => `${Math.round(n)}%`;
 function roePill(x) {
   const r = roeFor(x);
   if (!r) return x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo da avaliação estimada: costuma ser fração do imóvel ou área errada no anúncio">conferir dados</span>` : "";
-  return `<span class="pill ${roeClass(r)}" title="Retorno sobre o capital, comprando à vista e revendendo na faixa provável de avaliação (premissas na estratégia). Anualizado no cenário central: ${pct(r.annual)} a.a. em ${r.months} meses.">ROE ${pct(r.lo)} a ${pct(r.hi)}</span>`;
+  return `<span class="pill ${roeClass(r)}" title="Retorno sobre o capital, comprando à vista e revendendo na faixa provável de avaliação (premissas na estratégia). Anualizado no cenário central: ${pct(r.annual)} a.a. em ${r.months} meses.">ROE est. ${pct(r.lo)} a ${pct(r.hi)}</span>`;
 }
 
 /* ---------- "new" listings from the alert job ---------- */
@@ -670,15 +699,6 @@ function ptmPill(x) {
   return `<span class="pill ${cls}" title="Valor de mercado ${brl.format(x.mv)} — fonte: ${esc(x.mvs)}">Lance = ${Math.round(x.ptm)}% do mercado${est}</span>`;
 }
 
-function cityLine(x) {
-  const bits = [];
-  if (x.pop) bits.push(`${numShort.format(x.pop)} hab.`);
-  if (x.idhm) bits.push(`IDH-M ${x.idhm.toFixed(3).replace(".", ",")}`);
-  if (x.gdppc) bits.push(`PIB pc ${brlShort.format(x.gdppc)}`);
-  if (x.agro != null && x.agro >= 10) bits.push(`agro ${Math.round(x.agro)}%`);
-  if (x.cap) bits.push("capital");
-  return bits.length ? `<span title="IBGE / PNUD">${bits.join(" · ")}</span>` : "";
-}
 
 function lotHTML(x, isNew) {
   const where = [x.hood, x.city && x.uf ? `${x.city}/${x.uf}` : x.city || x.uf].filter(Boolean).join(", ");
@@ -686,64 +706,124 @@ function lotHTML(x, isNew) {
     ? `<div class="rounds">${x.rounds.map((r) => `<span class="round${r.t < NOW ? " past" : ""}"><b>${r.n}ª praça</b> ${isNaN(r.t) ? "" : dShort.format(r.t)} ${r.v ? brlShort.format(r.v) : ""}</span>`).join("")}</div>`
     : "";
   const img = showImages && x.img ? `<img src="${esc(safeUrl(x.img))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
-  const disc = x.disc != null && x.disc > 0 && x.ptm == null ? `<span class="pill good">−${x.disc}% ${x.discBasis}</span>` : "";
   const debts = x.debts === true ? `<span class="tag warn" title="${esc(x.debtsrc || "")}">Dívidas: arrematante</span>`
     : x.debts === false ? `<span class="tag good" title="${esc(x.debtsrc || "")}">Dívidas: vendedor</span>` : "";
   const ck = USER.checklists[ckKey(x.id)];
-  const open = openDD.has(x.id);
-  return `<article class="lot" data-id="${esc(x.id)}">
+  const open = openFicha.has(x.id);
+  const r = roeFor(x), ch = chanceFor(x);
+  return `<article class="lot${open ? " open" : ""}" data-id="${esc(x.id)}">
     <div class="lot-row">
       <div class="thumb" aria-hidden="true">${img || initials(x)}</div>
       <div class="lot-main">
         <a class="lot-title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
-        <div class="meta">${where ? `<span>${esc(where)}</span>` : ""}${x.area ? `<span>${x.area.toLocaleString("pt-BR")} m²</span>` : ""}${x.beds ? `<span>${x.beds} quarto${x.beds > 1 ? "s" : ""}</span>` : ""}${x.seller ? `<span>${esc(x.seller)}</span>` : ""}</div>
-        <div class="meta">${cityLine(x)}</div>
+        <div class="meta">${where ? `<span>${esc(where)}</span>` : ""}${x.area ? `<span>${x.area.toLocaleString("pt-BR")} m²</span>` : ""}${x.beds ? `<span>${x.beds} quarto${x.beds > 1 ? "s" : ""}</span>` : ""}</div>
         <div class="tags">${isNew ? `<span class="tag new">Novo</span>` : ""}<span class="tag src">${esc(SITES[x.src] || x.src)}</span>${x.type ? `<span class="tag">${esc(x.type)}</span>` : ""}${x.modn ? `<span class="tag">${esc(x.modn.replace("_", " "))}</span>` : ""}${debts}${ck ? `<span class="tag">Em análise · ${ckDone(ck)}/6</span>` : ""}</div>
         ${rounds}
       </div>
       <div class="price-col">
         <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
-        ${x.appraisal ? `<div class="appraisal">Avaliação ${brl.format(x.appraisal)}</div>` : ""}
-        ${ptmPill(x)}${disc}
-        ${x.val ? `<div class="appraisal" title="Faixa provável (80%): ${brl.format(x.val.lo)} – ${brl.format(x.val.hi)}">Avaliação do modelo ${brlShort.format(x.val.mid)}${x.ptmv != null ? ` · lance ${Math.round(x.ptmv)}%` : ""}</div>` : ""}
-        ${rangeBar(x)}
-        ${chancePill(x)}${roePill(x)}
-        ${deadline(x)}
-        <div class="tags" style="justify-content:flex-end">
-          ${x.val && VMETA ? `<button class="btn btn-sm" type="button" data-val="${esc(x.id)}" aria-expanded="${openVal.has(x.id)}">${openVal.has(x.id) ? "Fechar avaliação" : "Avaliação"}</button>` : ""}
-          <button class="btn btn-sm dd-toggle" type="button" data-dd="${esc(x.id)}" aria-expanded="${open}">${open ? "Fechar checklist" : "Checklist"}</button>
-          <button class="btn btn-sm" type="button" data-won="${esc(x.id)}" title="Adicionar ao meu portfólio">Arrematei</button>
-        </div>
+        ${x.val && !x.val.flag ? `<div class="bar-cap">Valor est. ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}</div>${rangeBar(x)}` : ""}
+        ${r ? `<div class="bar-cap">ROE est. ${pct(r.lo)} a ${pct(r.hi)}</div>${roeBar(r)}` : ""}
+        <div class="tags" style="justify-content:flex-end">${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">conferir dados</span>` : ""}${deadline(x)}</div>
       </div>
+      <button class="expand" type="button" data-ficha="${esc(x.id)}" aria-expanded="${open}" aria-label="${open ? "Fechar ficha" : "Abrir ficha completa"}" title="${open ? "Fechar ficha" : "Ficha completa: custos, ROE, cidade e checklist"}">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
-    ${openVal.has(x.id) && x.val && VMETA ? valHTML(x) : ""}
-    ${open ? ddHTML(x) : ""}
+    ${open ? fichaHTML(x) : ""}
   </article>`;
 }
 
-/* ---------- ROE breakdown (central scenario) ---------- */
-function roeBreakdown(x) {
+
+/* ---------- ficha (detail sheet) ---------- */
+const simState = new Map();   // per lot: resale value and cost sliders in the simulator
+
+function fichaHTML(x) {
+  const off = x.mvo && x.mv ? x.mv : x.appraisal;
+  const facts = [
+    ["Comitente", x.seller], ["Tipo de leilão", x.modn ? x.modn.replace("_", " ") : null],
+    ["Ocupação", x.occ === true ? "Ocupado" : x.occ === false ? "Desocupado" : "Não informado"],
+    ["Dívidas (condomínio/IPTU)", x.debts === true ? "Ficam com o arrematante" : x.debts === false ? "Pagas pelo vendedor" : "Não informado"],
+    ["Avaliação oficial", off ? `${brl.format(off)}${x.ptm != null ? ` · lance = ${Math.round(x.ptm)}% dela` : ""}` : null],
+    ["Área", x.area ? `${x.area.toLocaleString("pt-BR")} m²` : null], ["Quartos", x.beds],
+  ].filter(([, v]) => v != null && v !== "");
+  const natl = SPEC?.reference?.national_gdp_per_capita;
+  const city = [
+    ["População", x.pop ? `${x.pop.toLocaleString("pt-BR")} hab.` : null],
+    ["IDH-M", x.idhm ? `${x.idhm.toFixed(3).replace(".", ",")} ${x.idhm >= 0.8 ? "(muito alto)" : x.idhm >= 0.7 ? "(alto)" : x.idhm >= 0.6 ? "(médio)" : "(baixo)"}` : null],
+    ["PIB per capita", x.gdppc ? `${brl.format(x.gdppc)}${natl ? ` (${x.gdppc >= natl ? "acima" : "abaixo"} da média nacional de ${brlShort.format(natl)})` : ""}` : null],
+    ["Agronegócio no PIB", x.agro != null ? `${Math.round(x.agro)}%` : null], ["Capital", x.cap ? "Sim" : null],
+  ].filter(([, v]) => v);
+  const dl = (rows) => `<dl class="facts">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
+  return `<div class="ficha">
+    <p class="estimate-note">Valores, ROE e chances desta ficha são <b>estimativas</b> de um modelo com dados públicos. Não são laudo de avaliação nem recomendação de investimento: confira o edital e visite o imóvel.</p>
+    <section class="fsec"><h3>Imóvel</h3>${dl(facts)}
+      <div class="st-actions"><a class="btn btn-primary btn-sm" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">Abrir no site do leiloeiro ↗</a>
+        <button class="btn btn-sm" type="button" data-won="${esc(x.id)}">Arrematei: adicionar ao portfólio</button></div></section>
+    ${city.length ? `<section class="fsec"><h3>${esc(x.city || "Cidade")}${x.uf ? `/${esc(x.uf)}` : ""}</h3>${dl(city)}<p class="help">IBGE (Censo 2022, PIB dos Municípios) e PNUD (IDH-M 2010).</p></section>` : ""}
+    ${x.val && VMETA && !x.val.flag ? `<section class="fsec"><h3>Valor estimado</h3>${valHTML(x)}</section>` : ""}
+    ${x.val && !x.val.flag && x.price ? `<section class="fsec"><h3>Retorno estimado (ROE) e custos</h3><div id="sim-${ckKey(x.id)}">${simHTML(x)}</div></section>` : ""}
+    <section class="fsec"><h3>Checklist de due diligence</h3>${ddHTML(x)}</section>
+  </div>`;
+}
+
+/* Interactive ROE: drag the resale value and the cost sliders; every cost listed. */
+function simHTML(x) {
+  const v = x.val, a = roeAssumptions(activeStrategy?.roe_assumptions);
+  const st = simState.get(x.id) || { value: v.mid, reno: (a.renovation_min_pct + a.renovation_max_pct) / 2, furn: a.furniture_pct };
+  const aa = { ...a, furniture_pct: st.furn };
+  const j = x.modn === "judicial";
+  const f = flip(x.price, st.value, x.debts, x.occ, aa, j, st.reno);
   const r = roeFor(x);
-  if (!r) return "";
-  const a = roeAssumptions(activeStrategy?.roe_assumptions);
-  const v = x.val.mid, p = x.price;
   const occ = x.occ === true || (x.occ == null && a.assume_occupied >= 1);
-  const lines = [
-    ["Lance", p],
-    [`Comissão, ITBI e registro (${a.commission_pct + a.itbi_pct + a.registry_pct}% do lance)`, p * (a.commission_pct + a.itbi_pct + a.registry_pct) / 100],
-    [`Reforma (${a.renovation_pct}% do valor)`, v * a.renovation_pct / 100],
-    ...(x.debts === true ? [[`Dívidas com o arrematante (${a.debts_pct}%)`, v * a.debts_pct / 100]] : []),
-    ...(occ ? [[`Desocupação (${a.eviction_pct}%)`, v * a.eviction_pct / 100]] : []),
-    [`Condomínio + IPTU por ${r.months} meses`, v * a.carrying_pct_month / 100 * r.months],
+  const lawyerWhy = occ ? "imóvel ocupado: ação de imissão na posse" : j ? "leilão judicial: acompanhamento do processo" : "não necessário neste caso";
+  const rows = [
+    ["Lance", f.costs.bid, "valor do lote"],
+    [`Comissão (${a.commission_pct}%), ITBI (${a.itbi_pct}%) e registro (${a.registry_pct}%)`, f.costs.fees, "sobre o lance"],
+    ["Documentação (certidões, despachante)", f.costs.docs, "valor fixo"],
+    [`Reforma (${st.reno.toFixed(1).replace(".", ",")}% do valor)`, f.costs.renovation, `faixa da estratégia: ${a.renovation_min_pct}% a ${a.renovation_max_pct}%`],
+    [`Mobília e eletrodomésticos (${st.furn}% do valor)`, f.costs.furniture, st.furn ? "para alugar mobiliado ou valorizar a venda" : "não incluído"],
+    [`Dívidas de condomínio/IPTU (${a.debts_pct}% do valor)`, f.costs.debts, x.debts === true ? "o edital deixa com o arrematante" : x.debts === false ? "o vendedor paga" : "não informado: não incluído"],
+    [`Desocupação (${a.eviction_pct}% do valor, +${a.eviction_months} meses)`, f.costs.eviction, occ ? (x.occ === true ? "imóvel ocupado" : "ocupação desconhecida tratada como ocupado") : x.occ === false ? "desocupado" : "ocupação não informada: não incluída"],
+    ["Advogado", f.costs.legal, lawyerWhy],
+    [`Condomínio + IPTU por ${f.months} meses`, f.costs.carrying, `${a.carrying_pct_month}% do valor por mês até vender`],
   ];
-  const f = flip(p, v, x.debts, x.occ, a);
-  return `<div class="table-wrap"><table class="vt"><thead><tr><th>Retorno no cenário central (venda por ${brl.format(v)})</th><th class="num">R$</th></tr></thead><tbody>
-    ${lines.map(([k, n]) => `<tr><td class="name">${esc(k)}</td><td class="num">${brl.format(n)}</td></tr>`).join("")}
-    <tr><td class="name"><b>Capital investido</b></td><td class="num"><b>${brl.format(f.equity)}</b></td></tr>
-    <tr><td class="name">Venda menos corretagem (${a.broker_pct}%) e IR (${a.tax_pct}% do lucro)</td><td class="num">${brl.format(f.equity + f.profit)}</td></tr>
-    <tr><td class="name"><b>Lucro líquido · ROE</b></td><td class="num"><b>${brl.format(f.profit)} · ${pct(100 * f.roe)}</b></td></tr>
-  </tbody></table></div>
-  <p class="help">ROE de ${pct(r.lo)} a ${pct(r.hi)} vendendo entre ${brl.format(x.val.lo50)} e ${brl.format(x.val.hi50)} (faixa em que caem metade das avaliações reais); ${pct(r.annual)} ao ano no cenário central. À vista, sem financiamento.${x.occ == null ? " Ocupação não informada: tratada como " + (occ ? "ocupado" : "desocupado") + "." : ""}</p>`;
+  return `<div class="sim">
+    ${r ? `<div class="bar-cap">ROE est. ${pct(r.lo)} (pessimista) · ${pct(r.mid)} (central) · ${pct(r.hi)} (otimista)</div>${roeBar(r, true)}` : ""}
+    <div class="sim-ctl">
+      <label>Revenda por <b>${brl.format(st.value)}</b>
+        <input type="range" data-sim="value" data-sim-id="${esc(x.id)}" min="${Math.round(v.lo)}" max="${Math.round(v.hi)}" step="${Math.max(1000, Math.round((v.hi - v.lo) / 200 / 1000) * 1000)}" value="${Math.round(st.value)}"></label>
+      <label>Reforma: <b>${st.reno.toFixed(1).replace(".", ",")}%</b> do valor
+        <input type="range" data-sim="reno" data-sim-id="${esc(x.id)}" min="0" max="${Math.max(30, a.renovation_max_pct)}" step="0.5" value="${st.reno}"></label>
+      <label>Mobília: <b>${st.furn}%</b> do valor
+        <input type="range" data-sim="furn" data-sim-id="${esc(x.id)}" min="0" max="15" step="0.5" value="${st.furn}"></label>
+    </div>
+    <div class="table-wrap"><table class="vt"><thead><tr><th>Custo</th><th class="num">R$</th><th>Por quê</th></tr></thead><tbody>
+      ${rows.map(([k, n, why]) => `<tr class="${n ? "" : "na"}"><td class="name">${esc(k)}</td><td class="num">${brl.format(n)}</td><td class="why">${esc(why)}</td></tr>`).join("")}
+      <tr class="sum"><td class="name"><b>Capital investido</b></td><td class="num"><b>${brl.format(f.equity)}</b></td><td></td></tr>
+      <tr><td class="name">Venda</td><td class="num">${brl.format(st.value)}</td><td class="why">valor de revenda escolhido acima</td></tr>
+      <tr><td class="name">Corretagem (${a.broker_pct}%)</td><td class="num">−${brl.format(f.broker)}</td><td class="why">sobre a venda</td></tr>
+      <tr><td class="name">IR sobre o lucro (${a.tax_pct}%)</td><td class="num">−${brl.format(f.tax)}</td><td class="why">ganho de capital, pessoa física</td></tr>
+      <tr class="sum"><td class="name"><b>Lucro líquido estimado</b></td><td class="num"><b>${brl.format(f.profit)}</b></td><td class="why"><b>ROE est. ${pct(100 * f.roe)}</b> · ${pct(100 * f.annual)} ao ano</td></tr>
+    </tbody></table></div>
+    <p class="help">À vista, sem financiamento. Mude as porcentagens padrão nas premissas da sua estratégia (aba Estratégias).</p>
+  </div>`;
+}
+
+/* ROE bar: band = pessimistic..optimistic, line = central, red = 0% (breakeven), dashed = 20%. */
+function roeBar(r, big = false) {
+  // scale from at least -15%..45%, capped at 150% so 0% and 20% stay readable
+  const lo = Math.max(Math.min(r.lo, -10), -100) - 5, hi = Math.min(Math.max(r.hi, 40), 150) + 5;
+  const pos = (n) => `${Math.min(100, Math.max(0, (100 * (n - lo)) / (hi - lo))).toFixed(1)}%`;
+  const cls = r.mid >= 20 ? "good" : r.mid >= 0 ? "warn" : "bad";
+  return `<div class="rbar roe ${cls}${big ? " big" : ""}" role="img" aria-label="ROE estimado de ${pct(r.lo)} a ${pct(r.hi)}, central ${pct(r.mid)}">
+    <div class="rb-track"></div>
+    <div class="rb-50" style="left:${pos(r.lo)};right:calc(100% - ${pos(r.hi)})"></div>
+    <div class="rb-mid" style="left:${pos(r.mid)}"></div>
+    <div class="rb-be" style="left:${pos(0)}" title="0%: empate"></div>
+    <div class="rb-tgt" style="left:${pos(20)}" title="20%"></div>
+    ${big ? `<span class="rb-lbl" style="left:${pos(0)}">0%</span><span class="rb-lbl" style="left:${pos(20)}">20%</span>` : ""}
+  </div>`;
 }
 
 /* ---------- valuation panel ---------- */
@@ -751,31 +831,35 @@ function valHTML(x) {
   const v = x.val, methods = VMETA.methods;
   const weight = (m) => 1 / Math.max(methods[m].mdape || 0.5, 0.05) ** 2;
   const present = Object.keys(x.vm || {});
-  const wsum = present.reduce((s, m) => s + weight(m), 0);
+  const wmap = Object.fromEntries(present.map((m) => [m, weight(m)]));
+  if (wmap.m0 != null) {  // same rule as valuation.py: official appraisal = 3x all models combined
+    const models = present.filter((m) => m !== "m0").reduce((s, m) => s + wmap[m], 0);
+    wmap.m0 = Math.max(wmap.m0, 3 * models);
+  }
+  const wsum = present.reduce((s, m) => s + wmap[m], 0);
   const ch = chanceFor(x);
   const a = roeAssumptions(activeStrategy?.roe_assumptions);
-  const target = valueNeeded(x.price || 0, 0.2, x.debts, x.occ, a);
+  const target = valueNeeded(x.price || 0, 0.2, x.debts, x.occ, a, x.modn === "judicial");
   const rows = Object.entries(methods).map(([m, meta]) => {
     const val = (x.vm || {})[m];
     return `<tr class="${val ? "" : "na"}"><td class="name">${esc(meta.name)}</td>
       <td class="num">${val ? brl.format(val) : "sem dados"}</td>
       <td class="num">${meta.mdape != null ? (meta.assumed ? "~" : "") + Math.round(meta.mdape * 100) + "%" + (meta.assumed ? " (premissa)" : "") : "—"}</td>
-      <td class="num">${val ? Math.round((100 * weight(m)) / wsum) + "%" : "—"}</td></tr>`;
+      <td class="num">${val ? Math.round((100 * wmap[m]) / wsum) + "%" : "—"}</td></tr>`;
   }).join("");
   const c = VMETA.combined;
   const verdict = !x.price ? "" : x.price < v.lo ? "O lance está abaixo até do cenário pessimista: margem de segurança grande."
     : x.price < v.lo50 ? "O lance está abaixo da faixa provável de valor." : x.price <= v.hi50 ? "O lance está dentro da faixa provável de valor: pouca margem." : "O lance está acima da faixa provável de valor.";
   return `<div class="val">
-    <div class="val-head"><span>Valor provável <b>${brl.format(v.lo50)} – ${brl.format(v.hi50)}</b></span>
+    <div class="val-head"><span>Valor provável (estimado) <b>${brl.format(v.lo50)} – ${brl.format(v.hi50)}</b></span>
       <span class="pill ${v.conf === "alta" ? "good" : v.conf === "média" ? "warn" : "mute"}" title="Quantos métodos tiveram dados e o quanto concordam">confiança ${v.conf}</span></div>
     ${rangeBar(x, true)}
     <ul class="val-facts">
       <li>${verdict}</li>
       <li>Metade das avaliações reais cai entre <b>${brl.format(v.lo50)}</b> e <b>${brl.format(v.hi50)}</b>; 8 em cada 10, entre ${brl.format(v.lo)} e ${brl.format(v.hi)}. Valor central: ${brl.format(v.mid)}.</li>
-      ${ch ? `<li>Para não ter prejuízo (lance + todos os custos), o imóvel precisa valer pelo menos <b>${brl.format(ch.breakeven)}</b>. <span class="pill ${chanceClass(ch.profit)}">Chance de lucro ${ch.profit}%</span></li>
+      ${ch ? `<li>Para não ter prejuízo (lance + todos os custos), o imóvel precisa valer pelo menos <b>${brl.format(ch.breakeven)}</b>. <span class="pill ${chanceClass(ch.profit)}">Chance de lucro est. ${ch.profit}%</span></li>
       <li>Para um ROE de 20% ou mais, precisa valer <b>${brl.format(target)}</b>. Chance estimada: <b>${ch.target}%</b>.</li>` : ""}
     </ul>
-    ${roeBreakdown(x)}
     <details class="how"><summary>Como calculamos</summary>
       <div class="table-wrap"><table class="vt"><thead><tr><th>Método</th><th class="num">Valor</th><th class="num">Erro mediano medido</th><th class="num">Peso</th></tr></thead><tbody>${rows}</tbody></table></div>
       <p class="help">Cada método foi calibrado e testado contra ${VMETA.n_official} avaliações oficiais de leilão que ele não tinha visto. O valor central combina os métodos dando mais peso aos mais precisos e errou em mediana ${Math.round(c.mdape * 100)}%. As chances vêm da distribuição desses erros: se o modelo errou para cima em 3 de cada 10 casos parecidos, a chance de o imóvel valer menos que a estimativa reflete isso. Use como referência, não como laudo. FipeZAP ${esc(VMETA.sources.fipezap)}, SINAPI ${esc(VMETA.sources.sinapi)}.</p>
@@ -971,11 +1055,24 @@ function buildControls() {
   $("list").addEventListener("click", (e) => {
     const won = e.target.closest("[data-won]");
     if (won) { const x = ALL.find((l) => l.id === won.dataset.won); if (x) { editingProp = propertyFromListing(x); showTab("portfolio"); } return; }
-    const b = e.target.closest("[data-dd],[data-val]");
+    const b = e.target.closest("[data-ficha]");
     if (!b) return;
-    const [set, id] = b.dataset.dd ? [openDD, b.dataset.dd] : [openVal, b.dataset.val];
-    set.has(id) ? set.delete(id) : set.add(id);
+    const id = b.dataset.ficha;
+    openFicha.has(id) ? openFicha.delete(id) : openFicha.add(id);
     render();
+  });
+  // ROE simulator: recompute only that lot's simulator while dragging
+  $("list").addEventListener("input", (e) => {
+    const el = e.target.closest("[data-sim]");
+    if (!el) return;
+    const id = el.dataset.simId, x = ALL.find((l) => l.id === id);
+    const a = roeAssumptions(activeStrategy?.roe_assumptions);
+    const st = simState.get(id) || { value: x.val.mid, reno: (a.renovation_min_pct + a.renovation_max_pct) / 2, furn: a.furniture_pct };
+    st[el.dataset.sim] = Number(el.value);
+    simState.set(id, st);
+    const box = document.getElementById(`sim-${ckKey(id)}`);
+    box.innerHTML = simHTML(x);
+    box.querySelector(`[data-sim="${el.dataset.sim}"]`)?.focus();
   });
   $("list").addEventListener("change", async (e) => {
     const el = e.target.closest("[data-ck-field]");

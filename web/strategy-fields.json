@@ -256,7 +256,7 @@
       "key": "ptmv",
       "attr": "ptmv",
       "group": "valor",
-      "label": "Lance em % da avaliação do modelo",
+      "label": "Lance em % do valor estimado pelo modelo",
       "unit": "%",
       "step": 5,
       "help": "Avaliação estimada pelos 5 métodos (FipeZAP, renda, regressão entre cidades, comparáveis de leilão e custo de reposição). Cobre mais imóveis que o valor oficial, mas é aproximada: erro mediano em torno de 40%."
@@ -322,16 +322,16 @@
       "key": "roelo",
       "attr": "roelo",
       "group": "retorno",
-      "label": "ROE no cenário pessimista",
+      "label": "ROE estimado no cenário pessimista",
       "unit": "%",
       "step": 5,
-      "help": "Mesmo cálculo com a revenda pelo valor baixo da faixa de avaliação (metade das avaliações reais fica acima dele). Use para exigir margem de segurança."
+      "help": "Revenda pelo valor baixo da faixa estimada e reforma no máximo. Use para exigir margem de segurança."
     },
     {
       "key": "chance",
       "attr": "chance",
       "group": "retorno",
-      "label": "Chance de lucro",
+      "label": "Chance de lucro estimada",
       "unit": "%",
       "step": 5,
       "help": "Probabilidade de o imóvel valer o suficiente para cobrir lance e todos os custos, medida pelos erros reais do modelo em avaliações que ele não tinha visto."
@@ -498,8 +498,23 @@
       "% do lance"
     ],
     [
-      "renovation_pct",
-      "Reforma",
+      "docs_fixed",
+      "Documentação (certidões, despachante)",
+      "R$"
+    ],
+    [
+      "renovation_min_pct",
+      "Reforma — mínimo",
+      "% do valor"
+    ],
+    [
+      "renovation_max_pct",
+      "Reforma — máximo",
+      "% do valor"
+    ],
+    [
+      "furniture_pct",
+      "Mobília e eletrodomésticos",
       "% do valor"
     ],
     [
@@ -516,6 +531,16 @@
       "eviction_months",
       "Meses extras de desocupação",
       "meses"
+    ],
+    [
+      "legal_fixed",
+      "Advogado (só se ocupado ou leilão judicial)",
+      "R$"
+    ],
+    [
+      "legal_on_judicial",
+      "Advogado também em leilão judicial (1 = sim)",
+      ""
     ],
     [
       "holding_months",

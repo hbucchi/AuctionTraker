@@ -9,17 +9,18 @@
      "mid": 400000,
      "hi50": 520000,
      "lo": 180000,
-     "hi": 800000
+     "hi": 800000,
+     "n": 4
     }
    },
    "custom": null,
    "expect": {
-    "lo": 9.0,
-    "mid": 44.8,
-    "hi": 78.3,
-    "annual": 44.8,
+    "lo": 3.2,
+    "mid": 44.0,
+    "hi": 95.8,
+    "annual": 44.0,
     "months": 12.0,
-    "equity": 246200
+    "equity": 247700
    }
   },
   {
@@ -31,22 +32,23 @@
      "mid": 400000,
      "hi50": 520000,
      "lo": 180000,
-     "hi": 800000
+     "hi": 800000,
+     "n": 4
     },
     "debts": true
    },
    "custom": null,
    "expect": {
-    "lo": 3.8,
-    "mid": 35.1,
-    "hi": 63.2,
-    "annual": 35.1,
+    "lo": -1.6,
+    "mid": 34.4,
+    "hi": 77.4,
+    "annual": 34.4,
     "months": 12.0,
-    "equity": 266200
+    "equity": 267700
    }
   },
   {
-   "name": "occupied adds eviction and months",
+   "name": "occupied: eviction, months and lawyer",
    "item": {
     "price": 200000,
     "val": {
@@ -54,18 +56,69 @@
      "mid": 400000,
      "hi50": 520000,
      "lo": 180000,
-     "hi": 800000
+     "hi": 800000,
+     "n": 4
     },
     "occ": true
    },
    "custom": null,
    "expect": {
-    "lo": 4.9,
-    "mid": 37.1,
-    "hi": 66.3,
-    "annual": 23.4,
+    "lo": -2.7,
+    "mid": 33.7,
+    "hi": 77.2,
+    "annual": 21.4,
     "months": 18.0,
-    "equity": 261800
+    "equity": 269300
+   }
+  },
+  {
+   "name": "judicial auction budgets a lawyer",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "modn": "judicial"
+   },
+   "custom": null,
+   "expect": {
+    "lo": 1.2,
+    "mid": 41.0,
+    "hi": 91.2,
+    "annual": 41.0,
+    "months": 12.0,
+    "equity": 253700
+   }
+  },
+  {
+   "name": "judicial without lawyer when switched off",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "modn": "judicial"
+   },
+   "custom": {
+    "legal_on_judicial": 0
+   },
+   "expect": {
+    "lo": 3.2,
+    "mid": 44.0,
+    "hi": 95.8,
+    "annual": 44.0,
+    "months": 12.0,
+    "equity": 247700
    }
   },
   {
@@ -77,19 +130,72 @@
      "mid": 400000,
      "hi50": 520000,
      "lo": 180000,
-     "hi": 800000
+     "hi": 800000,
+     "n": 4
     }
    },
    "custom": {
     "assume_occupied": 1
    },
    "expect": {
-    "lo": 4.9,
-    "mid": 37.1,
-    "hi": 66.3,
-    "annual": 23.4,
+    "lo": -2.7,
+    "mid": 33.7,
+    "hi": 77.2,
+    "annual": 21.4,
     "months": 18.0,
-    "equity": 261800
+    "equity": 269300
+   }
+  },
+  {
+   "name": "renovation range 5-25% and furniture",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "custom": {
+    "renovation_min_pct": 5,
+    "renovation_max_pct": 25,
+    "furniture_pct": 3
+   },
+   "expect": {
+    "lo": -13.4,
+    "mid": 21.6,
+    "hi": 68.1,
+    "annual": 21.6,
+    "months": 12.0,
+    "equity": 299700
+   }
+  },
+  {
+   "name": "legacy single renovation_pct",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    }
+   },
+   "custom": {
+    "renovation_pct": 15
+   },
+   "expect": {
+    "lo": -1.6,
+    "mid": 26.1,
+    "hi": 50.0,
+    "annual": 26.1,
+    "months": 12.0,
+    "equity": 287700
    }
   },
   {
@@ -101,21 +207,22 @@
      "mid": 400000,
      "hi50": 520000,
      "lo": 180000,
-     "hi": 800000
+     "hi": 800000,
+     "n": 4
     }
    },
    "custom": {
-    "renovation_pct": 15,
     "holding_months": 6,
-    "itbi_pct": 2
+    "itbi_pct": 2,
+    "docs_fixed": 0
    },
    "expect": {
-    "lo": 0.5,
-    "mid": 28.9,
-    "hi": 53.6,
-    "annual": 66.1,
+    "lo": 5.4,
+    "mid": 47.8,
+    "hi": 102.4,
+    "annual": 118.6,
     "months": 6.0,
-    "equity": 280600
+    "equity": 240600
    }
   },
   {
@@ -127,17 +234,18 @@
      "mid": 400000,
      "hi50": 520000,
      "lo": 180000,
-     "hi": 800000
+     "hi": 800000,
+     "n": 4
     }
    },
    "custom": null,
    "expect": {
-    "lo": -39.5,
-    "mid": -15.2,
-    "hi": 7.0,
-    "annual": -15.2,
+    "lo": -41.6,
+    "mid": -15.5,
+    "hi": 12.3,
+    "annual": -15.5,
     "months": 12.0,
-    "equity": 443300
+    "equity": 444800
    }
   },
   {
@@ -150,6 +258,7 @@
      "hi50": 520000,
      "lo": 180000,
      "hi": 800000,
+     "n": 4,
      "flag": "lance_atipico"
     }
    },
@@ -165,7 +274,8 @@
      "mid": 400000,
      "hi50": 520000,
      "lo": 180000,
-     "hi": 800000
+     "hi": 800000,
+     "n": 4
     }
    },
    "custom": null,
@@ -234,7 +344,7 @@
    "expect": {
     "profit": 82,
     "target": 69,
-    "breakeven": 251147
+    "breakeven": 252867
    }
   },
   {
@@ -252,9 +362,9 @@
    },
    "custom": null,
    "expect": {
-    "profit": 54,
+    "profit": 53,
     "target": 32,
-    "breakeven": 401835
+    "breakeven": 403555
    }
   },
   {
@@ -274,9 +384,9 @@
    },
    "custom": null,
    "expect": {
-    "profit": 77,
-    "target": 60,
-    "breakeven": 279693
+    "profit": 75,
+    "target": 58,
+    "breakeven": 289272
    }
   },
   {
@@ -295,8 +405,31 @@
    "custom": null,
    "expect": {
     "profit": 68,
-    "target": 56,
-    "breakeven": 251147
+    "target": 55,
+    "breakeven": 252867
+   }
+  },
+  {
+   "name": "judicial with heavy renovation",
+   "item": {
+    "price": 200000,
+    "val": {
+     "lo50": 280000,
+     "mid": 400000,
+     "hi50": 520000,
+     "lo": 180000,
+     "hi": 800000,
+     "n": 4
+    },
+    "modn": "judicial"
+   },
+   "custom": {
+    "renovation_max_pct": 30
+   },
+   "expect": {
+    "profit": 74,
+    "target": 57,
+    "breakeven": 293394
    }
   },
   {
