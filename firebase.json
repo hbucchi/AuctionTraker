@@ -1,15 +1,24 @@
 {
   "hosting": {
     "public": "web",
-    "ignore": ["listings.json", "**/.*"],
+    "ignore": [
+      "listings.json",
+      "**/.*"
+    ],
     "headers": [
       {
         "source": "**",
-        "headers": [{ "key": "Referrer-Policy", "value": "no-referrer" }]
+        "headers": [
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          }
+        ]
       }
     ]
   },
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }

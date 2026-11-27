@@ -11,6 +11,8 @@ on:
       - "web/**"
       - "firebase.json"
       - "firestore.rules"
+      - "firestore.indexes.json"
+      - "tests/rules/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch: {}
 
@@ -31,6 +33,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+
+      # The rules decide who can see whom (partners, groups): test them on the
+      # Firestore emulator before anything is deployed.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Test Firestore security rules
+        working-directory: tests/rules
+        run: |
+          npm install --no-audit --no-fund
+          npm test
 
       - name: Write service-account credentials
         env:
@@ -58,7 +73,7 @@ jobs:
           fi
 
       - name: Deploy hosting and Firestore rules
-        run: npx --yes firebase-tools deploy --only hosting,firestore:rules --project auctiontraker --non-interactive
+        run: npx --yes firebase-tools deploy --only hosting,firestore:rules,firestore:indexes --project auctiontraker --non-interactive
 
       - name: Remove credentials
         if: always()

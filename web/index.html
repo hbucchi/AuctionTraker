@@ -378,6 +378,47 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
 .wl .map-dots i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
 .wl-foot { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 16px; }
 .wl-foot small { color: var(--muted); }
+
+/* ---- partners ---- */
+.pa-lead { margin: 0; color: var(--muted); max-width: 75ch; }
+.pa-lead b { color: var(--ink); }
+.pa-msg { margin: 0; padding: 10px 14px; border-left: 2px solid var(--gold); background: var(--surface); border-radius: 0 10px 10px 0; }
+.pa-sec { display: grid; gap: 12px; }
+.pa-sec h2 { font: 600 24px/1.2 var(--font-display); margin: 8px 0 0; }
+.pa-shead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; }
+.pa-list { display: grid; gap: 10px; }
+.pa-card { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+@media (max-width: 640px) { .pa-card { grid-template-columns: 40px minmax(0, 1fr); } .pa-act { grid-column: 1 / -1; } }
+.pa-hl { border-color: var(--gold); }
+.pa-avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font: 600 17px var(--font-display); letter-spacing: .04em; }
+.pa-body { display: grid; gap: 4px; min-width: 0; }
+.pa-name { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pa-name b { font: 600 18px/1.2 var(--font-display); }
+.pa-facts { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--muted); font-size: 13px; }
+.pa-facts a { color: var(--accent); }
+.pa-note { margin: 2px 0; font-style: italic; }
+.pa-act { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+.pa-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+.pa-inline .input { width: auto; min-width: 0; flex: 1 1 160px; }
+.pa-inline label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.pa-inline label .input { width: 130px; flex: none; }
+.pa-form { display: grid; gap: 14px; }
+.pa-form h3, .pa-ghead h3 { font: 600 20px/1.2 var(--font-display); margin: 0; }
+.pa-private { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px; margin: 0; }
+.pa-private legend { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 6px; }
+.pa-group { gap: 12px; }
+.pa-ghead { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pa-desc { margin: 0; color: var(--muted); }
+.pa-commit { display: grid; gap: 6px; font-size: 14px; }
+.pa-commit b { font: 600 20px var(--font-display); }
+.pa-bar { height: 8px; border-radius: 4px; background: var(--accent-soft); overflow: hidden; }
+.pa-bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.pa-sub { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
+.pa-sub h4 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.pa-row { display: flex; gap: 8px 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.check > span { display: inline; }
+.field > label.check { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; color: var(--ink); align-items: flex-start; }
+.field > label.check input { margin-top: 3px; }
 </style>
 <!-- preview:strip-below -->
 </head>
@@ -392,6 +433,7 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
       <button class="tab" role="tab" id="tab-lots" aria-selected="true" type="button">Oportunidades</button>
       <button class="tab" role="tab" id="tab-strategies" aria-selected="false" type="button">Estratégias <span class="count-badge" id="newBadge" hidden></span></button>
       <button class="tab" role="tab" id="tab-portfolio" aria-selected="false" type="button">Meu portfólio</button>
+      <button class="tab" role="tab" id="tab-partners" aria-selected="false" type="button">Parceiros <span class="count-badge" id="partnersBadge" hidden></span></button>
     </nav>
     <span class="freshness" id="freshness"></span>
     <span class="spacer"></span>
@@ -551,10 +593,12 @@ dialog.welcome::backdrop { background: rgb(29 27 24 / .45); backdrop-filter: blu
 </dialog>
 <div class="single" id="strategiesView" hidden></div>
 <div class="single" id="portfolioView" hidden></div>
+<div class="single" id="partnersView" hidden></div>
 
 <script src="firebase-config.js"></script>
 <script type="module">
 import { matchesStrategy, nextDeadline } from "./strategy.js";
+import { handle, similarity, cardFromStrategies, pairId, quotaOk, GOALS } from "./partners.js";
 import { roeRange, roeAssumptions, flip, chances, valueNeeded } from "./roe.js";
 
 const FIREBASE_SDK = "13.4.0";
@@ -582,6 +626,7 @@ let ALL = [];
 let shown = PAGE;
 let showImages = false;
 let store = null;               // persistence: Firestore (live) or this browser (preview)
+let partnersWired = false;
 let USER = { strategies: [], checklists: {}, alertState: {}, email: null, lastFilters: null, portfolio: [] };
 let activeStrategy = null;      // strategy applied to the list
 let editing = null;             // strategy being edited (a copy)
@@ -923,7 +968,8 @@ function fichaHTML(x) {
     <p class="estimate-note">Valores, ROE e chances desta ficha são <b>estimativas</b> de um modelo com dados públicos. Não são laudo de avaliação nem recomendação de investimento: confira o edital e visite o imóvel.</p>
     <section class="fsec"><h3>Imóvel</h3>${dl(facts)}
       <div class="st-actions"><a class="btn btn-primary btn-sm" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">Abrir no site do leiloeiro ↗</a>
-        <button class="btn btn-sm" type="button" data-won="${esc(x.id)}">Arrematei: adicionar ao portfólio</button></div></section>
+        <button class="btn btn-sm" type="button" data-won="${esc(x.id)}">Arrematei: adicionar ao portfólio</button>
+        <button class="btn btn-sm" type="button" data-group="${esc(x.id)}">Formar grupo para este imóvel</button></div></section>
     ${city.length ? `<section class="fsec"><h3>${esc(x.city || "Cidade")}${x.uf ? `/${esc(x.uf)}` : ""}</h3>${dl(city)}<p class="help">IBGE (Censo 2022, PIB dos Municípios) e PNUD (IDH-M 2010).</p></section>` : ""}
     <section class="fsec"><h3>Valor estimado</h3>${x.val && VMETA && !x.val.flag ? valHTML(x) : noValHTML(x)}</section>
     ${x.price ? `<section class="fsec"><h3>Retorno estimado (ROE) e custos</h3><div id="sim-${ckKey(x.id)}">${simHTML(x)}</div></section>` : ""}
@@ -1260,6 +1306,8 @@ function buildControls() {
   });
   $("list").addEventListener("click", (e) => {
     if (e.target.closest("[data-legend]")) { openLegend(true); return; }
+    const grp = e.target.closest("[data-group]");
+    if (grp) { const x = ALL.find((l) => l.id === grp.dataset.group); if (x) { pUI.creating = { name: (x.title || "").slice(0, 80), target_title: x.title, target_url: x.url, target_price: x.price }; showTab("partners"); } return; }
     const won = e.target.closest("[data-won]");
     if (won) { const x = ALL.find((l) => l.id === won.dataset.won); if (x) { editingProp = propertyFromListing(x); showTab("portfolio"); } return; }
     const b = e.target.closest("[data-ficha]");
@@ -1617,14 +1665,515 @@ function renderPortfolio() {
   v.querySelectorAll("[data-prop]").forEach((b) => b.addEventListener("click", () => { editingProp = { ...USER.portfolio.find((p) => p.id === b.dataset.prop) }; renderPortfolio(); }));
 }
 
+/* ---------- partners: anonymous matching, connections, groups ---------- */
+// Privacy is enforced by firestore.rules (tested in tests/rules); this code
+// only shows what the database lets each user read.
+let partners = null;            // partner store: Firestore (live) or a local demo (preview)
+let PS = null;                  // loaded partner state
+const pUI = { editCard: false, creating: null, applying: null, accepting: null, inviting: null, open: new Set(), editGroup: null, msg: "", busy: false };
+
+function firestorePartners(fs, db, user) {
+  const uid = user.uid, now = () => fs.serverTimestamp();
+  const d = (...p) => fs.doc(db, ...p);
+  const rows = async (q) => { const s = await fs.getDocs(q); const out = []; s.forEach((x) => out.push({ id: x.id, ...x.data() })); return out; };
+  const memberRef = (gid, who) => d("groups", gid, "members", who);
+  return {
+    uid, mode: "live",
+    async basics() {
+      const [c, k] = await Promise.all([fs.getDoc(d("partner_cards", uid)), fs.getDoc(d("contacts", uid))]);
+      return { card: c.exists() ? c.data() : null, contact: k.exists() ? k.data() : null };
+    },
+    async cards() { return (await rows(fs.query(fs.collection(db, "partner_cards"), fs.limit(500)))).map((c) => ({ ...c, uid: c.id })).filter((c) => c.uid !== uid); },
+    connections() { return rows(fs.query(fs.collection(db, "connections"), fs.where("users", "array-contains", uid))); },
+    async contactOf(other) { try { const s = await fs.getDoc(d("contacts", other)); return s.exists() ? s.data() : null; } catch { return null; } },
+    saveCard(c) {
+      return fs.setDoc(d("partner_cards", uid), { ufs: c.ufs, kinds: c.kinds, modalities: c.modalities, price_min: c.price_min, price_max: c.price_max,
+        ticket_min: c.ticket_min, ticket_max: c.ticket_max, goal: c.goal, updated_at: now() });
+    },
+    deleteCard() { return fs.deleteDoc(d("partner_cards", uid)); },
+    saveContact(c) { return fs.setDoc(d("contacts", uid), { name: c.name || "", email: c.email || "", phone: c.phone || "", note: c.note || "", updated_at: now() }); },
+    invite(to, note) {
+      return fs.setDoc(d("connections", pairId(uid, to)), { users: [uid, to], from: uid, to, status: "pending", note: (note || "").slice(0, 280), created_at: now(), updated_at: now() });
+    },
+    respond(cid, accept) { return fs.updateDoc(d("connections", cid), { status: accept ? "accepted" : "declined", updated_at: now() }); },
+    removeConnection(cid) { return fs.deleteDoc(d("connections", cid)); },
+    async memberships() {
+      const s = await fs.getDocs(fs.query(fs.collectionGroup(db, "members"), fs.where("uid", "==", uid)));
+      const out = []; s.forEach((x) => out.push({ gid: x.ref.parent.parent.id, ...x.data() })); return out;
+    },
+    async group(gid) { const s = await fs.getDoc(d("groups", gid)); return s.exists() ? { id: gid, ...s.data() } : null; },
+    members(gid, asLeader) {
+      const col = fs.collection(db, "groups", gid, "members");
+      return rows(asLeader ? col : fs.query(col, fs.where("status", "==", "approved")));
+    },
+    publicGroups() { return rows(fs.query(fs.collection(db, "groups"), fs.where("visibility", "==", "public"), fs.limit(100))); },
+    async createGroup(g, seat) {
+      const ref = fs.doc(fs.collection(db, "groups"));
+      const b = fs.writeBatch(db);
+      b.set(ref, { ...g, leader: uid, member_count: 1, created_at: now(), updated_at: now() });
+      b.set(fs.doc(ref, "members", uid), { uid, role: "leader", status: "approved", quota: seat.quota, name: seat.name, contact: seat.contact, created_at: now(), updated_at: now() });
+      await b.commit();
+      return ref.id;
+    },
+    updateGroup(gid, patch) { return fs.updateDoc(d("groups", gid), { ...patch, updated_at: now() }); },
+    closeGroup(gid, who) { const b = fs.writeBatch(db); for (const u of who) b.delete(memberRef(gid, u)); b.delete(d("groups", gid)); return b.commit(); },
+    apply(gid, seat) { return fs.setDoc(memberRef(gid, uid), { uid, role: "member", status: "applied", quota: seat.quota, name: seat.name, contact: seat.contact, created_at: now(), updated_at: now() }); },
+    inviteToGroup(gid, to) { return fs.setDoc(memberRef(gid, to), { uid: to, role: "member", status: "invited", quota: null, name: null, contact: null, created_at: now(), updated_at: now() }); },
+    acceptGroupInvite(gid, seat, count) {
+      const b = fs.writeBatch(db);
+      b.update(memberRef(gid, uid), { status: "approved", quota: seat.quota, name: seat.name, contact: seat.contact, updated_at: now() });
+      b.update(d("groups", gid), { member_count: count + 1, updated_at: now() });
+      return b.commit();
+    },
+    approve(gid, who, count) {
+      const b = fs.writeBatch(db);
+      b.update(memberRef(gid, who), { status: "approved", updated_at: now() });
+      b.update(d("groups", gid), { member_count: count + 1, updated_at: now() });
+      return b.commit();
+    },
+    removeMember(gid, who, wasApproved, count) {
+      const b = fs.writeBatch(db);
+      b.delete(memberRef(gid, who));
+      if (wasApproved) b.update(d("groups", gid), { member_count: count - 1, updated_at: now() });
+      return b.commit();
+    },
+    leave(gid, wasApproved, count) { return this.removeMember(gid, uid, wasApproved, count); },
+    setQuota(gid, quota) { return fs.updateDoc(memberRef(gid, uid), { quota, updated_at: now() }); },
+  };
+}
+
+// Preview: the same flows on sample data kept in this browser. Every sample
+// investor is labelled "exemplo"; invites and applications to them are
+// answered automatically after a moment so the whole flow can be tried.
+function demoPartners() {
+  const uid = "voce", KEY = "at.partnersDemo";
+  const seedCards = [
+    ["demo-a", ["SP", "PR"], ["apartamento", "casa"], ["judicial", "extrajudicial"], 150e3, 600e3, 50e3, 150e3, "revenda"],
+    ["demo-b", ["SP"], ["apartamento"], ["extrajudicial"], 300e3, 900e3, 100e3, 300e3, "aluguel"],
+    ["demo-c", ["MG", "SP", "RJ"], ["casa", "casa_condominio"], [], 200e3, 800e3, 80e3, 200e3, "revenda"],
+    ["demo-d", ["SC", "PR", "RS"], ["apartamento", "comercial"], ["judicial"], 100e3, 400e3, 30e3, 80e3, "ambos"],
+    ["demo-e", ["GO", "DF"], ["casa"], ["extrajudicial"], 250e3, 700e3, 100e3, 250e3, "revenda"],
+    ["demo-f", ["BA", "PE"], ["apartamento"], [], 120e3, 350e3, 40e3, 120e3, "aluguel"],
+    ["demo-g", ["SP"], ["comercial"], ["judicial"], 500e3, 2e6, 200e3, 600e3, "aluguel"],
+  ].map(([u, ufs, kinds, modalities, price_min, price_max, ticket_min, ticket_max, goal]) => ({ uid: u, ufs, kinds, modalities, price_min, price_max, ticket_min, ticket_max, goal }));
+  const names = { "demo-a": "Marina (exemplo)", "demo-b": "Rafael (exemplo)", "demo-c": "Helena (exemplo)", "demo-d": "Otávio (exemplo)", "demo-e": "Luísa (exemplo)", "demo-f": "Caio (exemplo)", "demo-g": "Beatriz (exemplo)" };
+  const fresh = () => ({
+    card: null, contact: null, cards: seedCards, connections: [],
+    groups: {
+      "demo-g1": { id: "demo-g1", name: "Apartamentos em Curitiba (exemplo)", description: "Comprar 1 apartamento judicial em Curitiba por até R$ 600 mil, revenda em 12 meses.", visibility: "public", leader: "demo-d", quota_min: 50e3, quota_max: 150e3, max_members: 5, member_count: 2, target_title: "", target_url: "", target_price: 520e3 },
+      "demo-g2": { id: "demo-g2", name: "Casas em condomínio SP (exemplo)", description: "Grupo para casas em condomínio no interior de SP.", visibility: "public", leader: "demo-c", quota_min: 100e3, quota_max: 300e3, max_members: 4, member_count: 1, target_title: "", target_url: "", target_price: null },
+    },
+    members: {
+      "demo-g1": { "demo-d": { uid: "demo-d", role: "leader", status: "approved", quota: 120e3, name: names["demo-d"], contact: "otavio@exemplo.com" }, "demo-a": { uid: "demo-a", role: "member", status: "approved", quota: 80e3, name: names["demo-a"], contact: "marina@exemplo.com" } },
+      "demo-g2": { "demo-c": { uid: "demo-c", role: "leader", status: "approved", quota: 200e3, name: names["demo-c"], contact: "helena@exemplo.com" } },
+    },
+  });
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch { S = fresh(); }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* storage blocked: keep in memory */ } };
+  const later = (fn) => setTimeout(() => { fn(); save(); if (!$("partnersView").hidden) loadPartners().then(() => { if (!editingSomething()) renderPartners(); }); }, 1500);
+  const cid = (a, b) => pairId(a, b);
+  return {
+    uid, mode: "preview",
+    async basics() { return { card: S.card, contact: S.contact }; },
+    async cards() { return S.cards; },
+    async connections() { return S.connections; },
+    async contactOf(other) { const c = S.connections.find((x) => x.users.includes(other)); return c?.status === "accepted" ? { name: names[other] || other, email: `${other}@exemplo.com`, phone: "", note: "Contato de exemplo" } : null; },
+    async saveCard(c) { S.card = { ...c }; save(); },
+    async deleteCard() { S.card = null; save(); },
+    async saveContact(c) { S.contact = { ...c }; save(); },
+    async invite(to, note) {
+      const c = { id: cid(uid, to), users: [uid, to], from: uid, to, status: "pending", note };
+      S.connections.push(c); save();
+      later(() => { c.status = to === "demo-e" ? "declined" : "accepted"; const x = S.connections.find((k) => k.id === c.id); if (x) x.status = c.status; });
+    },
+    async respond(id, accept) { const c = S.connections.find((x) => x.id === id); if (c) c.status = accept ? "accepted" : "declined"; save(); },
+    async removeConnection(id) { S.connections = S.connections.filter((x) => x.id !== id); save(); },
+    async memberships() { return Object.entries(S.members).flatMap(([gid, m]) => (m[uid] ? [{ gid, ...m[uid] }] : [])); },
+    async group(gid) { return S.groups[gid] || null; },
+    async members(gid, asLeader) { return Object.values(S.members[gid] || {}).filter((m) => asLeader || m.status === "approved"); },
+    async publicGroups() { return Object.values(S.groups).filter((g) => g.visibility === "public"); },
+    async createGroup(g, seat) {
+      const gid = `g${Date.now()}`;
+      S.groups[gid] = { ...g, id: gid, leader: uid, member_count: 1 };
+      S.members[gid] = { [uid]: { uid, role: "leader", status: "approved", ...seat } };
+      save(); return gid;
+    },
+    async updateGroup(gid, patch) { Object.assign(S.groups[gid], patch); save(); },
+    async closeGroup(gid) { delete S.groups[gid]; delete S.members[gid]; save(); },
+    async apply(gid, seat) {
+      S.members[gid][uid] = { uid, role: "member", status: "applied", ...seat }; save();
+      later(() => { const m = S.members[gid]?.[uid]; if (m && m.status === "applied") { m.status = "approved"; S.groups[gid].member_count++; } });
+    },
+    async inviteToGroup(gid, to) {
+      S.members[gid][to] = { uid: to, role: "member", status: "invited", quota: null, name: null, contact: null }; save();
+      later(() => { const m = S.members[gid]?.[to]; const g = S.groups[gid]; if (m && m.status === "invited" && g.member_count < g.max_members) { Object.assign(m, { status: "approved", quota: g.quota_min, name: names[to] || to, contact: `${to}@exemplo.com` }); g.member_count++; } });
+    },
+    async acceptGroupInvite(gid, seat) { Object.assign(S.members[gid][uid], { status: "approved", ...seat }); S.groups[gid].member_count++; save(); },
+    async approve(gid, who) { S.members[gid][who].status = "approved"; S.groups[gid].member_count++; save(); },
+    async removeMember(gid, who, wasApproved) { delete S.members[gid][who]; if (wasApproved) S.groups[gid].member_count--; save(); },
+    async leave(gid, wasApproved) { return this.removeMember(gid, uid, wasApproved); },
+    async setQuota(gid, quota) { S.members[gid][uid].quota = quota; save(); },
+  };
+}
+
+const editingSomething = () => !!(pUI.editCard || pUI.creating || pUI.applying || pUI.accepting || pUI.inviting
+  || document.activeElement?.closest?.("#partnersView form"));
+
+async function loadPartners() {
+  const me = partners.uid;
+  const [{ card, contact }, connections, memberships] = await Promise.all([partners.basics(), partners.connections(), partners.memberships()]);
+  // only investors who opted in can browse others (the rules enforce it too)
+  const [cards, pub] = card ? await Promise.all([partners.cards(), partners.publicGroups()]) : [[], []];
+  const groups = {};
+  await Promise.all(memberships.map(async (m) => {
+    const g = await partners.group(m.gid);
+    if (!g) return;
+    const asLeader = g.leader === me;
+    const members = m.status === "approved" ? await partners.members(m.gid, asLeader) : [];
+    groups[m.gid] = { g, me: m, members, asLeader };
+  }));
+  const contacts = {};
+  await Promise.all(connections.filter((c) => c.status === "accepted").map(async (c) => {
+    const other = c.users.find((u) => u !== me);
+    contacts[other] = await partners.contactOf(other);
+  }));
+  PS = { me, card, contact, cards, connections, groups, contacts, publicGroups: pub.filter((g) => !groups[g.id]) };
+  updatePartnersBadge();
+  return PS;
+}
+
+function updatePartnersBadge() {
+  if (!PS) return;
+  const me = PS.me;
+  const n = PS.connections.filter((c) => c.status === "pending" && c.to === me).length
+    + Object.values(PS.groups).filter((x) => x.me.status === "invited").length
+    + Object.values(PS.groups).filter((x) => x.asLeader).reduce((s, x) => s + x.members.filter((m) => m.status === "applied").length, 0);
+  $("partnersBadge").hidden = !n;
+  $("partnersBadge").textContent = n;
+}
+
+const optLabel = (key, v) => ((SPEC?.sets || []).find((f) => f.key === key)?.options || []).find((o) => o[0] === v)?.[1] || v;
+const rangeTxt = (a, b) => (a != null && b != null ? `${brlShort.format(a)}–${brlShort.format(b)}` : a != null ? `desde ${brlShort.format(a)}` : b != null ? `até ${brlShort.format(b)}` : "qualquer valor");
+const goalTxt = (g) => (GOALS.find((x) => x[0] === g) || [, ""])[1];
+const initialsOf = (h) => h.slice(-4, -2);
+
+function cardSummary(c) {
+  return [
+    c.ufs?.length ? c.ufs.join(", ") : "Todo o Brasil",
+    c.kinds?.length ? c.kinds.map((k) => optLabel("kind", k)).join(", ") : "Qualquer tipo",
+    `Imóveis de ${rangeTxt(c.price_min, c.price_max)}`,
+    `Aporte por negócio: ${rangeTxt(c.ticket_min, c.ticket_max)}`,
+    goalTxt(c.goal),
+  ].filter(Boolean).map((t) => `<span>${esc(t)}</span>`).join("");
+}
+
+function chipSet(name, key, selected) {
+  const opts = (SPEC?.sets || []).find((f) => f.key === key)?.options || [];
+  return `<div class="chips">${opts.map(([v, l]) => `<label class="chip-toggle"><input type="checkbox" name="${name}" value="${esc(v)}" ${selected.includes(v) ? "checked" : ""}><span>${esc(l)}</span></label>`).join("")}</div>`;
+}
+
+function cardForm() {
+  const c = PS.card || cardFromStrategies(USER.strategies);
+  const k = PS.contact || { name: "", email: USER.email || "", phone: "" };
+  return `<form class="pa-form" id="paCardForm">
+    <div class="field"><span class="label">Estados de interesse</span>${chipSet("pc-uf", "uf", c.ufs || [])}<span class="help">Nenhum marcado = todo o Brasil.</span></div>
+    <div class="field"><span class="label">Tipos de imóvel</span>${chipSet("pc-kind", "kind", c.kinds || [])}</div>
+    <div class="field"><span class="label">Tipo de leilão</span>${chipSet("pc-mod", "modality", c.modalities || [])}</div>
+    <div class="row2"><div class="field"><label for="pcPmin">Imóveis de (R$)</label><input class="input" id="pcPmin" type="number" min="0" step="any" value="${c.price_min ?? ""}"></div>
+      <div class="field"><label for="pcPmax">até (R$)</label><input class="input" id="pcPmax" type="number" min="0" step="any" value="${c.price_max ?? ""}"></div></div>
+    <div class="row2"><div class="field"><label for="pcTmin">Quero aportar por negócio, de (R$)</label><input class="input" id="pcTmin" type="number" min="0" step="any" value="${c.ticket_min ?? ""}"></div>
+      <div class="field"><label for="pcTmax">até (R$)</label><input class="input" id="pcTmax" type="number" min="0" step="any" value="${c.ticket_max ?? ""}"></div></div>
+    <div class="field"><label for="pcGoal">Objetivo</label><select class="input" id="pcGoal">${GOALS.map(([v, l]) => `<option value="${v}" ${c.goal === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    <fieldset class="pa-private"><legend>Seu contato (privado)</legend>
+      <p class="help">Só aparece para quem tiver uma conexão aceita com você e para os sócios dos grupos em que você entrar.</p>
+      <div class="row2"><div class="field"><label for="pcName">Nome</label><input class="input" id="pcName" value="${esc(k.name)}" maxlength="80"></div>
+        <div class="field"><label for="pcPhone">WhatsApp / telefone</label><input class="input" id="pcPhone" value="${esc(k.phone)}" maxlength="40"></div></div>
+      <div class="field"><label for="pcEmail">E-mail</label><input class="input" id="pcEmail" type="email" value="${esc(k.email)}" maxlength="120"></div>
+    </fieldset>
+    <div class="st-actions"><button class="btn btn-primary" type="submit">${PS.card ? "Salvar perfil" : "Ativar perfil anônimo"}</button>
+      <button class="btn" type="button" data-pa="card-cancel">Cancelar</button></div>
+  </form>`;
+}
+
+function seatFields(prefix, g, quota) {
+  const k = PS.contact || {};
+  return `<div class="row2"><div class="field"><label for="${prefix}Quota">Minha cota (R$)</label>
+      <input class="input" id="${prefix}Quota" type="number" min="${g ? g.quota_min : 0}" ${g ? `max="${g.quota_max}"` : ""} step="any" value="${quota ?? (g ? g.quota_min : "")}" required>
+      ${g ? `<span class="help">Entre ${brl.format(g.quota_min)} e ${brl.format(g.quota_max)}.</span>` : ""}</div>
+    <div class="field"><label for="${prefix}Name">Nome para os sócios</label><input class="input" id="${prefix}Name" value="${esc(k.name || "")}" maxlength="80" required></div></div>
+    <div class="field"><label for="${prefix}Contact">Contato para os sócios (e-mail ou WhatsApp)</label><input class="input" id="${prefix}Contact" value="${esc(k.email || k.phone || "")}" maxlength="120" required></div>`;
+}
+const readSeat = (prefix) => ({ quota: num($(`${prefix}Quota`).value), name: $(`${prefix}Name`).value.trim(), contact: $(`${prefix}Contact`).value.trim() });
+
+function groupForm() {
+  const t = pUI.creating || {};
+  return `<form class="pa-form st-card" id="paGroupForm">
+    <h3>Novo grupo de investimento</h3>
+    <div class="field"><label for="pgName">Nome do grupo</label><input class="input" id="pgName" maxlength="80" required value="${esc(t.name || "")}" placeholder="Ex.: Apartamento judicial em Moema"></div>
+    <div class="field"><label for="pgDesc">Descrição</label><textarea class="input" id="pgDesc" rows="2" maxlength="500" placeholder="Estratégia, prazo, como as decisões serão tomadas…">${esc(t.description || "")}</textarea></div>
+    <div class="field"><span class="label">Quem pode entrar</span>
+      <label class="check"><input type="radio" name="pgVis" value="public" checked> <span><b>Público</b>: aparece para investidores com perfil; cada um se candidata com uma cota e você aprova.</span></label>
+      <label class="check"><input type="radio" name="pgVis" value="private"> <span><b>Só convidados</b>: invisível; você convida conexões ou investidores compatíveis.</span></label></div>
+    <div class="row2"><div class="field"><label for="pgQmin">Cota mínima por sócio (R$)</label><input class="input" id="pgQmin" type="number" min="1000" step="any" required value="${t.quota_min ?? ""}"></div>
+      <div class="field"><label for="pgQmax">Cota máxima por sócio (R$)</label><input class="input" id="pgQmax" type="number" min="1000" step="any" required value="${t.quota_max ?? ""}"></div></div>
+    <div class="field"><label for="pgMax">Número máximo de sócios (com você)</label><input class="input" id="pgMax" type="number" min="2" max="50" step="1" value="${t.max_members ?? 5}" required></div>
+    <fieldset class="pa-private"><legend>Imóvel-alvo (opcional)</legend>
+      <div class="field"><label for="pgTitle">Imóvel</label><input class="input" id="pgTitle" maxlength="160" value="${esc(t.target_title || "")}" placeholder="Pode deixar em branco e decidir com o grupo"></div>
+      <div class="row2"><div class="field"><label for="pgUrl">Link do leilão</label><input class="input" id="pgUrl" type="url" value="${esc(t.target_url || "")}"></div>
+        <div class="field"><label for="pgPrice">Valor do lance (R$)</label><input class="input" id="pgPrice" type="number" min="0" step="any" value="${t.target_price ?? ""}"></div></div>
+    </fieldset>
+    <fieldset class="pa-private"><legend>Sua participação</legend>${seatFields("pgSeat", null, t.my_quota)}</fieldset>
+    <div class="st-actions"><button class="btn btn-primary" type="submit">Criar grupo</button><button class="btn" type="button" data-pa="group-cancel">Cancelar</button></div>
+  </form>`;
+}
+
+function connState(other) {
+  return PS.connections.find((c) => c.users.includes(other));
+}
+
+function matchCard(c) {
+  const s = similarity(PS.card, c), h = handle(c.uid), conn = connState(c.uid), me = PS.me;
+  let action;
+  if (!conn) action = pUI.inviting === c.uid
+    ? `<div class="pa-inline"><input class="input" id="paNote" maxlength="280" placeholder="Mensagem (opcional): o que você procura"><button class="btn btn-primary btn-sm" type="button" data-pa="invite-send" data-uid="${esc(c.uid)}">Enviar convite</button><button class="btn btn-sm" type="button" data-pa="invite-cancel">Cancelar</button></div>`
+    : `<button class="btn btn-sm" type="button" data-pa="invite" data-uid="${esc(c.uid)}">Convidar para conectar</button>`;
+  else if (conn.status === "accepted") action = `<span class="pill good">Conectado</span>`;
+  else if (conn.status === "pending") action = conn.from === me ? `<span class="pill mute">Convite enviado</span>` : `<span class="pill warn">Convidou você: veja em Conexões</span>`;
+  else action = `<span class="pill mute">${conn.from === me ? "Convite recusado" : "Você recusou"}</span>`;
+  return `<article class="pa-card">
+    <div class="pa-avatar" aria-hidden="true">${esc(initialsOf(h))}</div>
+    <div class="pa-body"><div class="pa-name"><b>${esc(h)}</b><span class="pill ${s.score >= 70 ? "good" : s.score >= 40 ? "warn" : "mute"}">${s.score}% compatível</span></div>
+      <div class="pa-facts">${cardSummary(c)}</div>
+      ${s.shared.ufs.length || s.shared.kinds.length ? `<div class="help">Em comum: ${esc([...s.shared.ufs, ...s.shared.kinds.map((k) => optLabel("kind", k))].join(", "))}</div>` : ""}
+    </div>
+    <div class="pa-act">${action}</div>
+  </article>`;
+}
+
+function connectionRow(c) {
+  const me = PS.me, other = c.users.find((u) => u !== me), h = handle(other), k = PS.contacts[other];
+  if (c.status === "accepted") return `<article class="pa-card">
+      <div class="pa-avatar" aria-hidden="true">${esc(initialsOf(h))}</div>
+      <div class="pa-body"><div class="pa-name"><b>${esc(k?.name || h)}</b><span class="pill good">Conectado</span></div>
+        <div class="pa-facts">${k?.email ? `<a href="mailto:${esc(k.email)}">${esc(k.email)}</a>` : ""}${k?.phone ? `<span>${esc(k.phone)}</span>` : ""}${!k ? `<span>${esc(h)} ainda não preencheu o contato.</span>` : ""}</div></div>
+      <div class="pa-act"><button class="btn btn-sm" type="button" data-pa="conn-remove" data-id="${esc(c.id)}">Desfazer conexão</button></div></article>`;
+  if (c.status === "pending" && c.to === me) return `<article class="pa-card pa-hl">
+      <div class="pa-avatar" aria-hidden="true">${esc(initialsOf(h))}</div>
+      <div class="pa-body"><div class="pa-name"><b>${esc(h)}</b><span class="pill warn">Quer se conectar</span></div>
+        ${c.note ? `<p class="pa-note">“${esc(c.note)}”</p>` : ""}
+        <div class="help">Se aceitar, vocês dois passam a ver o nome e o contato um do outro.</div></div>
+      <div class="pa-act"><button class="btn btn-primary btn-sm" type="button" data-pa="conn-accept" data-id="${esc(c.id)}">Aceitar</button><button class="btn btn-sm" type="button" data-pa="conn-decline" data-id="${esc(c.id)}">Recusar</button></div></article>`;
+  if (c.status === "pending") return `<article class="pa-card">
+      <div class="pa-avatar" aria-hidden="true">${esc(initialsOf(h))}</div>
+      <div class="pa-body"><div class="pa-name"><b>${esc(h)}</b><span class="pill mute">Aguardando resposta</span></div></div>
+      <div class="pa-act"><button class="btn btn-sm" type="button" data-pa="conn-remove" data-id="${esc(c.id)}">Cancelar convite</button></div></article>`;
+  return "";
+}
+
+function groupCard(x) {
+  const { g, me, members, asLeader } = x, gid = g.id;
+  const approved = members.filter((m) => m.status === "approved");
+  const committed = approved.reduce((s, m) => s + (m.quota || 0), 0);
+  const role = asLeader ? `<span class="pill good">Líder</span>` : me.status === "approved" ? `<span class="pill mute">Sócio</span>` : me.status === "applied" ? `<span class="pill warn">Candidatura em análise</span>` : `<span class="pill warn">Convite</span>`;
+  const head = `<div class="pa-ghead"><h3>${esc(g.name)}</h3>${role}<span class="pill mute">${g.visibility === "public" ? "Público" : "Só convidados"}</span></div>
+    ${g.description ? `<p class="pa-desc">${esc(g.description)}</p>` : ""}
+    <div class="pa-facts"><span>${g.member_count}/${g.max_members} sócios</span><span>Cota de ${brl.format(g.quota_min)} a ${brl.format(g.quota_max)}</span>
+      ${g.target_title || g.target_url ? `<span>Alvo: ${g.target_url ? `<a href="${esc(safeUrl(g.target_url))}" target="_blank" rel="noopener noreferrer">${esc(g.target_title || "ver leilão")} ↗</a>` : esc(g.target_title)}</span>` : ""}</div>`;
+  if (me.status === "invited") {
+    return `<article class="st-card pa-group pa-hl">${head}
+      ${pUI.accepting === gid ? `<form class="pa-form" data-form="accept" data-gid="${esc(gid)}">${seatFields("paAcc", g)}
+        <div class="st-actions"><button class="btn btn-primary btn-sm" type="submit">Entrar no grupo</button><button class="btn btn-sm" type="button" data-pa="accept-cancel">Cancelar</button></div></form>`
+      : `<p class="help">O líder ${esc(handle(g.leader))} convidou você. Ao entrar, os sócios veem seu nome, contato e cota.</p>
+        <div class="st-actions"><button class="btn btn-primary btn-sm" type="button" data-pa="accept" data-gid="${esc(gid)}">Aceitar convite</button><button class="btn btn-sm" type="button" data-pa="decline-group" data-gid="${esc(gid)}">Recusar</button></div>`}
+    </article>`;
+  }
+  if (me.status === "applied") {
+    return `<article class="st-card pa-group">${head}<p class="help">Sua cota proposta: <b>${brl.format(me.quota)}</b>. O líder ainda não respondeu.</p>
+      <div class="st-actions"><button class="btn btn-sm" type="button" data-pa="leave" data-gid="${esc(gid)}">Retirar candidatura</button></div></article>`;
+  }
+  const open = pUI.open.has(gid);
+  const pct = g.target_price ? Math.min(100, Math.round((100 * committed) / g.target_price)) : null;
+  const apps = asLeader ? members.filter((m) => m.status === "applied") : [];
+  const invited = asLeader ? members.filter((m) => m.status === "invited") : [];
+  const room = g.max_members - g.member_count;
+  const inGroup = new Set(members.map((m) => m.uid));
+  const canInvite = asLeader ? [
+    ...PS.connections.filter((c) => c.status === "accepted").map((c) => c.users.find((u) => u !== PS.me)),
+    ...PS.cards.map((c) => c.uid),
+  ].filter((u, i, a) => a.indexOf(u) === i && !inGroup.has(u)) : [];
+  return `<article class="st-card pa-group${apps.length ? " pa-hl" : ""}">${head}
+    <div class="pa-commit"><div><b>${brl.format(committed)}</b> comprometidos${g.target_price ? ` de ${brl.format(g.target_price)} (${pct}%)` : ""}</div>
+      ${g.target_price ? `<div class="pa-bar" role="img" aria-label="${pct}% do lance coberto"><i style="width:${pct}%"></i></div>` : ""}</div>
+    ${apps.length ? `<div class="pa-sub"><h4>Candidaturas (${apps.length})</h4>${apps.map((m) => `<div class="pa-row"><span><b>${esc(m.name)}</b> · cota ${brl.format(m.quota)} · ${esc(m.contact)}</span>
+      <span class="st-actions">${room > 0 ? `<button class="btn btn-primary btn-sm" type="button" data-pa="approve" data-gid="${esc(gid)}" data-uid="${esc(m.uid)}">Aprovar</button>` : `<span class="help">Grupo cheio</span>`}
+      <button class="btn btn-sm" type="button" data-pa="reject" data-gid="${esc(gid)}" data-uid="${esc(m.uid)}">Recusar</button></span></div>`).join("")}</div>` : ""}
+    <button class="link-btn" type="button" data-pa="toggle-group" data-gid="${esc(gid)}" aria-expanded="${open}">${open ? "Ocultar detalhes" : "Ver sócios e opções"}</button>
+    ${open ? `<div class="pa-sub"><h4>Sócios</h4>${approved.map((m) => `<div class="pa-row"><span><b>${esc(m.name)}</b>${m.role === "leader" ? " (líder)" : ""} · cota ${brl.format(m.quota)} · ${esc(m.contact)}</span>
+        ${asLeader && m.uid !== PS.me ? `<button class="btn btn-sm" type="button" data-pa="remove" data-gid="${esc(gid)}" data-uid="${esc(m.uid)}">Remover</button>` : ""}</div>`).join("")}
+      ${invited.length ? `<div class="help">Convites pendentes: ${invited.map((m) => esc(handle(m.uid))).join(", ")}</div>` : ""}
+      ${me.status === "approved" && !asLeader ? `<form class="pa-inline" data-form="quota" data-gid="${esc(gid)}"><label for="q-${esc(gid)}">Minha cota (R$)</label><input class="input" id="q-${esc(gid)}" type="number" min="${g.quota_min}" max="${g.quota_max}" step="any" value="${me.quota}"><button class="btn btn-sm" type="submit">Atualizar</button></form>` : ""}
+      ${asLeader ? `<div class="pa-sub"><h4>Convidar</h4>${room <= 0 ? `<p class="help">Grupo cheio.</p>` : canInvite.length ? `<div class="pa-inline"><select class="input" id="inv-${esc(gid)}">${canInvite.map((u) => `<option value="${esc(u)}">${esc(PS.contacts[u]?.name || handle(u))}${PS.cards.find((c) => c.uid === u) ? ` · ${similarity(PS.card, PS.cards.find((c) => c.uid === u)).score}% compatível` : ""}</option>`).join("")}</select><button class="btn btn-sm" type="button" data-pa="group-invite" data-gid="${esc(gid)}">Convidar</button></div><p class="help">Quem você convidar vê o grupo e decide se entra, com uma cota na sua faixa.</p>` : `<p class="help">Conecte-se a investidores (acima) para convidá-los.</p>`}</div>
+        <div class="pa-sub"><h4>Regras do grupo</h4><form class="pa-inline" data-form="rules" data-gid="${esc(gid)}">
+          <label>Cota mín. <input class="input" name="qmin" type="number" min="1000" step="any" value="${g.quota_min}"></label>
+          <label>Cota máx. <input class="input" name="qmax" type="number" min="1000" step="any" value="${g.quota_max}"></label>
+          <label>Máx. sócios <input class="input" name="max" type="number" min="${Math.max(2, g.member_count)}" max="50" value="${g.max_members}"></label>
+          <button class="btn btn-sm" type="submit">Salvar</button></form></div>
+        <div class="st-actions"><button class="btn btn-sm btn-danger" type="button" data-pa="close-group" data-gid="${esc(gid)}">Encerrar grupo</button></div>`
+      : `<div class="st-actions"><button class="btn btn-sm btn-danger" type="button" data-pa="leave" data-gid="${esc(gid)}">Sair do grupo</button></div>`}
+    </div>` : ""}
+  </article>`;
+}
+
+function publicGroupCard(g) {
+  const full = g.member_count >= g.max_members;
+  const s = PS.card ? similarity(PS.card, PS.cards.find((c) => c.uid === g.leader) || {}) : null;
+  return `<article class="st-card pa-group">
+    <div class="pa-ghead"><h3>${esc(g.name)}</h3><span class="pill mute">${g.member_count}/${g.max_members} sócios</span></div>
+    ${g.description ? `<p class="pa-desc">${esc(g.description)}</p>` : ""}
+    <div class="pa-facts"><span>Líder: ${esc(handle(g.leader))}${s && s.score ? ` · ${s.score}% compatível com você` : ""}</span><span>Cota de ${brl.format(g.quota_min)} a ${brl.format(g.quota_max)}</span>
+      ${g.target_price ? `<span>Lance-alvo ${brl.format(g.target_price)}</span>` : ""}
+      ${g.target_title || g.target_url ? `<span>Alvo: ${g.target_url ? `<a href="${esc(safeUrl(g.target_url))}" target="_blank" rel="noopener noreferrer">${esc(g.target_title || "ver leilão")} ↗</a>` : esc(g.target_title)}</span>` : ""}</div>
+    ${full ? `<p class="help">Grupo completo.</p>` : pUI.applying === g.id
+      ? `<form class="pa-form" data-form="apply" data-gid="${esc(g.id)}">${seatFields("paApp", g)}<p class="help">O líder vê seu nome, contato e cota para decidir. Os outros sócios só veem você se for aprovado.</p>
+        <div class="st-actions"><button class="btn btn-primary btn-sm" type="submit">Enviar candidatura</button><button class="btn btn-sm" type="button" data-pa="apply-cancel">Cancelar</button></div></form>`
+      : `<div class="st-actions"><button class="btn btn-sm" type="button" data-pa="apply" data-gid="${esc(g.id)}">Candidatar-me</button></div>`}
+  </article>`;
+}
+
+function renderPartners() {
+  const v = $("partnersView");
+  if (!PS) { v.innerHTML = `<div class="empty">Carregando…</div>`; return; }
+  const me = PS.me;
+  const incoming = PS.connections.filter((c) => c.status === "pending" && c.to === me);
+  const others = PS.connections.filter((c) => !(c.status === "pending" && c.to === me) && c.status !== "declined");
+  const mine = Object.values(PS.groups).sort((a, b) => (a.me.status === "invited" ? -1 : 0) - (b.me.status === "invited" ? -1 : 0));
+  const matches = PS.card ? [...PS.cards].map((c) => ({ c, s: similarity(PS.card, c).score })).sort((a, b) => b.s - a.s).slice(0, 30) : [];
+  v.innerHTML = `<div class="st-head"><h1>Parceiros</h1></div>
+    <p class="pa-lead">Encontre investidores com o mesmo perfil e formem grupos para arrematar juntos. <b>Ninguém vê seu nome ou contato até vocês dois concordarem.</b>${partners.mode === "preview" ? " <span class=\"pill warn\">Prévia: investidores e grupos de exemplo</span>" : ""}</p>
+    ${pUI.msg ? `<p class="pa-msg" role="status">${esc(pUI.msg)}</p>` : ""}
+
+    <section class="pa-sec"><h2>Meu perfil de sócio</h2>
+      ${pUI.editCard ? cardForm() : PS.card ? `<article class="st-card"><div class="pa-name"><b>${esc(handle(me))}</b><span class="pill good">Visível, anônimo</span></div>
+          <div class="pa-facts">${cardSummary(PS.card)}</div>
+          <p class="help">É assim que os outros veem você: sem nome e sem contato.</p>
+          <div class="st-actions"><button class="btn btn-sm" type="button" data-pa="card-edit">Editar</button><button class="btn btn-sm" type="button" data-pa="card-off">Ficar invisível</button></div></article>`
+        : `<article class="st-card"><p>Ative um perfil <b>anônimo</b> para ver investidores compatíveis e grupos abertos. Os outros verão só um apelido (como <b>${esc(handle(me))}</b>) e suas preferências: estados, tipos de imóvel, faixa de preço e quanto quer aportar. Já preenchemos com as suas estratégias.</p>
+          <div class="st-actions"><button class="btn btn-primary" type="button" data-pa="card-edit">Criar perfil anônimo</button></div></article>`}
+    </section>
+
+    ${incoming.length || others.length ? `<section class="pa-sec"><h2>Conexões</h2><div class="pa-list">${[...incoming, ...others].map(connectionRow).join("")}</div></section>` : ""}
+
+    <section class="pa-sec"><div class="pa-shead"><h2>Grupos de investimento</h2>${!pUI.creating ? `<button class="btn btn-primary btn-sm" type="button" data-pa="group-new">Criar grupo</button>` : ""}</div>
+      <p class="help">Como uma guilda: o líder define a cota mínima e máxima de cada sócio e quantos sócios cabem, e aprova cada candidatura. Juntos, vocês dão o lance.</p>
+      ${pUI.creating ? groupForm() : ""}
+      ${mine.length ? `<div class="pa-list">${mine.map(groupCard).join("")}</div>` : !pUI.creating ? `<div class="empty"><span>Você ainda não participa de nenhum grupo.</span></div>` : ""}
+    </section>
+
+    ${PS.card ? `<section class="pa-sec"><h2>Grupos abertos</h2>
+      ${PS.publicGroups.length ? `<div class="pa-list">${PS.publicGroups.map(publicGroupCard).join("")}</div>` : `<div class="empty"><span>Nenhum grupo público no momento. Crie o primeiro.</span></div>`}</section>
+    <section class="pa-sec"><h2>Investidores compatíveis</h2>
+      ${matches.length ? `<div class="pa-list">${matches.map(({ c }) => matchCard(c)).join("")}</div>` : `<div class="empty"><span>Ainda não há outros investidores com perfil ativo.</span></div>`}</section>` : ""}`;
+}
+
+async function paRun(fn, okMsg) {
+  if (pUI.busy) return;
+  pUI.busy = true;
+  try { await fn(); pUI.msg = okMsg || ""; await loadPartners(); }
+  catch (e) { pUI.msg = `Não foi possível concluir: ${e.message}`; }
+  finally { pUI.busy = false; renderPartners(); }
+}
+
+function wirePartners() {
+  const v = $("partnersView");
+  v.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-pa]");
+    if (!b) return;
+    const a = b.dataset.pa, gid = b.dataset.gid, u = b.dataset.uid, id = b.dataset.id, G = gid && PS.groups[gid];
+    const ui = (fn) => { fn(); pUI.msg = ""; renderPartners(); };
+    switch (a) {
+      case "card-edit": return ui(() => { pUI.editCard = true; });
+      case "card-cancel": return ui(() => { pUI.editCard = false; });
+      case "card-off": return paRun(() => partners.deleteCard(), "Seu perfil está invisível. Conexões e grupos continuam.");
+      case "invite": return ui(() => { pUI.inviting = u; });
+      case "invite-cancel": return ui(() => { pUI.inviting = null; });
+      case "invite-send": return paRun(async () => { await partners.invite(u, $("paNote")?.value || ""); pUI.inviting = null; }, "Convite enviado. Vocês só verão o contato um do outro se ele aceitar.");
+      case "conn-accept": return paRun(() => partners.respond(id, true), "Conexão aceita: agora vocês veem o contato um do outro.");
+      case "conn-decline": return paRun(() => partners.respond(id, false), "Convite recusado. Essa pessoa não poderá convidar você de novo.");
+      case "conn-remove": return paRun(() => partners.removeConnection(id), "Conexão desfeita.");
+      case "group-new": return ui(() => { pUI.creating = {}; });
+      case "group-cancel": return ui(() => { pUI.creating = null; });
+      case "toggle-group": return ui(() => { pUI.open.has(gid) ? pUI.open.delete(gid) : pUI.open.add(gid); });
+      case "apply": return ui(() => { pUI.applying = gid; });
+      case "apply-cancel": return ui(() => { pUI.applying = null; });
+      case "accept": return ui(() => { pUI.accepting = gid; });
+      case "accept-cancel": return ui(() => { pUI.accepting = null; });
+      case "decline-group": return paRun(() => partners.removeMember(gid, PS.me, false), "Convite recusado.");
+      case "approve": return paRun(() => partners.approve(gid, u, G.g.member_count), "Sócio aprovado.");
+      case "reject": return paRun(() => partners.removeMember(gid, u, false, G.g.member_count), "Candidatura recusada.");
+      case "remove": return paRun(() => partners.removeMember(gid, u, true, G.g.member_count), "Sócio removido.");
+      case "group-invite": return paRun(() => partners.inviteToGroup(gid, $(`inv-${gid}`).value), "Convite enviado. A pessoa decide se entra.");
+      case "leave": return paRun(() => partners.leave(gid, G.me.status === "approved", G.g.member_count), "Você saiu do grupo.");
+      case "close-group": return paRun(() => partners.closeGroup(gid, G.members.map((m) => m.uid)), "Grupo encerrado.");
+    }
+  });
+  v.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = e.target;
+    if (f.id === "paCardForm") {
+      const picked = (n) => [...f.querySelectorAll(`input[name="${n}"]:checked`)].map((i) => i.value);
+      const c = { ufs: picked("pc-uf"), kinds: picked("pc-kind"), modalities: picked("pc-mod"), price_min: num($("pcPmin").value), price_max: num($("pcPmax").value),
+        ticket_min: num($("pcTmin").value), ticket_max: num($("pcTmax").value), goal: $("pcGoal").value };
+      const k = { name: $("pcName").value.trim(), email: $("pcEmail").value.trim(), phone: $("pcPhone").value.trim() };
+      return paRun(async () => { await partners.saveCard(c); await partners.saveContact(k); pUI.editCard = false; }, "Perfil salvo. Você aparece de forma anônima.");
+    }
+    if (f.id === "paGroupForm") {
+      const g = { name: $("pgName").value.trim(), description: $("pgDesc").value.trim(), visibility: f.querySelector('input[name="pgVis"]:checked').value,
+        quota_min: num($("pgQmin").value), quota_max: num($("pgQmax").value), max_members: Math.round(num($("pgMax").value) || 0),
+        target_title: $("pgTitle").value.trim(), target_url: $("pgUrl").value.trim(), target_price: num($("pgPrice").value) };
+      const seat = readSeat("pgSeat");
+      if (!g.quota_min || !g.quota_max || g.quota_min > g.quota_max) { pUI.msg = "A cota mínima precisa ser menor ou igual à máxima."; return renderPartners(); }
+      if (!quotaOk(seat.quota, g)) { pUI.msg = `Sua cota precisa ficar entre ${brl.format(g.quota_min)} e ${brl.format(g.quota_max)}.`; return renderPartners(); }
+      return paRun(async () => { const gid = await partners.createGroup(g, seat); pUI.creating = null; pUI.open.add(gid); }, g.visibility === "public" ? "Grupo criado. Ele já aparece para investidores com perfil." : "Grupo criado. Convide sócios em “Ver sócios e opções”.");
+    }
+    const gid = f.dataset.gid, G = PS.groups[gid];
+    if (f.dataset.form === "apply") {
+      const g = PS.publicGroups.find((x) => x.id === gid), seat = readSeat("paApp");
+      if (!quotaOk(seat.quota, g)) { pUI.msg = `A cota precisa ficar entre ${brl.format(g.quota_min)} e ${brl.format(g.quota_max)}.`; return renderPartners(); }
+      return paRun(async () => { await partners.apply(gid, seat); pUI.applying = null; }, "Candidatura enviada ao líder.");
+    }
+    if (f.dataset.form === "accept") {
+      const seat = readSeat("paAcc");
+      if (!quotaOk(seat.quota, G.g)) { pUI.msg = `A cota precisa ficar entre ${brl.format(G.g.quota_min)} e ${brl.format(G.g.quota_max)}.`; return renderPartners(); }
+      return paRun(async () => { await partners.acceptGroupInvite(gid, seat, G.g.member_count); pUI.accepting = null; pUI.open.add(gid); }, "Você entrou no grupo.");
+    }
+    if (f.dataset.form === "quota") {
+      const q = num(f.querySelector("input").value);
+      if (!quotaOk(q, G.g)) { pUI.msg = `A cota precisa ficar entre ${brl.format(G.g.quota_min)} e ${brl.format(G.g.quota_max)}.`; return renderPartners(); }
+      return paRun(() => partners.setQuota(gid, q), "Cota atualizada.");
+    }
+    if (f.dataset.form === "rules") {
+      const qmin = num(f.qmin.value), qmax = num(f.qmax.value), max = Math.round(num(f.max.value) || 0);
+      if (!qmin || !qmax || qmin > qmax || max < Math.max(2, G.g.member_count) || max > 50) { pUI.msg = "Confira: cota mínima ≤ máxima, e o máximo de sócios entre o número atual e 50."; return renderPartners(); }
+      return paRun(() => partners.updateGroup(gid, { quota_min: qmin, quota_max: qmax, max_members: max }), "Regras atualizadas.");
+    }
+  });
+}
+
+async function openPartners() {
+  renderPartners();
+  try { await loadPartners(); } catch (e) { pUI.msg = `Não foi possível carregar: ${e.message}`; PS = PS || { me: partners.uid, card: null, contact: null, cards: [], connections: [], groups: {}, contacts: {}, publicGroups: [] }; }
+  renderPartners();
+}
+
 /* ---------- tabs ---------- */
 function showTab(name) {
-  for (const t of ["lots", "strategies", "portfolio"]) {
+  for (const t of ["lots", "strategies", "portfolio", "partners"]) {
     $(`tab-${t}`).setAttribute("aria-selected", String(name === t));
     $(`${t}View`).hidden = name !== t;
   }
   if (name !== "lots") $("legend").hidden = true;
-  if (name === "lots") render(); else if (name === "strategies") renderStrategies(); else renderPortfolio();
+  if (name === "lots") render(); else if (name === "strategies") renderStrategies(); else if (name === "partners") openPartners(); else renderPortfolio();
   window.scrollTo(0, 0);
 }
 
@@ -1644,6 +2193,9 @@ function start(items, updatedAt, note) {
   $("tab-lots").onclick = () => showTab("lots");
   $("tab-strategies").onclick = () => { editing = null; showTab("strategies"); };
   $("tab-portfolio").onclick = () => { editingProp = null; showTab("portfolio"); };
+  $("tab-partners").onclick = () => showTab("partners");
+  if (!partnersWired) { wirePartners(); partnersWired = true; }
+  loadPartners().catch(() => { /* the badge is optional */ });
   buildControls();
   restoreFilters(USER.lastFilters);
   updateNewBadge();
@@ -1654,7 +2206,7 @@ function start(items, updatedAt, note) {
 function showGate(html) {
   $("gateView").innerHTML = `<div class="gate">${html}</div>`;
   $("gateView").hidden = false;
-  $("lotsView").hidden = true; $("strategiesView").hidden = true; $("portfolioView").hidden = true; $("tabs").hidden = true;
+  $("lotsView").hidden = true; $("strategiesView").hidden = true; $("portfolioView").hidden = true; $("partnersView").hidden = true; $("tabs").hidden = true;
 }
 
 /* ---------- persistence ---------- */
@@ -1731,6 +2283,7 @@ async function startPreview() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
     store = browserStore();
+    partners = demoPartners();
     Object.assign(USER, await store.load());
     const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(d.run_id || "");
     const when = m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : null;
@@ -1795,6 +2348,7 @@ async function startLive(config) {
     loadingFor = user.uid;
     try {
       store = firestoreStore(fs, db, user);
+      partners = firestorePartners(fs, db, user);
       USER.email = user.email;
       const [{ snap, fromCache }, mine] = await Promise.all([loadSummaries(fs, db), store.load()]);
       Object.assign(USER, mine);
