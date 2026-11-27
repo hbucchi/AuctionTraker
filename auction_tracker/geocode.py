@@ -24,7 +24,7 @@ from .models import Listing
 
 log = logging.getLogger("geocode")
 API = "https://maps.googleapis.com/maps/api/geocode/json"
-MAX_NEW_PER_RUN = 800
+MAX_NEW_PER_RUN = 300  # x daily runs stays under the 10,000 free geocodes per month
 
 
 def address_query(x: Listing) -> str | None:

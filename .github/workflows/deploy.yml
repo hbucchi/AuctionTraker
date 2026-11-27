@@ -39,6 +39,24 @@ jobs:
           python3 scripts/write_credentials.py "$RUNNER_TEMP/sa.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
 
+      # The Maps browser key lives in the GOOGLE_MAPS_BROWSER_KEY secret, not in
+      # the (public) repository. It is added to the published site only. It is
+      # still visible to site visitors, as every Maps key is, so it must stay
+      # restricted to the site's domains and the Maps JavaScript API.
+      - name: Add the Google Maps browser key to the site
+        env:
+          MAPS_KEY: ${{ secrets.GOOGLE_MAPS_BROWSER_KEY }}
+        run: |
+          if [ -z "$MAPS_KEY" ]; then
+            echo "No GOOGLE_MAPS_BROWSER_KEY secret: the site uses its schematic map."
+          elif [[ "$MAPS_KEY" =~ ^[A-Za-z0-9_-]{20,64}$ ]]; then
+            printf '\nwindow.GOOGLE_MAPS_KEY = "%s";\n' "$MAPS_KEY" >> web/firebase-config.js
+            echo "Google Maps key added."
+          else
+            echo "::error::GOOGLE_MAPS_BROWSER_KEY doesn't look like an API key (letters, digits, - and _ only)"
+            exit 1
+          fi
+
       - name: Deploy hosting and Firestore rules
         run: npx --yes firebase-tools deploy --only hosting,firestore:rules --project auctiontraker --non-interactive
 
