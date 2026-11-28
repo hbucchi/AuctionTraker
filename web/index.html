@@ -670,6 +670,43 @@ dialog.welcome { border-radius: 3px; border-color: var(--ink); }
   .vt th, .vt td { padding: 6px 6px; }
   .rb-lbl { font-size: 10px; }
 }
+
+/* ======================================================================
+   Card pass (after the editorial pass): a very light grey page with each
+   property in its own white card, so where one lot starts and ends is
+   obvious. A deep crimson accent, used sparingly: the source line, the
+   active section and the open card.
+   ====================================================================== */
+:root { --bg: #f2f2f0; --card-line: #e0e0dc; --crimson: #a51c30; }
+.masthead, nav.sections, body::before { background: var(--surface); }
+.input, select.input, textarea.input, .chip-toggle span, .seg { background: var(--surface); }
+nav.sections .tab[aria-selected="true"] { border-bottom-color: var(--crimson); }
+.kicker b { color: var(--crimson); }
+
+.list { gap: 14px; }
+.lot { background: var(--surface); border: 1px solid var(--card-line); border-radius: 4px; padding: 0 24px; }
+.lot:hover { border-color: #c4c4bf; }
+.lot.open { border-color: #c4c4bf; box-shadow: inset 0 3px 0 var(--crimson); }
+.lot-row { padding: 22px 0 20px; }
+.ficha { margin: 0 -24px; padding: 22px 24px 28px; background: #fafaf8; border-top: 1px solid var(--card-line); border-radius: 0 0 4px 4px; }
+@media (min-width: 761px) { .lot-row.has-img + .ficha { padding-left: 248px; } }
+@media (max-width: 760px) {
+  .lot { padding: 0 16px; }
+  .ficha { margin: 0 -16px; padding: 18px 16px 24px; }
+}
+
+/* the same card language on the other tabs */
+.st-card, .pa-card, .pro, .tpl, .stat { background: var(--surface); border: 1px solid var(--card-line); border-radius: 4px; padding: 18px 20px; }
+.pa-sec > :is(h2, .pa-shead) + .st-card { border-top: 1px solid var(--card-line); padding-top: 18px; }
+.pa-sec > :is(h2, .pa-shead) + :is(.pa-list, .pro-grid, .tpl-grid, .st-list) > :first-child { border-top: 1px solid var(--card-line); }
+.pa-list { gap: 12px; }
+.st-list, .pro-grid, .tpl-grid { gap: 14px; }
+.pa-hl { box-shadow: inset 0 3px 0 var(--crimson); }
+.editor { background: var(--surface); border: 1px solid var(--card-line); border-top: 2px solid var(--rule); }
+.editor-top { background: var(--surface); }
+.map { background: var(--surface); }
+.empty { background: transparent; }
+@media (max-width: 640px) { .st-card, .pa-card, .pro, .tpl { padding: 16px; } }
 </style>
 <!-- preview:strip-below -->
 </head>
