@@ -102,11 +102,12 @@ def render_email(user: dict, strategies: list[dict], news: dict[str, list[dict]]
     return subject, "".join(parts)
 
 
-def send_resend(to: str, subject: str, body_html: str) -> None:
+def send_resend(to: str, subject: str, body_html: str) -> bool:
+    """Send one email; False when email isn't configured (nothing was sent)."""
     key = os.environ.get("RESEND_API_KEY")
     if not key:
         log.info("RESEND_API_KEY not set; skipping email to %s", to.split("@")[0][:2] + "***")
-        return
+        return False
     r = requests.post(
         "https://api.resend.com/emails",
         headers={"Authorization": f"Bearer {key}"},
@@ -121,9 +122,10 @@ def send_resend(to: str, subject: str, body_html: str) -> None:
     if r.status_code >= 400:
         log.error("email failed: HTTP %s %s", r.status_code, r.text[:200])
     r.raise_for_status()
+    return True
 
 
-def run(db: Any, items: list[dict], now: float | None = None, send: Callable[[str, str, str], None] = send_resend) -> dict:
+def run(db: Any, items: list[dict], now: float | None = None, send: Callable[[str, str, str], bool | None] = send_resend) -> dict:
     now = now if now is not None else datetime.now(timezone.utc).timestamp()
     stats = {"users": 0, "emails": 0, "new": 0}
     for doc in db.collection("users").stream():
@@ -142,8 +144,8 @@ def run(db: Any, items: list[dict], now: float | None = None, send: Callable[[st
         if emailable and user.get("email"):
             subject, body = render_email(user, strategies, emailable)
             try:
-                send(user["email"], subject, body)
-                stats["emails"] += 1
+                if send(user["email"], subject, body) is not False:  # False: email not configured
+                    stats["emails"] += 1
             except requests.RequestException:
                 log.exception("could not email user %s", doc.id)
     return stats

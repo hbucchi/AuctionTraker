@@ -43,3 +43,8 @@ def test_run_emails_only_new_matches_of_email_strategies():
     to, subj, body = sent[0]
     assert to == "ana@example.com" and "1 novo imóvel" in subj and "Olá Ana" in body and "https://x/2" in body
     assert db.store["alert_state"]["u1"]["strategies"]["s2"]["new"] == ["zuk:2"]
+
+
+def test_skipped_emails_are_not_counted_as_sent(monkeypatch):
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    assert alerts.send_resend("a@b.com", "s", "b") is False
