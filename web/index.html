@@ -8,31 +8,36 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Old+Standard+TT:wght@700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
 <style>
 /* Layout: sticky filter rail + scannable lot rows; a second tab holds the user's saved strategies.
-   Always light (ivory, warm ink, bronze accents), whatever the visitor's system theme. */
+   Always light, whatever the visitor's system theme (see the editorial pass at the end). */
 :root {
+  /* Editorial, newspaper-like: white paper, black ink, hairline rules instead of
+     boxes, serif headlines, a Franklin sans for labels and figures. Colour only
+     where it carries meaning (gain, attention, loss). Always light. */
   color-scheme: light;
-  --bg: #f6f2ea;          /* ivory page */
-  --surface: #fffdf8;     /* cards */
-  --surface-2: #faf6ee;   /* inputs, quiet panels */
-  --ink: #1d1b18;         /* warm near-black */
-  --muted: #74695c;
-  --line: #e8e1d4;
-  --accent: #86662b;      /* bronze: links, bands, selected states */
-  --accent-soft: #f2e9d7;
-  --gold: #b8964f;        /* hairlines and hover only, never text */
-  --good: #2d6a4b;
-  --good-soft: #e5efe6;
-  --warn: #8f611d;
-  --warn-soft: #f7eedc;
-  --bad: #9a3b31;
-  --bad-soft: #f7e6e2;
-  --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --radius: 14px;
-  --shadow: 0 1px 2px rgb(70 52 20 / .04), 0 10px 28px -16px rgb(70 52 20 / .18);
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f7f7f5;   /* quiet panels, inputs */
+  --ink: #121212;
+  --muted: #5a5a5a;
+  --line: #e2e2e2;        /* hairlines */
+  --rule: #121212;        /* strong rules */
+  --accent: #121212;      /* links, selected states, chart marks */
+  --accent-soft: #ececec; /* chart bands */
+  --gold: #121212;        /* legacy name: hairline accents */
+  --good: #2f6b4a;
+  --good-soft: #e6f0ea;
+  --warn: #8a5a12;
+  --warn-soft: #f7efe0;
+  --bad: #a3281b;
+  --bad-soft: #f8e7e4;
+  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-body: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --font-mast: "Old Standard TT", "Source Serif 4", Georgia, serif;
+  --radius: 3px;
+  --shadow: none;
 }
 
 * { box-sizing: border-box; }
@@ -477,29 +482,210 @@ details.qual[open] { display: grid; gap: 10px; }
 .pro-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
 .pro { display: grid; gap: 6px; align-content: start; }
 .pa-sec .note { margin: 0; font-size: 13px; color: var(--muted); border-left: 2px solid var(--gold); padding-left: 10px; }
+
+/* ======================================================================
+   Editorial pass: newspaper conventions. Rules instead of boxes, serif
+   headlines, Franklin labels, square corners, no shadows. Later rules
+   here intentionally override the component styles above.
+   ====================================================================== */
+body { font: 15px/1.5 var(--font-body); letter-spacing: 0; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+a { color: var(--ink); }
+
+/* masthead + section bar */
+.masthead { background: var(--bg); }
+.mast-top { max-width: 1280px; margin: 0 auto; padding-block: 18px 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 12px; }
+.mast-left { display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+#todayLine { font-weight: 700; color: var(--ink); }
+.masthead .wordmark { font: 700 clamp(30px, 4.4vw, 46px)/1 var(--font-mast); letter-spacing: -.01em; text-align: center; color: var(--ink); }
+.mast-right { justify-self: end; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.badge-preview { border: 1px solid var(--ink); color: var(--ink); border-radius: 2px; padding: 2px 8px; letter-spacing: .1em; font-size: 10px; }
+nav.sections { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; background: var(--bg);
+  border-top: 1px solid var(--rule); border-bottom: 4px double var(--rule);
+  display: flex; justify-content: center; gap: 4px 28px; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  overflow-x: auto; scrollbar-width: none; }
+nav.sections[hidden] { display: none; }
+nav.sections::-webkit-scrollbar { display: none; }
+nav.sections .tab { margin: 0; padding: 12px 0 10px; border: 0; border-radius: 0; font: 600 13px/1 var(--font-body); color: var(--ink); white-space: nowrap;
+  border-bottom: 2px solid transparent; letter-spacing: .01em; }
+nav.sections .tab:hover { border-bottom-color: var(--line); }
+nav.sections .tab[aria-selected="true"] { border-bottom-color: var(--ink); }
+.tab .count-badge { background: var(--bad); color: #fff; border-radius: 2px; }
+body::before { background: var(--bg); }
+@media (max-width: 720px) {
+  .mast-top { grid-template-columns: 1fr; justify-items: center; text-align: center; padding-block: 14px 10px; gap: 6px; }
+  .mast-left { order: 2; justify-items: center; } .mast-right { order: 3; justify-self: center; justify-content: center; }
+  nav.sections { justify-content: flex-start; gap: 22px; }
+}
+
+/* layout */
+.page { padding-block: 24px 64px; gap: 40px; grid-template-columns: 250px minmax(0, 1fr); }
+@media (max-width: 960px) { .page { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+.single { padding-block: 28px 64px; gap: 28px; }
+
+/* filters: a column under a strong rule, not a card */
+.filters { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 60px); background: transparent; border: 0; border-top: 2px solid var(--rule); border-radius: 0; box-shadow: none; max-height: calc(100vh - 80px); }
+@media (max-width: 960px) { .filters { position: static; max-height: none; } }
+.filters summary { padding: 12px 0; font: 700 12px/1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; }
+.filter-body { padding: 0 0 16px; gap: 18px; }
+.field > label, .field > .label, .label { font-size: 11px; letter-spacing: .08em; color: var(--ink); font-weight: 700; }
+.input, select.input, textarea.input { background: var(--bg); border: 1px solid #c7c7c7; border-radius: 2px; }
+.input:focus { border-color: var(--ink); outline: none; }
+.chip-toggle span { border-radius: 2px; border-color: #c7c7c7; background: var(--bg); padding: 4px 9px; }
+.chip-toggle input:checked + span { background: var(--ink); border-color: var(--ink); color: #fff; }
+.link-btn { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* buttons */
+.btn { border-radius: 3px; border-color: #c7c7c7; font: 600 13px/1.2 var(--font-body); padding: 9px 14px; }
+.btn:hover { border-color: var(--ink); }
+.btn-primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.btn-primary:hover { background: #333; border-color: #333; }
+.btn-sm { padding: 6px 11px; font-size: 12px; }
+.seg { border-radius: 3px; border-color: #c7c7c7; }
+.seg label:has(input:checked) { background: var(--ink); color: #fff; }
+
+/* list header */
+.main { gap: 14px; }
+.estimate-note { order: 0; border: 0; padding: 0; font: italic 14px/1.45 var(--font-display); color: var(--muted); max-width: 80ch; }
+.toolbar { border-bottom: 1px solid var(--rule); padding-bottom: 12px; gap: 10px 14px; }
+.toolbar .result-count { font: 400 14px var(--font-body); color: var(--muted); }
+.toolbar .result-count b { font: 700 32px/1 var(--font-display); color: var(--ink); }
+.toolbar select.input { width: auto; max-width: 100%; }
+.banner { background: var(--surface-2); border: 0; border-left: 3px solid var(--ink); border-radius: 0; }
+
+/* lots: editorial rows */
+.list { gap: 0; }
+.lot { background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none; }
+@media (prefers-reduced-motion: no-preference) { .lot:hover { border-color: var(--line); } }
+.lot-row { display: grid; padding: 20px 0; gap: 6px 24px; align-items: start;
+  grid-template-columns: minmax(0, 1fr) 64px; grid-template-areas: "head expand" "figs expand" "sig expand"; }
+.lot-row.has-img { grid-template-columns: 200px minmax(0, 1fr) 64px; grid-template-areas: "thumb head expand" "thumb figs expand" "thumb sig expand"; }
+.thumb { grid-area: thumb; width: 100%; aspect-ratio: 3 / 2; border-radius: 0; background: var(--surface-2); }
+.lot-head { grid-area: head; min-width: 0; display: grid; gap: 4px; }
+.kicker { font: 500 11px/1.3 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; flex-wrap: wrap; align-items: baseline; }
+.kicker b { color: var(--ink); font-weight: 700; }
+.kicker .sep { margin: 0 6px; color: #b5b5b5; }
+.kicker .new { background: var(--bad); color: #fff; padding: 1px 5px; margin-right: 8px; font-weight: 700; letter-spacing: .06em; }
+.lot-h { margin: 0; font: 700 21px/1.22 var(--font-display); text-wrap: balance; }
+.lot-title { font: inherit; color: var(--ink); text-decoration: none; }
+.lot-title:hover { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.meta { font-size: 13px; color: var(--muted); gap: 2px 0; }
+.meta span + span::before { content: "·"; margin: 0 7px; color: #b5b5b5; }
+.meta .warn { color: var(--warn); }
+.rounds { font-size: 12px; color: var(--muted); }
+.figs { grid-area: figs; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 8px; border-top: 1px solid var(--line); }
+.fig { display: grid; align-content: start; gap: 3px; padding: 10px 14px 4px; border-left: 1px solid var(--line); min-width: 0; }
+.fig:first-child { border-left: 0; padding-left: 0; }
+.fig-k { font: 700 10.5px/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 2px; }
+.fig-v { font: 600 15px/1.2 var(--font-body); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fig-v.price { font: 700 24px/1.1 var(--font-display); font-variant-numeric: lining-nums tabular-nums; }
+.fig-s { font-size: 12px; color: var(--muted); }
+.fig-s.good { color: var(--good); } .fig-s.warn { color: var(--warn); } .fig-s.bad { color: var(--bad); }
+.fig .rbar { width: 100%; margin-top: 4px; }
+.fig .pill { padding: 0; background: none; border: 0; font-weight: 600; }
+.signals { grid-area: sig; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.signals .pill { background: none; border: 0; padding: 0; font: 600 12px var(--font-body); display: inline-flex; align-items: center; gap: 6px; }
+.signals .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.expand { grid-area: expand; align-self: start; width: auto; height: auto; padding: 4px 0; opacity: 1; color: var(--ink); display: inline-flex; gap: 4px; align-items: center; justify-self: end;
+  font: 600 12px var(--font-body); border-bottom: 1px solid transparent; border-radius: 0; }
+.expand:hover { border-bottom-color: var(--ink); }
+.lot.open .expand svg { transform: rotate(180deg); }
+.hint { width: 14px; height: 14px; border-radius: 50%; font-size: 9px; border-color: #bdbdbd; margin-left: 4px; }
+.pill { border-radius: 2px; }
+@media (max-width: 1100px) and (min-width: 961px), (max-width: 760px) {
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fig:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .fig:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 760px) {
+  .lot-row, .lot-row.has-img { grid-template-columns: minmax(0, 1fr) 96px; gap: 8px 14px; padding: 18px 0;
+    grid-template-areas: "head thumb" "figs figs" "sig sig" "expand expand"; }
+  .lot-row:not(.has-img) { grid-template-areas: "head head" "figs figs" "sig sig" "expand expand"; }
+  .thumb { aspect-ratio: 1; }
+  .lot-h { font-size: 18px; }
+  .fig-v.price { font-size: 21px; }
+  .expand { justify-self: start; }
+}
+
+/* the detail sheet */
+.ficha { background: transparent; border-top: 1px solid var(--line); border-radius: 0; padding: 20px 0 28px; }
+@media (min-width: 761px) { .lot-row.has-img + .ficha { padding-left: 224px; } }
+.fsec + .fsec { border-top: 1px solid var(--line); }
+.fsec h3 { font: 700 19px/1.25 var(--font-display); }
+.vt th { background: transparent; }
+.table-wrap { border-radius: 0; }
+
+/* section pages: headings and rules instead of boxed cards */
+.st-head { border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+.st-head h1, .gate h1 { font: 700 clamp(28px, 4vw, 40px)/1.1 var(--font-display); letter-spacing: -.01em; }
+.pa-lead { font: 400 17px/1.5 var(--font-display); color: var(--ink); max-width: 70ch; }
+.pa-lead b { font-weight: 600; }
+.pa-sec { gap: 14px; }
+.pa-sec > h2, .pa-sec > .pa-shead { border-top: 2px solid var(--rule); padding-top: 10px; margin-top: 10px; }
+.pa-sec h2 { font: 700 22px/1.2 var(--font-display); margin: 0; }
+.pa-shead h2 { border: 0; padding: 0; margin: 0; }
+.st-card, .pa-card, .pro, .tpl, .stat, .persona, .editor, .map-pop, .empty, .gate, .lf-panel, .pa-msg {
+  border-radius: var(--radius); box-shadow: none; }
+.st-card, .pa-card, .pro, .tpl, .stat { background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 14px 0 6px; }
+.st-list, .pro-grid, .tpl-grid { gap: 8px 32px; }
+.pa-list { gap: 0; }
+.pa-card { padding: 16px 0; }
+.pa-avatar { border-radius: 50%; background: var(--surface-2); color: var(--ink); font-family: var(--font-display); }
+.pa-name b, .st-card h2, .tpl h3, .pa-form h3, .pa-ghead h3 { font-family: var(--font-display); font-weight: 700; }
+.pa-hl { border-top-color: var(--ink); }
+.pa-msg { background: var(--surface-2); border: 0; border-left: 3px solid var(--ink); border-radius: 0; }
+.pa-private { border-radius: 0; border-color: var(--line); }
+.empty { border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; text-align: left; justify-items: start; padding: 18px 0; }
+.editor { border-radius: 0; border: 0; border-top: 2px solid var(--rule); background: transparent; }
+.editor-top { top: calc(env(safe-area-inset-top, 0px) + 46px); border-radius: 0; background: var(--bg); }
+.stats { gap: 0 24px; }
+.stat .v { font: 700 30px/1.1 var(--font-display); }
+.pa-commit b, .scorebox b { font-family: var(--font-display); }
+.pa-bar, .bar { border-radius: 0; } .pa-bar i { background: var(--ink); border-radius: 0; }
+
+/* map, legend, welcome */
+.map { border-radius: 0; border-color: var(--line); }
+.map-key { border-radius: 2px; box-shadow: none; }
+.lf-btn { border-radius: 3px; box-shadow: 0 2px 10px rgb(0 0 0 / .18); font: 600 13px var(--font-body); }
+.lf-btn .q { border-color: #fff; color: #fff; }
+.lf-panel { border-radius: 3px; border-color: var(--ink); box-shadow: 0 12px 40px -12px rgb(0 0 0 / .3); }
+.lf-head h2 { font: 700 22px var(--font-display); }
+dialog.welcome { border-radius: 3px; border-color: var(--ink); }
+.wl h2 { font: 700 30px/1.1 var(--font-display); }
+.wl-eyebrow { color: var(--muted); }
+.doc-wrap { border-radius: 0; }
+
+/* refinements after review */
+.fig-v { white-space: normal; overflow: visible; }
+.pa-lead .pill { font-family: var(--font-body); }
+.tag, .st-crit span { border-radius: 2px; }
+.pa-sec > :is(h2, .pa-shead) + :is(.st-card, .empty) { border-top: 0; padding-top: 2px; }
+.pa-sec > :is(h2, .pa-shead) + :is(.pa-list, .pro-grid, .tpl-grid, .st-list) > :first-child { border-top: 0; }
+@media (max-width: 640px) {
+  .vt td.name { min-width: 0; }
+  .vt td.why { min-width: 0; font-size: 11px; }
+  .vt th, .vt td { padding: 6px 6px; }
+  .rb-lbl { font-size: 10px; }
+}
 </style>
 <!-- preview:strip-below -->
 </head>
 <body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="wordmark">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 3.5l6 6-2.2 2.2-6-6 2.2-2.2zM9.8 8.2l6 6-2.3 2.3-6-6 2.3-2.3zM12 9.6l-8.6 8.6a1.6 1.6 0 002.3 2.3l8.6-8.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M13 21h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      AuctionTraker
-    </div>
-    <nav class="tabs" role="tablist" id="tabs" hidden>
-      <button class="tab" role="tab" id="tab-lots" aria-selected="true" type="button">Oportunidades</button>
-      <button class="tab" role="tab" id="tab-strategies" aria-selected="false" type="button">Estratégias <span class="count-badge" id="newBadge" hidden></span></button>
-      <button class="tab" role="tab" id="tab-portfolio" aria-selected="false" type="button">Meu portfólio</button>
-      <button class="tab" role="tab" id="tab-partners" aria-selected="false" type="button">Parceiros <span class="count-badge" id="partnersBadge" hidden></span></button>
-      <button class="tab" role="tab" id="tab-services" aria-selected="false" type="button">Modelos e serviços</button>
-    </nav>
-    <span class="freshness" id="freshness"></span>
-    <span class="spacer"></span>
-    <span class="badge-preview" id="previewBadge" hidden>Prévia</span>
-    <div class="user" id="userBox" hidden></div>
+<header class="masthead">
+  <div class="mast-top">
+    <div class="mast-left"><span id="todayLine"></span><span class="freshness" id="freshness"></span></div>
+    <div class="wordmark">AuctionTraker</div>
+    <div class="mast-right"><span class="badge-preview" id="previewBadge" hidden>Prévia</span><div class="user" id="userBox" hidden></div></div>
   </div>
 </header>
+<nav class="sections" role="tablist" id="tabs" aria-label="Seções" hidden>
+  <button class="tab" role="tab" id="tab-lots" aria-selected="true" type="button">Oportunidades</button>
+  <button class="tab" role="tab" id="tab-strategies" aria-selected="false" type="button">Estratégias <span class="count-badge" id="newBadge" hidden></span></button>
+  <button class="tab" role="tab" id="tab-portfolio" aria-selected="false" type="button">Meu portfólio</button>
+  <button class="tab" role="tab" id="tab-partners" aria-selected="false" type="button">Parceiros <span class="count-badge" id="partnersBadge" hidden></span></button>
+  <button class="tab" role="tab" id="tab-services" aria-selected="false" type="button">Modelos e serviços</button>
+</nav>
 
 <div class="single" id="gateView" hidden></div>
 
@@ -612,7 +798,7 @@ details.qual[open] { display: grid; gap: 10px; }
         <li><span class="lf-n">2</span><i class="sw sw-bid"></i><span><b>Triângulo verde: o lance.</b> Quanto você pagaria hoje.</span></li>
         <li><span class="lf-n">3</span><i class="sw sw-be"></i><span><b>Traço vermelho: empate.</b> O menor valor de venda que paga o lance e todos os custos (taxas, reforma, dívidas, corretagem, imposto). Abaixo dele, prejuízo.</span></li>
         <li><span class="lf-n">4</span><i class="sw sw-50"></i><span><b>Faixa escura: valor provável.</b> Metade das avaliações cai aqui. É a faixa escrita em números no cartão.</span></li>
-        <li><span class="lf-n">5</span><i class="sw sw-mid"></i><span><b>Traço bronze: valor central,</b> a melhor estimativa única.</span></li>
+        <li><span class="lf-n">5</span><i class="sw sw-mid"></i><span><b>Traço preto: valor central,</b> a melhor estimativa única.</span></li>
       </ol>
       <p class="lf-tip">Leitura rápida: triângulo e traço vermelho bem à esquerda da faixa escura = margem de segurança. Traço vermelho dentro ou à direita dela = o lucro depende de vender acima do provável.</p>
     </section>
@@ -925,7 +1111,7 @@ function newIds() {
 /* ---------- lot rendering ---------- */
 function deadline(x) {
   const t = x.nextT;
-  if (isNaN(t)) return x.status ? `<span class="pill mute">${esc(x.status)}</span>` : "";
+  if (isNaN(t)) return x.status && !/^(valor|lance|status)$/i.test(x.status.trim()) ? `<span class="pill mute">${esc(x.status)}</span>` : "";
   const dt = t - NOW;
   if (dt < 0) return x.proposals ? `<span class="pill warn">Aceita propostas</span>` : `<span class="pill mute">Encerrado ${dShort.format(t)}</span>`;
   const days = Math.floor(dt / DAY);
@@ -934,10 +1120,6 @@ function deadline(x) {
   return `<span class="pill ${cls}" title="${esc(dLong.format(t))}">${label}</span>`;
 }
 
-function initials(x) {
-  const t = x.type || CATS[x.cat] || "Lote";
-  return esc(t.replace(/[^A-Za-zÀ-ú ]/g, "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "L");
-}
 
 function ptmPill(x) {
   if (x.ptm == null) return "";
@@ -952,36 +1134,45 @@ function lotHTML(x, isNew) {
   const rounds = x.rounds.length > 1 || (x.rounds.length === 1 && x.rounds[0].v && x.rounds[0].v !== x.price)
     ? `<div class="rounds">${x.rounds.map((r) => `<span class="round${r.t < NOW ? " past" : ""}"><b>${r.n}ª praça</b> ${isNaN(r.t) ? "" : dShort.format(r.t)} ${r.v ? brlShort.format(r.v) : ""}</span>`).join("")}</div>`
     : "";
-  const img = showImages && x.img ? `<img src="${esc(safeUrl(x.img))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
-  const debts = x.debts === true ? `<span class="tag warn" title="${esc(x.debtsrc || "")}">Dívidas: arrematante</span>`
-    : x.debts === false ? `<span class="tag good" title="${esc(x.debtsrc || "")}">Dívidas: vendedor</span>` : "";
+  const img = showImages && x.img ? `<img src="${esc(safeUrl(x.img))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.lot-row').classList.remove('has-img');this.parentNode.remove()">` : "";
+  const debts = x.debts === true ? `<span class="warn" title="${esc(x.debtsrc || "")}">dívidas com o arrematante</span>`
+    : x.debts === false ? `<span title="${esc(x.debtsrc || "")}">dívidas pagas pelo vendedor</span>` : "";
   const ck = USER.checklists[ckKey(x.id)];
   const open = openFicha.has(x.id);
-  const r = roeFor(x), ch = chanceFor(x);
+  const r = roeFor(x), ch = chanceFor(x), c = ceilFor(x);
+  const ceilCls = c && c.central ? (c.safe && x.price <= c.safe ? "good" : x.price <= c.central ? "warn" : "bad") : "";
+  const ceilMsg = { good: "abaixo do teto, com folga", warn: "abaixo do teto central", bad: "lance acima do teto" }[ceilCls];
+  const kicker = [`<b>${esc(SITES[x.src] || x.src)}</b>`, x.type ? esc(x.type) : "", x.modn ? esc(x.modn.replace("_", " ")) : ""].filter(Boolean).join('<span class="sep">·</span>');
   return `<article class="lot${open ? " open" : ""}" data-id="${esc(x.id)}">
-    <div class="lot-row">
-      <div class="thumb" aria-hidden="true">${img || initials(x)}</div>
-      <div class="lot-main">
-        <a class="lot-title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a>
-        <div class="meta">${where ? `<span>${esc(where)}</span>` : ""}${x.area ? `<span>${x.area.toLocaleString("pt-BR")} m²</span>` : ""}${x.beds ? `<span>${x.beds} quarto${x.beds > 1 ? "s" : ""}</span>` : ""}</div>
-        <div class="tags">${isNew ? `<span class="tag new">Novo</span>` : ""}<span class="tag src">${esc(SITES[x.src] || x.src)}</span>${x.type ? `<span class="tag">${esc(x.type)}</span>` : ""}${x.modn ? `<span class="tag">${esc(x.modn.replace("_", " "))}</span>` : ""}${debts}${ck ? `<span class="tag">Em análise · ${ckDone(ck)}/6</span>` : ""}</div>
+    <div class="lot-row${img ? " has-img" : ""}">
+      ${img ? `<div class="thumb" aria-hidden="true">${img}</div>` : ""}
+      <div class="lot-head">
+        <div class="kicker">${isNew ? `<span class="new">Novo</span>` : ""}${kicker}</div>
+        <h3 class="lot-h"><a class="lot-title" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener noreferrer">${esc(x.title)}</a></h3>
+        <div class="meta">${where ? `<span>${esc(where)}</span>` : ""}${x.area ? `<span>${x.area.toLocaleString("pt-BR")} m²</span>` : ""}${x.beds ? `<span>${x.beds} quarto${x.beds > 1 ? "s" : ""}</span>` : ""}${debts}${ck ? `<span>em análise · ${ckDone(ck)}/6</span>` : ""}</div>
         ${rounds}
       </div>
-      <div class="price-col">
-        <div class="price">${x.price != null ? brl.format(x.price) : "—"}</div>
-        ${x.val && !x.val.flag ? `<div class="bar-cap">Valor est. ${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50)}<button class="hint" type="button" data-legend aria-label="Como ler a barra de valor">?</button></div>${rangeBar(x)}` : ""}
-        ${r ? `<div class="bar-cap">ROE est. ${pct(r.lo)} a ${pct(r.hi)}<button class="hint" type="button" data-legend aria-label="Como ler a barra de ROE">?</button></div>${roeBar(r)}` : ""}
-        ${ceilLine(x)}
-        <div class="tags" style="justify-content:flex-end">${riskPill(x)}${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">conferir dados</span>` : ""}${deadline(x)}</div>
+      <div class="figs">
+        <div class="fig fig-price"><span class="fig-k">Lance mínimo</span><span class="fig-v price">${x.price != null ? brl.format(x.price) : "—"}</span><span class="fig-s">${deadline(x)}</span></div>
+        ${x.val && !x.val.flag ? `<div class="fig"><span class="fig-k">Valor estimado<button class="hint" type="button" data-legend aria-label="Como ler a barra de valor">?</button></span><span class="fig-v">${brlShort.format(x.val.lo50)}–${brlShort.format(x.val.hi50).replace(/^R\$\s?/, "")}</span>${rangeBar(x)}</div>` : ""}
+        ${r ? `<div class="fig"><span class="fig-k">ROE estimado<button class="hint" type="button" data-legend aria-label="Como ler a barra de ROE">?</button></span><span class="fig-v">${pct(r.lo)} a ${pct(r.hi)}</span>${roeBar(r)}</div>` : ""}
+        ${c && c.central ? `<div class="fig"><span class="fig-k">Lance máximo · ROE ${targetRoe()}%</span><span class="fig-v">${brlShort.format(c.central)}</span><span class="fig-s ${ceilCls}">${ceilMsg}</span></div>` : ""}
       </div>
+      <div class="signals">${riskPill(x)}${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">Conferir dados do anúncio</span>` : ""}</div>
       <button class="expand" type="button" data-ficha="${esc(x.id)}" aria-expanded="${open}" aria-label="${open ? "Fechar ficha" : "Abrir ficha completa"}" title="${open ? "Fechar ficha" : "Ficha completa: custos, ROE, cidade e checklist"}">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="expand-l">${open ? "Fechar" : "Ficha"}</span><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
     ${open ? fichaHTML(x) : ""}
   </article>`;
 }
 
+
+/* ---------- masthead date line ---------- */
+(() => {
+  const d = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
+  $("todayLine").textContent = d.charAt(0).toUpperCase() + d.slice(1);
+})();
 
 /* ---------- floating legend ---------- */
 function openLegend(open) {
@@ -1028,13 +1219,6 @@ const RISK_CLASS = { low: "good", mid: "warn", high: "bad" };
 function riskPill(x) {
   const r = riskFor(x);
   return `<span class="pill ${RISK_CLASS[r.level]}" title="${esc(r.factors.map((f) => `${f.text} (+${f.pts})`).join("\n") || "Nenhum fator identificado")}">${r.points} ponto${r.points === 1 ? "" : "s"} de atenção</span>`;
-}
-function ceilLine(x) {
-  const c = ceilFor(x);
-  if (!c || !c.central) return "";
-  const cls = c.safe && x.price <= c.safe ? "good" : x.price <= c.central ? "warn" : "bad";
-  const msg = cls === "good" ? "abaixo do teto com folga" : cls === "warn" ? "abaixo do teto central" : "acima do teto";
-  return `<div class="bar-cap ceil ${cls}" title="Maior lance que ainda dá ROE de ${targetRoe()}% se vender pelo valor central${c.safe ? `; ${brl.format(c.safe)} com 75% de chance` : ""}">Lance máx. p/ ROE ${targetRoe()}%: <b>${brlShort.format(c.central)}</b> · ${msg}</div>`;
 }
 
 const ceilState = new Map();   // per lot: target ROE, chance and the user's own resale value
@@ -1286,7 +1470,7 @@ function rangeBar(x, big = false) {
   const lo = Math.min(...pts) * 0.92, hi = Math.max(...pts) * 1.08;
   const pos = (n) => `${Math.min(100, Math.max(0, (100 * (Math.log(n) - Math.log(lo)) / (Math.log(hi) - Math.log(lo))))).toFixed(1)}%`;
   // labels stay inside the bar so text near the edges isn't cut off
-  const lpos = (n) => `${Math.min(92, Math.max(8, (100 * (Math.log(n) - Math.log(lo)) / (Math.log(hi) - Math.log(lo))))).toFixed(1)}%`;
+  const lpos = (n) => `${Math.min(86, Math.max(14, (100 * (Math.log(n) - Math.log(lo)) / (Math.log(hi) - Math.log(lo))))).toFixed(1)}%`;
   const label = `Valor provável entre ${brl.format(v.lo50)} e ${brl.format(v.hi50)}; lance ${brl.format(x.price)}${ch ? `; empate em ${brl.format(ch.breakeven)}` : ""}`;
   return `<div class="rbar${big ? " big" : ""}" role="img" aria-label="${esc(label)}" title="${esc(label)}">
     <div class="rb-track"></div>
@@ -2673,6 +2857,7 @@ function showTab(name) {
     $(`${t}View`).hidden = name !== t;
   }
   if (name !== "lots") $("legend").hidden = true;
+  $(`tab-${name}`).scrollIntoView({ block: "nearest", inline: "center" });
   if (name === "lots") render(); else if (name === "strategies") renderStrategies(); else if (name === "partners") openPartners(); else if (name === "services") openServices(); else renderPortfolio();
   window.scrollTo(0, 0);
 }
