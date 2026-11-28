@@ -31,6 +31,7 @@ def main() -> int:
     body = body.replace('import { matchesStrategy, nextDeadline } from "./strategy.js";', inline("roe.js") + "\n" + inline("strategy.js"))
     body = re.sub(r'^import \{[^}]*\} from "\./roe\.js";\n', "", body, flags=re.M)
     body = body.replace('import { risk } from "./risk.js";', inline("risk.js"))
+    body = body.replace('import { groupSimilar } from "./dedupe.js";', inline("dedupe.js"))
     # docs.js has helpers named like the page's (esc, brl): give it its own scope
     names = "dealContract, TEMPLATES, docHTML, docPDF, fileName"
     body = body.replace('import { %s } from "./docs.js";' % names,

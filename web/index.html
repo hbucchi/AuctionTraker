@@ -707,6 +707,11 @@ nav.sections .tab[aria-selected="true"] { border-bottom-color: var(--crimson); }
 .map { background: var(--surface); }
 .empty { background: transparent; }
 @media (max-width: 640px) { .st-card, .pa-card, .pro, .tpl { padding: 16px; } }
+
+/* similar lots: one card leads, the rest open beneath it */
+.similar-btn { border: 0; background: none; padding: 0; font: 600 12px var(--font-body); color: var(--crimson); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.similar-group { display: grid; gap: 10px; margin: -4px 0 4px 28px; padding-left: 14px; border-left: 2px solid var(--crimson); }
+@media (max-width: 760px) { .similar-group { margin-left: 8px; padding-left: 10px; } }
 </style>
 <!-- preview:strip-below -->
 </head>
@@ -884,6 +889,7 @@ import { matchesStrategy, nextDeadline } from "./strategy.js";
 import { handle, similarity, cardFromStrategies, pairId, quotaOk, GOALS, sharedListings, rankByShared, sharedSummary, combinedTicket } from "./partners.js";
 import { roeRange, roeAssumptions, flip, chances, valueNeeded, maxBid, valueAtChance, ceilings } from "./roe.js";
 import { risk } from "./risk.js";
+import { groupSimilar } from "./dedupe.js";
 import { dealContract, TEMPLATES, docHTML, docPDF, fileName } from "./docs.js";
 
 const FIREBASE_SDK = "13.4.0";
@@ -912,7 +918,9 @@ let shown = PAGE;
 let showImages = false;
 let store = null;               // persistence: Firestore (live) or this browser (preview)
 let partnersWired = false;
-let sharedView = null;          // {label, ids}: the list narrowed to opportunities shared with a partner or group
+let sharedView = null;
+const MIN_PRICE = 40000;        // minimum bid shown; same as MIN_PRICE in auction_tracker/summary.py
+const openSimilar = new Set();   // groups of similar lots the user expanded          // {label, ids}: the list narrowed to opportunities shared with a partner or group
 let USER = { strategies: [], checklists: {}, alertState: {}, email: null, lastFilters: null, portfolio: [] };
 let activeStrategy = null;      // strategy applied to the list
 let editing = null;             // strategy being edited (a copy)
@@ -1168,7 +1176,7 @@ function ptmPill(x) {
 }
 
 
-function lotHTML(x, isNew) {
+function lotHTML(x, isNew, group = null) {
   const where = [x.hood, x.city && x.uf ? `${x.city}/${x.uf}` : x.city || x.uf].filter(Boolean).join(", ");
   const rounds = x.rounds.length > 1 || (x.rounds.length === 1 && x.rounds[0].v && x.rounds[0].v !== x.price)
     ? `<div class="rounds">${x.rounds.map((r) => `<span class="round${r.t < NOW ? " past" : ""}"><b>${r.n}ª praça</b> ${isNaN(r.t) ? "" : dShort.format(r.t)} ${r.v ? brlShort.format(r.v) : ""}</span>`).join("")}</div>`
@@ -1197,7 +1205,7 @@ function lotHTML(x, isNew) {
         ${r ? `<div class="fig"><span class="fig-k">ROE estimado<button class="hint" type="button" data-legend aria-label="Como ler a barra de ROE">?</button></span><span class="fig-v">${pct(r.lo)} a ${pct(r.hi)}</span>${roeBar(r)}</div>` : ""}
         ${c && c.central ? `<div class="fig"><span class="fig-k">Lance máximo · ROE ${targetRoe()}%</span><span class="fig-v">${brlShort.format(c.central)}</span><span class="fig-s ${ceilCls}">${ceilMsg}</span></div>` : ""}
       </div>
-      <div class="signals">${riskPill(x)}${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">Conferir dados do anúncio</span>` : ""}</div>
+      <div class="signals">${group && group.more.length ? `<button class="similar-btn" type="button" data-similar="${esc(group.key)}" aria-expanded="${openSimilar.has(group.key)}">${openSimilar.has(group.key) ? "Ocultar" : "+"} ${group.more.length} lote${group.more.length > 1 ? "s" : ""} semelhante${group.more.length > 1 ? "s" : ""} no mesmo anúncio</button>` : ""}${riskPill(x)}${ch ? `<span class="pill ${chanceClass(ch.profit)}" title="Estimativa: probabilidade de o imóvel valer mais que ${brl.format(ch.breakeven)} (lance + custos)">Chance de lucro est. ${ch.profit}%</span>` : ""}${x.val?.flag ? `<span class="pill warn" title="Lance muito abaixo do valor estimado: costuma ser fração do imóvel ou área errada no anúncio">Conferir dados do anúncio</span>` : ""}</div>
       <button class="expand" type="button" data-ficha="${esc(x.id)}" aria-expanded="${open}" aria-label="${open ? "Fechar ficha" : "Abrir ficha completa"}" title="${open ? "Fechar ficha" : "Ficha completa: custos, ROE, cidade e checklist"}">
         <span class="expand-l">${open ? "Fechar" : "Ficha"}</span><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
@@ -1600,18 +1608,21 @@ function render() {
     $("editActive").onclick = () => openEditor(USER.strategies.find((s) => s.id === activeStrategy.id) || activeStrategy);
   }
 
-  $("resultCount").innerHTML = `<b>${rows.length.toLocaleString("pt-BR")}</b> oportunidade${rows.length === 1 ? "" : "s"}${rows.length !== ALL.length ? ` <span>de ${ALL.length.toLocaleString("pt-BR")}</span>` : ""}`;
+  const groups = groupSimilar(rows);
+  const lotsNote = groups.length !== rows.length ? ` · ${rows.length.toLocaleString("pt-BR")} lotes` : "";
+  $("resultCount").innerHTML = `<b>${groups.length.toLocaleString("pt-BR")}</b> oportunidade${groups.length === 1 ? "" : "s"} <span>${lotsNote}${rows.length !== ALL.length ? ` · de ${ALL.length.toLocaleString("pt-BR")} lotes coletados` : ""}</span>`;
   const onMap = document.querySelector('input[name="view"]:checked')?.value === "map";
   $("list").hidden = onMap; $("mapWrap").hidden = !onMap;
   $("legend").hidden = onMap;
   if (onMap) { $("more").hidden = true; renderMap(rows); setActiveCount(); return; }
-  const page = rows.slice(0, shown);
+  const page = groups.slice(0, shown);
   $("list").innerHTML = page.length
-    ? page.map((x) => lotHTML(x, fresh.has(x.id))).join("")
+    ? page.map((g) => lotHTML(g.lead, fresh.has(g.lead.id), g)
+        + (g.more.length && openSimilar.has(g.key) ? `<div class="similar-group">${g.more.map((x) => lotHTML(x, fresh.has(x.id))).join("")}</div>` : "")).join("")
     : `<div class="empty"><strong>Nenhum lote com esses filtros.</strong><span>Tente ampliar o preço, remover o estado ou desmarcar “Ocultar encerrados”.</span></div>`;
   for (const id of openFicha) loadHistory(id);
-  $("more").hidden = rows.length <= shown;
-  $("more").textContent = `Mostrar mais (${(rows.length - shown).toLocaleString("pt-BR")} restantes)`;
+  $("more").hidden = groups.length <= shown;
+  $("more").textContent = `Mostrar mais (${(groups.length - shown).toLocaleString("pt-BR")} restantes)`;
   setActiveCount();
 }
 
@@ -1684,6 +1695,8 @@ function buildControls() {
   });
   $("list").addEventListener("click", (e) => {
     if (e.target.closest("[data-legend]")) { openLegend(true); return; }
+    const sim = e.target.closest("[data-similar]");
+    if (sim) { const k = sim.dataset.similar; openSimilar.has(k) ? openSimilar.delete(k) : openSimilar.add(k); render(); return; }
     const grp = e.target.closest("[data-group]");
     if (grp) { const x = ALL.find((l) => l.id === grp.dataset.group); if (x) { pUI.creating = { name: (x.title || "").slice(0, 80), target_title: x.title, target_url: x.url, target_price: x.price }; showTab("partners"); } return; }
     const won = e.target.closest("[data-won]");
@@ -2908,8 +2921,8 @@ function updateNewBadge() {
 }
 
 function start(items, updatedAt, note) {
-  // only lots with a real price (no "R$ 0", no placeholders); same rule as summary.py
-  ALL = items.filter((x) => x.price >= 1000).map(enrich);
+  // only lots from R$ 40 mil (no placeholders, no small lots); same rule as summary.py
+  ALL = items.filter((x) => x.price >= MIN_PRICE).map(enrich);
   $("freshness").textContent = updatedAt ? `Atualizado ${dLong.format(new Date(updatedAt))}` : "";
   $("footnote").textContent = note || "";
   $("gateView").hidden = true;
