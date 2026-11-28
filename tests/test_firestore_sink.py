@@ -187,3 +187,32 @@ def test_an_incomplete_run_never_ends_lots():
     sink.write("zuk", mk(3), complete=True)
     sink.write("zuk", mk(1), complete=False)  # e.g. a page cap or a WARN run
     assert all(fc.store["listings"][f"zuk:{i}"]["ended_at"] is None for i in range(3))
+
+
+def test_rerunning_the_same_scrape_never_duplicates():
+    """Each lot has a fixed id (site + the site's lot number): a re-run
+    updates the same documents and rebuilds the site's summary."""
+    fc = FakeClient()
+    sink = FirestoreSink(client=fc)
+    for _ in range(3):
+        sink.write("zuk", mk(5), complete=True)
+    assert len(fc.store["listings"]) == 5
+    items = [i for d in fc.store["summaries"].values() for i in d["items"]]
+    assert sorted(i["id"] for i in items) == [f"zuk:{i}" for i in range(5)]
+
+
+def test_min_price_matches_the_web_app():
+    import re
+    from pathlib import Path
+
+    from auction_tracker.summary import MIN_PRICE
+    html = (Path(__file__).parent.parent / "web" / "index.html").read_text(encoding="utf-8")
+    assert int(re.search(r"const MIN_PRICE = (\d+);", html).group(1)) == MIN_PRICE
+
+
+def test_lots_under_the_minimum_are_not_published():
+    fc = FakeClient()
+    xs = mk(2)
+    xs[1].current_price = 39_999.0
+    FirestoreSink(client=fc).write("zuk", xs)
+    assert [i["id"] for i in fc.store["summaries"]["zuk-1"]["items"]] == ["zuk:0"]

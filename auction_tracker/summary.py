@@ -22,10 +22,11 @@ TITLE_MAX = 160
 MAX_DOC_BYTES = 800_000  # per summary document; Firestore's hard limit is 1 MiB
 
 
-# Listings without a real price are not shown anywhere (list, map, alerts):
-# no price at all ("recebendo propostas") or a placeholder like R$ 0,01
-# ("lote sustado"). Every price under R$ 1.000 in the data is a placeholder.
-MIN_PRICE = 1_000
+# Lots under this minimum bid are not shown anywhere (list, map, alerts): it
+# removes placeholders (no price, R$ 0,01 "lote sustado") and the small lots
+# the club doesn't invest in. They are still kept in listings/{id} with their
+# history. web/index.html uses the same value (MIN_PRICE); a test keeps them equal.
+MIN_PRICE = 40_000
 
 
 def has_price(x: Listing) -> bool:

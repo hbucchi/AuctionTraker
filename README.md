@@ -211,6 +211,24 @@ can reach them and set the variable `SCRAPE_RUNNER` to its label (and
 `SCRAPE_KNOWN_BLOCKED` to `none`). The app hides a site's lots once its data
 is more than 3 days old.
 
+## Duplicates, re-runs and the minimum bid
+
+- **Re-runs never duplicate.** Every lot has a fixed id: the site plus the
+  site's own lot number (`zuk:38128-239115`). Each run updates the same
+  `listings/{id}` document (keeping `first_seen_at`, adding the day's
+  snapshot) and rebuilds the site's `summaries/{site}-N` from what the site
+  shows that day; leftover parts are deleted, and lots that left the site
+  get `ended_at`. Tested in `tests/test_firestore_sink.py`.
+- **What looks like duplicates** are separate lots on the sites themselves:
+  several identical units under one headline (plots of a development,
+  shops of a building), an old page kept online for a relisted property, or
+  the same property on two sites. The app groups lots with the same
+  headline, city, state and area into one card ("+N lotes semelhantes",
+  `web/dedupe.js`), and counts properties rather than lots.
+- **Minimum bid R$ 40.000** (`MIN_PRICE` in `summary.py` and in
+  `web/index.html`, kept equal by a test): smaller lots and placeholders are
+  not shown or alerted on, but are still recorded with their history.
+
 ## The data model
 
 Every site maps into `auction_tracker.models.Listing`. Its main fields:
